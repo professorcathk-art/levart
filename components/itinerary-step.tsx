@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { MapComponent } from '@/components/map-component'
 import { EnhancedDayCard } from '@/components/itinerary/enhanced-day-card'
 import { PDFExport } from '@/components/itinerary/pdf-export'
-import type { Attraction, TripFocus, Itinerary } from '@/types'
+import type { Attraction, TripFocus, Itinerary, TripPreferences } from '@/types'
 
 interface ItineraryStepProps {
   destination: string
