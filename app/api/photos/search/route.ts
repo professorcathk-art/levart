@@ -1,14 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { searchPlacePhotos } from '@/lib/apis/google-places'
+import { searchPlacePhotos, getPlacePhoto } from '@/lib/apis/google-places'
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const query = searchParams.get('q')
+    const photoReference = searchParams.get('photo_reference')
 
+    // If photo_reference is provided, use it directly (faster)
+    if (photoReference) {
+      const photoUrl = await getPlacePhoto(photoReference)
+      if (photoUrl) {
+        return NextResponse.json({ photo: photoUrl })
+      }
+    }
+
+    // Otherwise, search for the place and get its photo
     if (!query) {
       return NextResponse.json(
-        { error: 'Query parameter "q" is required' },
+        { error: 'Query parameter "q" or "photo_reference" is required' },
         { status: 400 }
       )
     }

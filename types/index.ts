@@ -64,7 +64,8 @@ export interface DayItinerary {
     name: string
     cuisine?: string
     cost?: string
-    photo?: string
+    photoUrl?: string
+    photo?: string // Legacy support
     address?: string
   }>
   transport: string[]

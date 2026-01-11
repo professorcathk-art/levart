@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import type { DayItinerary } from '@/types'
+import type { DayItinerary, DayActivity } from '@/types'
 import { PawPrint } from '../paw-print'
 
 interface EnhancedDayCardProps {
@@ -210,7 +210,7 @@ export function EnhancedDayCard({ day, destination, dayIndex }: EnhancedDayCardP
   )
 }
 
-function ActivityCard({ activity, index }: { activity: any; index: number }) {
+function ActivityCard({ activity, index }: { activity: DayActivity; index: number }) {
   const [photo, setPhoto] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -376,7 +376,7 @@ function ActivityCard({ activity, index }: { activity: any; index: number }) {
   )
 }
 
-function RestaurantCard({ restaurant }: { restaurant: any }) {
+function RestaurantCard({ restaurant }: { restaurant: { name: string; cuisine?: string; cost?: string; photo?: string; address?: string } }) {
   const [photo, setPhoto] = useState<string | null>(null)
 
   useEffect(() => {
