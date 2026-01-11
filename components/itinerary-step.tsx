@@ -21,6 +21,7 @@ export function ItineraryStep({
   tripFocus,
   selectedAttractions,
   checkIn,
+  checkOut,
   dayCount,
   onItineraryGenerated,
   itinerary,
@@ -277,7 +278,7 @@ export function ItineraryStep({
           <h3 className="text-xl font-bold mb-4">Book Your Trip</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <a
-              href={`https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkIn}&affiliateId=${affiliateId}`}
+              href={`https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkOut || checkIn}&affiliateId=${affiliateId}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => handleAffiliateClick('hotel')}
