@@ -41,13 +41,14 @@ const crowdLevelColors = {
   high: 'text-red-600',
 }
 
-const typeColors = {
+const typeColors: Record<string, string> = {
   attraction: 'bg-blue-100 text-blue-800 border-blue-300',
   restaurant: 'bg-[#FF9A76]/20 text-[#FF9A76] border-[#FF9A76]/30',
   shopping: 'bg-pink-100 text-pink-800 border-pink-300',
   nightlife: 'bg-purple-100 text-purple-800 border-purple-300',
   nature: 'bg-green-100 text-green-800 border-green-300',
   culture: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+  rest: 'bg-teal-100 text-teal-800 border-teal-300',
 }
 
 export function EnhancedDayCard({ day, destination, dayIndex }: EnhancedDayCardProps) {
@@ -278,7 +279,7 @@ function ActivityCard({ activity, index }: { activity: any; index: number }) {
                 {activityIcons[activity.type || 'attraction'] || '🎯'}
               </span>
               <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                typeColors[activity.type || 'attraction'] || typeColors.attraction
+                typeColors[activity.type || 'attraction'] ?? typeColors.attraction
               }`}>
                 {activity.type || 'attraction'}
               </span>
