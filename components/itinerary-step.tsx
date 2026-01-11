@@ -53,11 +53,20 @@ export function ItineraryStep({
       })
 
       if (!response.ok) {
-        throw new Error('Failed to generate itinerary')
+        const errorData = await response.json().catch(() => ({}))
+        const errorMessage = errorData.error || `HTTP ${response.status}: Failed to generate itinerary`
+        throw new Error(errorMessage)
       }
 
       const data = await response.json()
+      if (data.error) {
+        throw new Error(data.error)
+      }
+      
       const generatedItinerary = data.itinerary
+      if (!generatedItinerary) {
+        throw new Error('No itinerary data returned from server')
+      }
       
       // Save itinerary to Supabase
       try {
