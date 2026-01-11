@@ -82,54 +82,27 @@ Return ONLY valid JSON, no markdown, no code blocks.`
   }
 
   try {
-    console.log('Calling AIML API with model: claude-3-5-sonnet-20241022')
+    // Use correct AIML API model name: claude-sonnet-4-5 (Claude 4.5 Sonnet)
+    // See: https://docs.aimlapi.com/api-references/text-models-llm/anthropic/claude-4-5-sonnet
+    console.log('Calling AIML API with model: claude-sonnet-4-5')
     console.log('API Key present:', !!apiKey)
     console.log('API Key length:', apiKey.length)
     console.log('Prompt length:', userPrompt.length)
     
-    let completion
-    try {
-      completion = await openai.chat.completions.create({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 4096,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          {
-            role: 'user',
-            content: userPrompt,
-          },
-        ],
-      })
-    } catch (apiError: unknown) {
-      // If 400 error, try alternative model name
-      if (apiError && typeof apiError === 'object' && 'status' in apiError && apiError.status === 400) {
-        console.log('400 error with claude-3-5-sonnet-20241022, trying claude-3-5-sonnet...')
-        try {
-          completion = await openai.chat.completions.create({
-            model: 'claude-3-5-sonnet',
-            max_tokens: 4096,
-            messages: [
-              {
-                role: 'system',
-                content: systemPrompt,
-              },
-              {
-                role: 'user',
-                content: userPrompt,
-              },
-            ],
-          })
-        } catch (retryError) {
-          console.error('Retry also failed:', retryError)
-          throw apiError // Throw original error
-        }
-      } else {
-        throw apiError
-      }
-    }
+    const completion = await openai.chat.completions.create({
+      model: 'claude-sonnet-4-5', // Correct AIML API model name for Claude 4.5 Sonnet
+      max_tokens: 4096,
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        {
+          role: 'user',
+          content: userPrompt,
+        },
+      ],
+    })
 
     const content = completion.choices[0]?.message?.content
     if (!content) {
