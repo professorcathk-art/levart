@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { generateItinerary } from '@/lib/apis/claude'
 import { getWeatherForecast } from '@/lib/apis/weather'
 import { optimizeRoute } from '@/lib/apis/osrm'
-import type { Attraction, TripFocus } from '@/types'
+import type { Attraction, TripFocus, TripPreferences } from '@/types'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
       selectedAttractions,
       checkIn,
       dayCount,
+      preferences,
     } = body
 
     if (
@@ -90,7 +91,8 @@ export async function POST(request: NextRequest) {
         totalDuration: route.totalDuration,
       },
       weatherForecasts,
-      dayCount
+      dayCount,
+      preferences as TripPreferences | undefined
     )
 
     return NextResponse.json({

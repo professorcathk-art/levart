@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import type { Attraction, DayItinerary, TripFocus, WeatherForecast } from '@/types'
+import type { Attraction, DayItinerary, TripFocus, WeatherForecast, TripPreferences } from '@/types'
 
 // AIML API is OpenAI-compatible
 const openai = new OpenAI({

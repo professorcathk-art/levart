@@ -81,6 +81,7 @@ export default function PlanPage() {
               checkIn={checkIn}
               checkOut={checkOut}
               dayCount={dayCount}
+              preferences={preferences}
               onItineraryGenerated={handleItineraryGenerated}
               itinerary={itinerary}
               onBack={() => setStep('attractions')}

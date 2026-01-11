@@ -13,6 +13,7 @@ interface ItineraryStepProps {
   checkIn: string
   checkOut: string
   dayCount: number
+  preferences?: TripPreferences
   onItineraryGenerated: (itinerary: Itinerary) => void
   itinerary: Itinerary | null
   onBack: () => void
@@ -25,6 +26,7 @@ export function ItineraryStep({
   checkIn,
   checkOut,
   dayCount,
+  preferences,
   onItineraryGenerated,
   itinerary,
   onBack,
@@ -51,6 +53,7 @@ export function ItineraryStep({
           selectedAttractions,
           checkIn,
           dayCount,
+          preferences,
         }),
       })
 
