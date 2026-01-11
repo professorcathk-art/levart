@@ -39,6 +39,40 @@
       opacity: 0;
     }
   }
+
+  @keyframes pawWalk {
+    0% {
+      transform: translateX(-100px) scale(0.8);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.4;
+    }
+    90% {
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateX(calc(100vw + 100px)) scale(0.8);
+      opacity: 0;
+    }
+  }
+
+  @keyframes pawWalkLeft {
+    0% {
+      transform: translateX(calc(100vw + 100px)) scale(0.8);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.4;
+    }
+    90% {
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateX(-100px) scale(0.8);
+      opacity: 0;
+    }
+  }
   
   /* Smooth scrolling */
   html {

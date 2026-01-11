@@ -1,11 +1,15 @@
 'use client'
 
 import { PawTrail, PawPrint } from '../paw-print'
+import { WalkingPawPrints } from './walking-paw-prints'
 import Link from 'next/link'
 
 export function Hero() {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-[#FFF8F3] via-[#FFE8E0] to-[#FFD4C4]">
+      {/* Walking paw prints animation */}
+      <WalkingPawPrints />
+      
       {/* Paw prints walking across */}
       <PawTrail count={8} startDelay={500} duration={4000} />
       
