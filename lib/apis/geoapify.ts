@@ -46,11 +46,8 @@ export async function searchAttractions(
       throw new Error(`Geoapify API error: ${response.statusText}`)
     }
 
-    const data = await response.json()
-    const features = data.features || []
-
-    return features.map((feature: unknown) => {
-      const f = feature as {
+    const data = (await response.json()) as {
+      features: Array<{
         properties: {
           name: string
           categories: string
@@ -61,14 +58,18 @@ export async function searchAttractions(
         geometry: {
           coordinates: [number, number]
         }
-      }
+      }>
+    }
+    const features = data.features || []
+
+    return features.map((feature) => {
       return {
-        id: `${f.properties.lat}-${f.properties.lon}`,
-        name: f.properties.name,
-        category: f.properties.categories || 'unknown',
-        lat: f.properties.lat,
-        lon: f.properties.lon,
-        address: f.properties.formatted,
+        id: `${feature.properties.lat}-${feature.properties.lon}`,
+        name: feature.properties.name,
+        category: feature.properties.categories || 'unknown',
+        lat: feature.properties.lat,
+        lon: feature.properties.lon,
+        address: feature.properties.formatted,
       }
     })
   } catch (error) {

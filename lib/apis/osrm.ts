@@ -22,7 +22,16 @@ export async function optimizeRoute(
       throw new Error(`OSRM API error: ${response.statusText}`)
     }
 
-    const data = await response.json()
+    const data = (await response.json()) as {
+      code: string
+      routes: Array<{
+        distance: number
+        duration: number
+        geometry: {
+          coordinates: [number, number][]
+        }
+      }>
+    }
 
     if (data.code !== 'Ok') {
       throw new Error(`OSRM routing failed: ${data.code}`)

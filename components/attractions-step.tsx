@@ -38,7 +38,7 @@ export function AttractionsStep({
       const data = await response.json()
       setAttractions(data.attractions || [])
       // Auto-select first 10 attractions
-      const autoSelected = new Set(
+      const autoSelected = new Set<string>(
         (data.attractions || []).slice(0, 10).map((a: Attraction) => a.id)
       )
       setSelectedIds(autoSelected)
