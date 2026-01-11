@@ -53,16 +53,16 @@ export function Hero() {
           </div>
           
           {/* Trust indicators */}
-          <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-gray-600 animate-fade-in-up animation-delay-600">
-            <div className="flex items-center gap-2">
+          <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-[#1A1A1A] font-semibold animate-fade-in-up animation-delay-600">
+            <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
               <span className="text-2xl">🎯</span>
               <span>AI-Powered</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
               <span className="text-2xl">⚡</span>
               <span>Instant Results</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-md">
               <span className="text-2xl">🆓</span>
               <span>100% Free</span>
             </div>

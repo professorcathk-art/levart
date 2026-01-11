@@ -16,7 +16,8 @@ export async function generateItinerary(
     totalDuration: number
   },
   weatherForecasts: WeatherForecast[],
-  dayCount: number
+  dayCount: number,
+  preferences?: TripPreferences
 ): Promise<DayItinerary[]> {
   const systemPrompt = `You are an expert travel planner. Generate detailed day-by-day itineraries in JSON format.
 Each day should include morning, afternoon, and evening activities based on the selected attractions and route.
