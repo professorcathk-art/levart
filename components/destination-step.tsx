@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import type { TripFocus } from '@/types'
 
 const TRIP_FOCUS_OPTIONS: { value: TripFocus; label: string }[] = [
@@ -26,9 +26,65 @@ interface DestinationStepProps {
 export function DestinationStep({ onSubmit }: DestinationStepProps) {
   const [destination, setDestination] = useState('')
   const [selectedFocus, setSelectedFocus] = useState<TripFocus[]>([])
-  const [checkIn, setCheckIn] = useState('')
+  const [checkIn, setCheckIn] = useState(() => {
+    // Set default to today
+    return new Date().toISOString().split('T')[0]
+  })
   const [checkOut, setCheckOut] = useState('')
   const [dayCount, setDayCount] = useState(3)
+  const [suggestions, setSuggestions] = useState<Array<{ display: string; formatted: string }>>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const suggestionsRef = useRef<HTMLDivElement>(null)
+
+  // Update checkOut when checkIn or dayCount changes
+  useEffect(() => {
+    if (checkIn && dayCount > 0) {
+      const endDate = new Date(checkIn)
+      endDate.setDate(endDate.getDate() + dayCount - 1)
+      setCheckOut(endDate.toISOString().split('T')[0])
+    }
+  }, [checkIn, dayCount])
+
+  // Fetch destination suggestions
+  useEffect(() => {
+    if (destination.length < 2) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+
+    const timeoutId = setTimeout(() => {
+      fetch(`/api/destinations/autocomplete?q=${encodeURIComponent(destination)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setSuggestions(data.suggestions || [])
+          setShowSuggestions(true)
+        })
+        .catch(() => {
+          setSuggestions([])
+        })
+    }, 300) // Debounce 300ms
+
+    return () => clearTimeout(timeoutId)
+  }, [destination])
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        inputRef.current &&
+        !inputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,39 +105,58 @@ export function DestinationStep({ onSubmit }: DestinationStepProps) {
 
   const handleDateChange = (startDate: string) => {
     setCheckIn(startDate)
-    if (startDate && dayCount > 0) {
-      const endDate = new Date(startDate)
-      endDate.setDate(endDate.getDate() + dayCount - 1)
-      setCheckOut(endDate.toISOString().split('T')[0])
-    }
   }
 
   const handleDayCountChange = (days: number) => {
     setDayCount(days)
-    if (checkIn) {
-      const endDate = new Date(checkIn)
-      endDate.setDate(endDate.getDate() + days - 1)
-      setCheckOut(endDate.toISOString().split('T')[0])
-    }
+  }
+
+  const handleSuggestionClick = (suggestion: { display: string; formatted: string }) => {
+    setDestination(suggestion.formatted)
+    setShowSuggestions(false)
   }
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
       <h2 className="text-2xl font-bold mb-6">Plan Your Trip</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
+        <div className="relative">
           <label htmlFor="destination" className="block text-sm font-medium mb-2">
             Destination
           </label>
           <input
+            ref={inputRef}
             id="destination"
             type="text"
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
+            onFocus={() => {
+              if (suggestions.length > 0) {
+                setShowSuggestions(true)
+              }
+            }}
             placeholder="e.g. Tokyo, Bangkok, Seoul"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             required
+            autoComplete="off"
           />
+          {showSuggestions && suggestions.length > 0 && (
+            <div
+              ref={suggestionsRef}
+              className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+            >
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="w-full text-left px-4 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                >
+                  <div className="font-medium">{suggestion.display}</div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>

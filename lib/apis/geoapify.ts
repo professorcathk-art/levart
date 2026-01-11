@@ -32,14 +32,57 @@ export async function searchAttractions(
   const categoriesParam = Array.from(categories).join(',')
 
   try {
-    const response = await fetch(
-      `${GEOAPIFY_BASE_URL}/search?` +
+    // First, try to get coordinates for the destination using autocomplete
+    const autocompleteResponse = await fetch(
+      `https://api.geoapify.com/v1/geocode/autocomplete?` +
         new URLSearchParams({
+          text: destination,
+          limit: '1',
+          apiKey,
+        })
+    )
+
+    let searchParams: URLSearchParams
+    if (autocompleteResponse.ok) {
+      const autocompleteData = (await autocompleteResponse.json()) as {
+        features?: Array<{
+          properties: {
+            lat: number
+            lon: number
+          }
+        }>
+      }
+      
+      if (autocompleteData.features && autocompleteData.features.length > 0) {
+        const coords = autocompleteData.features[0].properties
+        // Use coordinates-based search for better results
+        searchParams = new URLSearchParams({
+          categories: categoriesParam,
+          limit: '50',
+          filter: `circle:${coords.lon},${coords.lat},50000`, // 50km radius
+          apiKey,
+        })
+      } else {
+        // Fallback to text search
+        searchParams = new URLSearchParams({
           text: destination,
           categories: categoriesParam,
           limit: '50',
           apiKey,
         })
+      }
+    } else {
+      // Fallback to text search
+      searchParams = new URLSearchParams({
+        text: destination,
+        categories: categoriesParam,
+        limit: '50',
+        apiKey,
+      })
+    }
+
+    const response = await fetch(
+      `${GEOAPIFY_BASE_URL}/search?${searchParams.toString()}`
     )
 
     if (!response.ok) {
