@@ -76,6 +76,11 @@ Generate a JSON array with ${dayCount} day objects. Each day object should have:
 
 Return ONLY valid JSON, no markdown, no code blocks.`
 
+  const apiKey = process.env.AIML_API_KEY
+  if (!apiKey) {
+    throw new Error('AIML_API_KEY is not configured')
+  }
+
   try {
     const completion = await openai.chat.completions.create({
       model: 'claude-3-5-sonnet-20241022',
@@ -103,7 +108,17 @@ Return ONLY valid JSON, no markdown, no code blocks.`
       jsonText = jsonText.replace(/^```(?:json)?\n/, '').replace(/\n```$/, '')
     }
 
-    const itinerary = JSON.parse(jsonText) as DayItinerary[]
+    let itinerary: DayItinerary[]
+    try {
+      itinerary = JSON.parse(jsonText) as DayItinerary[]
+    } catch (parseError) {
+      console.error('Failed to parse Claude response:', jsonText)
+      throw new Error(`Invalid JSON response from Claude: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`)
+    }
+
+    if (!Array.isArray(itinerary)) {
+      throw new Error('Claude response is not an array')
+    }
 
     // Merge weather data from API
     return itinerary.map((day, index) => {

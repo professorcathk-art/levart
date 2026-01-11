@@ -34,7 +34,19 @@ export async function POST(request: NextRequest) {
       attractionId: a.id,
     }))
 
-    const route = await optimizeRoute(routePoints)
+    let route
+    try {
+      route = await optimizeRoute(routePoints)
+    } catch (routeError) {
+      console.error('Route optimization error:', routeError)
+      // If route optimization fails, use default values
+      route = {
+        points: routePoints,
+        polyline: JSON.stringify([]),
+        totalDistance: 0,
+        totalDuration: 0,
+      }
+    }
 
     // Get weather forecast
     const centerLat =
@@ -45,12 +57,28 @@ export async function POST(request: NextRequest) {
       selectedAttractions.length
 
     const startDate = checkIn || new Date().toISOString().split('T')[0]
-    const weatherForecasts = await getWeatherForecast(
-      centerLat,
-      centerLon,
-      startDate,
-      dayCount
-    )
+    let weatherForecasts
+    try {
+      weatherForecasts = await getWeatherForecast(
+        centerLat,
+        centerLon,
+        startDate,
+        dayCount
+      )
+    } catch (weatherError) {
+      console.error('Weather forecast error:', weatherError)
+      // If weather fails, create default forecasts
+      weatherForecasts = Array.from({ length: dayCount }, (_, i) => {
+        const date = new Date(startDate)
+        date.setDate(date.getDate() + i)
+        return {
+          date: date.toISOString().split('T')[0],
+          temperature: 20,
+          condition: 'clear',
+          description: 'Clear sky',
+        }
+      })
+    }
 
     // Generate AI itinerary
     const days = await generateItinerary(
@@ -77,8 +105,15 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error generating itinerary:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorDetails = error instanceof Error ? error.stack : String(error)
+    console.error('Error details:', errorDetails)
+    
     return NextResponse.json(
-      { error: 'Failed to generate itinerary' },
+      { 
+        error: `Failed to generate itinerary: ${errorMessage}`,
+        details: process.env.NODE_ENV === 'development' ? errorDetails : undefined
+      },
       { status: 500 }
     )
   }
