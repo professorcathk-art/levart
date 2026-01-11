@@ -41,10 +41,10 @@ TRIP_COM_AFFILIATE_ID=your_trip_com_affiliate_id
 - Get your access token from the account page
 - Free tier includes 50,000 map loads/month
 
-### Anthropic (Claude)
-- Sign up at https://www.anthropic.com/
-- Get your API key from the console
-- You'll need credits in your account
+### AIML API (Claude)
+- Sign up at https://aimlapi.com/
+- Get your API key from the dashboard
+- Documentation: https://aimlapi.com/
 
 ### Open-Meteo
 - No API key required

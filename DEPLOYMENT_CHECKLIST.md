@@ -27,8 +27,8 @@ NEXT_PUBLIC_GEOAPIFY_API_KEY=your_geoapify_key_here
 # Mapbox
 NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=your_mapbox_token_here
 
-# Claude AI / Anthropic
-ANTHROPIC_API_KEY=your_anthropic_key_here
+# AIML API (for Claude model)
+AIML_API_KEY=your_aiml_api_key_here
 
 # Trip.com Affiliate
 TRIP_COM_AFFILIATE_ID=your_affiliate_id_here
@@ -98,11 +98,11 @@ Follow prompts and add environment variables.
    - Used for: Finding attractions/POIs
    - Get key from: Dashboard → API Keys
 
-2. **Anthropic API Key** ⭐ Required
-   - Sign up: https://console.anthropic.com/
-   - Requires: Account credits
-   - Used for: AI itinerary generation
-   - Get key from: Settings → API Keys
+2. **AIML API Key** ⭐ Required
+   - Sign up: https://aimlapi.com/
+   - Used for: AI itinerary generation (Claude model)
+   - Get key from: Dashboard → API Keys
+   - Documentation: https://aimlapi.com/
 
 3. **Mapbox Access Token** ⭐ Required
    - Sign up: https://www.mapbox.com/
@@ -127,11 +127,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_10pjfghSyS8LYf9xQkASCA_BRI3vCLu
 SUPABASE_SERVICE_ROLE_KEY=sb_secret_C-wLk4MEA55RJL_E760A4w_IjKs9M5Q
 NEXT_PUBLIC_GEOAPIFY_API_KEY=<your_key>
 NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=<your_token>
-ANTHROPIC_API_KEY=<your_key>
+AIML_API_KEY=<your_key>
 TRIP_COM_AFFILIATE_ID=<your_id>
 ```
 
-**Important**: Mark `SUPABASE_SERVICE_ROLE_KEY` and `ANTHROPIC_API_KEY` as **sensitive** (don't expose to client).
+**Important**: Mark `SUPABASE_SERVICE_ROLE_KEY` and `AIML_API_KEY` as **sensitive** (don't expose to client).
 
 ## ✅ Post-Deployment Verification
 
@@ -142,7 +142,7 @@ After deployment, test:
 3. ✅ Attractions fetch (requires Geoapify key)
 4. ✅ Route optimization (OSRM - no key needed)
 5. ✅ Weather fetch (Open-Meteo - no key needed)
-6. ✅ Itinerary generation (requires Anthropic key)
+6. ✅ Itinerary generation (requires AIML API key)
 7. ✅ Map display (requires Mapbox token)
 8. ✅ Database saves (requires Supabase setup)
 

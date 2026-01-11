@@ -1,8 +1,10 @@
-import Anthropic from '@anthropic-ai/sdk'
+import OpenAI from 'openai'
 import type { Attraction, DayItinerary, TripFocus, WeatherForecast } from '@/types'
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
+// AIML API is OpenAI-compatible
+const openai = new OpenAI({
+  baseURL: 'https://api.aimlapi.com/v1',
+  apiKey: process.env.AIML_API_KEY || '',
 })
 
 export async function generateItinerary(
@@ -75,11 +77,14 @@ Generate a JSON array with ${dayCount} day objects. Each day object should have:
 Return ONLY valid JSON, no markdown, no code blocks.`
 
   try {
-    const message = await anthropic.messages.create({
+    const completion = await openai.chat.completions.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 4096,
-      system: systemPrompt,
       messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
         {
           role: 'user',
           content: userPrompt,
@@ -87,13 +92,13 @@ Return ONLY valid JSON, no markdown, no code blocks.`
       ],
     })
 
-    const content = message.content[0]
-    if (content.type !== 'text') {
-      throw new Error('Unexpected response type from Claude')
+    const content = completion.choices[0]?.message?.content
+    if (!content) {
+      throw new Error('No response content from Claude')
     }
 
     // Extract JSON from response (handle potential markdown code blocks)
-    let jsonText = content.text.trim()
+    let jsonText = content.trim()
     if (jsonText.startsWith('```')) {
       jsonText = jsonText.replace(/^```(?:json)?\n/, '').replace(/\n```$/, '')
     }

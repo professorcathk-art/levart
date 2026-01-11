@@ -14,8 +14,8 @@ NEXT_PUBLIC_GEOAPIFY_API_KEY=
 # Mapbox (get from https://www.mapbox.com/)
 NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=
 
-# Claude AI / Anthropic (get from https://console.anthropic.com/)
-ANTHROPIC_API_KEY=
+# AIML API (for Claude model) - get from https://aimlapi.com/
+AIML_API_KEY=
 
 # Trip.com Affiliate
 TRIP_COM_AFFILIATE_ID=
