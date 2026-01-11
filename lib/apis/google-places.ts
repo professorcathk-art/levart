@@ -94,6 +94,9 @@ export async function searchAttractions(
         }
         formatted_address?: string
         rating?: number
+        photos?: Array<{
+          photo_reference: string
+        }>
       }>
       status: string
     }
@@ -122,6 +125,7 @@ export async function searchAttractions(
           lat: place.geometry.location.lat,
           lon: place.geometry.location.lng,
           address: place.formatted_address,
+          photoReference: place.photos && place.photos.length > 0 ? place.photos[0].photo_reference : undefined,
         }))
     }
 

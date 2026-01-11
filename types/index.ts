@@ -15,6 +15,7 @@ export interface Attraction {
   lon: number
   address?: string
   description?: string
+  photoReference?: string
 }
 
 export interface RoutePoint {
