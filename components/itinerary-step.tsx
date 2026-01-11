@@ -29,7 +29,12 @@ export function ItineraryStep({
 }: ItineraryStepProps) {
   const [loading, setLoading] = useState(!itinerary)
   const [error, setError] = useState<string | null>(null)
-  const [affiliateId, setAffiliateId] = useState('')
+  const [affiliateConfig, setAffiliateConfig] = useState<{
+    allianceId: string
+    sid: string
+    tripSub1: string
+    tripSub3?: string
+  } | null>(null)
 
   const generateItinerary = async () => {
     setLoading(true)
@@ -83,10 +88,19 @@ export function ItineraryStep({
   }
 
   useEffect(() => {
-    // Fetch affiliate ID
+    // Fetch affiliate config
     fetch('/api/affiliate/config')
       .then((res) => res.json())
-      .then((data) => setAffiliateId(data.affiliateId || ''))
+      .then((data) => {
+        if (data.allianceId && data.sid && data.tripSub1) {
+          setAffiliateConfig({
+            allianceId: data.allianceId,
+            sid: data.sid,
+            tripSub1: data.tripSub1,
+            tripSub3: data.tripSub3,
+          })
+        }
+      })
       .catch(() => {})
 
     if (!itinerary) {
