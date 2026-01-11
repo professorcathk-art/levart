@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import type { TripFocus } from '@/types'
+import type { TripFocus, TripPreferences } from '@/types'
 
 const TRIP_FOCUS_OPTIONS: { value: TripFocus; label: string }[] = [
   { value: 'shopping', label: 'Shopping' },
@@ -240,9 +240,110 @@ export function DestinationStep({ onSubmit }: DestinationStepProps) {
           </div>
         </div>
 
+        {/* Optional Preferences Section */}
+        <div className="border-t pt-6 space-y-4">
+          <h3 className="text-lg font-semibold text-gray-700">Additional Preferences (Optional)</h3>
+          
+          {/* Budget */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Budget</label>
+            <select
+              value={budget}
+              onChange={(e) => setBudget(e.target.value as TripPreferences['budget'])}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="flexible">Flexible</option>
+              <option value="budget">Budget-friendly</option>
+              <option value="moderate">Moderate</option>
+              <option value="luxury">Luxury</option>
+            </select>
+          </div>
+
+          {/* Cuisine Preferences */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Cuisine Preferences (optional)</label>
+            <input
+              type="text"
+              placeholder="e.g., Italian, Japanese, Local cuisine"
+              value={cuisinePreferences.join(', ')}
+              onChange={(e) => {
+                const cuisines = e.target.value.split(',').map(c => c.trim()).filter(c => c.length > 0)
+                setCuisinePreferences(cuisines)
+              }}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">Separate multiple cuisines with commas</p>
+          </div>
+
+          {/* Transport Preference */}
+          <div>
+            <label className="block text-sm font-medium mb-2">Preferred Transportation</label>
+            <select
+              value={transportPreference}
+              onChange={(e) => setTransportPreference(e.target.value as TripPreferences['transportPreference'])}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="flexible">Flexible</option>
+              <option value="walking">Walking</option>
+              <option value="public">Public Transport</option>
+              <option value="taxi">Taxi/Rideshare</option>
+              <option value="rental">Car Rental</option>
+            </select>
+          </div>
+
+          {/* Departure & Arrival Times */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Departure Time</label>
+              <select
+                value={departureTime}
+                onChange={(e) => setDepartureTime(e.target.value as TripPreferences['departureTime'])}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="flexible">Flexible</option>
+                <option value="morning">Morning (6 AM - 12 PM)</option>
+                <option value="afternoon">Afternoon (12 PM - 6 PM)</option>
+                <option value="evening">Evening (6 PM - 11 PM)</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Arrival Time</label>
+              <select
+                value={arrivalTime}
+                onChange={(e) => setArrivalTime(e.target.value as TripPreferences['arrivalTime'])}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="flexible">Flexible</option>
+                <option value="morning">Morning (6 AM - 12 PM)</option>
+                <option value="afternoon">Afternoon (12 PM - 6 PM)</option>
+                <option value="evening">Evening (6 PM - 11 PM)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Travel Radius */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Search Radius: {travelRadius} km
+            </label>
+            <input
+              type="range"
+              min="5"
+              max="50"
+              step="5"
+              value={travelRadius}
+              onChange={(e) => setTravelRadius(Number(e.target.value))}
+              className="w-full"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Attractions will be limited within this radius from your destination center
+            </p>
+          </div>
+        </div>
+
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-6"
         >
           Find Attractions
         </button>
