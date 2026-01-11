@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import type { ResponseCookie } from 'next/dist/compiled/@edge-runtime/cookies'
 
 export async function createClient() {
   const cookieStore = await cookies()
@@ -13,11 +12,15 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll()
         },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options?: Partial<ResponseCookie> }>) {
+        setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
+            cookiesToSet.forEach(({ name, value, options }) => {
+              if (options) {
+                cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2])
+              } else {
+                cookieStore.set(name, value)
+              }
+            })
           } catch {
             // The `setAll` method was called from a Server Component.
             // This can be ignored if you have middleware refreshing
