@@ -35,7 +35,7 @@ export function HowItWorks() {
             <span className="text-[#FF9A76]">How It</span>{' '}
             <span className="text-[#7ECCC4]">Works</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-[#2D2D2D] max-w-2xl mx-auto font-medium">
             Planning your perfect trip is as easy as 1, 2, 3
           </p>
         </div>
@@ -65,10 +65,10 @@ export function HowItWorks() {
                 <div className="text-5xl mb-4">{step.icon}</div>
 
                 {/* Title */}
-                <h3 className="text-2xl font-bold mb-3 text-gray-800">{step.title}</h3>
+                <h3 className="text-2xl font-bold mb-3 text-[#1A1A1A]">{step.title}</h3>
 
                 {/* Description */}
-                <p className="text-gray-600 leading-relaxed">{step.description}</p>
+                <p className="text-[#2D2D2D] leading-relaxed font-medium">{step.description}</p>
 
                 {/* Decorative corner */}
                 <div

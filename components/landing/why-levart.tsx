@@ -35,9 +35,9 @@ export function WhyLevart() {
               <span className="text-[#FF9A76]">Why</span>{' '}
               <span className="text-[#7ECCC4]">Levart?</span>
             </h2>
-            <p className="text-xl text-gray-700">
+            <p className="text-xl text-[#1A1A1A] font-medium">
               We believe travel planning should be{' '}
-              <span className="text-[#FFB86C] font-semibold">warm, easy, and fun</span>
+              <span className="text-[#FF9A76] font-bold">warm, easy, and fun</span>
             </p>
           </div>
 
@@ -51,8 +51,8 @@ export function WhyLevart() {
                 <div className="flex items-start gap-4">
                   <div className="text-4xl">{value.emoji}</div>
                   <div>
-                    <h3 className="text-xl font-bold mb-2 text-gray-800">{value.title}</h3>
-                    <p className="text-gray-600">{value.description}</p>
+                    <h3 className="text-xl font-bold mb-2 text-[#1A1A1A]">{value.title}</h3>
+                    <p className="text-[#2D2D2D] font-medium">{value.description}</p>
                   </div>
                 </div>
               </div>

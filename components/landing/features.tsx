@@ -50,7 +50,7 @@ export function Features() {
             <span className="text-[#FF9A76]">Everything You</span>{' '}
             <span className="text-[#7ECCC4]">Need</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-[#2D2D2D] max-w-2xl mx-auto font-medium">
             All the tools to plan your perfect adventure
           </p>
         </div>
@@ -71,10 +71,10 @@ export function Features() {
               <div className="text-4xl mb-4">{feature.icon}</div>
 
               {/* Title */}
-              <h3 className="text-xl font-bold mb-2 text-gray-800">{feature.title}</h3>
+              <h3 className="text-xl font-bold mb-2 text-[#1A1A1A]">{feature.title}</h3>
 
               {/* Description */}
-              <p className="text-gray-600 text-sm leading-relaxed">{feature.description}</p>
+              <p className="text-[#2D2D2D] text-sm leading-relaxed font-medium">{feature.description}</p>
 
               {/* Color accent */}
               <div
