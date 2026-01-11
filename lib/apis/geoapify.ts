@@ -86,33 +86,78 @@ export async function searchAttractions(
     )
 
     if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Geoapify API error:', response.status, errorText)
       throw new Error(`Geoapify API error: ${response.statusText}`)
     }
 
     const data = (await response.json()) as {
-      features: Array<{
+      features?: Array<{
         properties: {
           name: string
-          categories: string
+          categories?: string
           lat: number
           lon: number
           formatted?: string
+          address_line2?: string
         }
         geometry: {
           coordinates: [number, number]
         }
       }>
     }
+    
     const features = data.features || []
+    
+    if (features.length === 0) {
+      console.warn('No attractions found for:', destination, 'with categories:', categoriesParam)
+      // Try a broader search without categories as fallback
+      const fallbackParams = new URLSearchParams({
+        text: destination,
+        categories: 'tourism,entertainment,commercial,catering',
+        limit: '50',
+        apiKey,
+      })
+      
+      const fallbackResponse = await fetch(
+        `${GEOAPIFY_BASE_URL}/search?${fallbackParams.toString()}`
+      )
+      
+      if (fallbackResponse.ok) {
+        const fallbackData = (await fallbackResponse.json()) as {
+          features?: Array<{
+            properties: {
+              name: string
+              categories?: string
+              lat: number
+              lon: number
+              formatted?: string
+              address_line2?: string
+            }
+            geometry: {
+              coordinates: [number, number]
+            }
+          }>
+        }
+        return (fallbackData.features || []).map((feature) => ({
+          id: `${feature.properties.lat}-${feature.properties.lon}-${Math.random()}`,
+          name: feature.properties.name,
+          category: feature.properties.categories || 'unknown',
+          lat: feature.properties.lat,
+          lon: feature.properties.lon,
+          address: feature.properties.formatted || feature.properties.address_line2,
+        }))
+      }
+    }
 
     return features.map((feature) => {
       return {
-        id: `${feature.properties.lat}-${feature.properties.lon}`,
+        id: `${feature.properties.lat}-${feature.properties.lon}-${Math.random()}`,
         name: feature.properties.name,
         category: feature.properties.categories || 'unknown',
         lat: feature.properties.lat,
         lon: feature.properties.lon,
-        address: feature.properties.formatted,
+        address: feature.properties.formatted || feature.properties.address_line2,
       }
     })
   } catch (error) {

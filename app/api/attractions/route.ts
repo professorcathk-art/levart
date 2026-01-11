@@ -14,11 +14,13 @@ export async function POST(request: NextRequest) {
     }
 
     const attractions = await searchAttractions(destination, focus)
+    console.log(`Found ${attractions.length} attractions for ${destination}`)
     return NextResponse.json({ attractions })
   } catch (error) {
     console.error('Error fetching attractions:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     return NextResponse.json(
-      { error: 'Failed to fetch attractions' },
+      { error: `Failed to fetch attractions: ${errorMessage}`, attractions: [] },
       { status: 500 }
     )
   }

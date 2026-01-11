@@ -36,12 +36,18 @@ export function AttractionsStep({
       }
 
       const data = await response.json()
-      setAttractions(data.attractions || [])
-      // Auto-select first 10 attractions
-      const autoSelected = new Set<string>(
-        (data.attractions || []).slice(0, 10).map((a: Attraction) => a.id)
-      )
-      setSelectedIds(autoSelected)
+      const attractionsList = data.attractions || []
+      
+      if (attractionsList.length === 0 && data.error) {
+        setError(`No attractions found. ${data.error}`)
+      } else {
+        setAttractions(attractionsList)
+        // Auto-select first 10 attractions
+        const autoSelected = new Set<string>(
+          attractionsList.slice(0, 10).map((a: Attraction) => a.id)
+        )
+        setSelectedIds(autoSelected)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
