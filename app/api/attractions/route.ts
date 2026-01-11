@@ -6,7 +6,7 @@ import { searchAttractions as searchGeoapify } from '@/lib/apis/geoapify'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { destination, focus } = body
+    const { destination, focus, travelRadius } = body
 
     if (!destination || !focus || !Array.isArray(focus)) {
       return NextResponse.json(
@@ -15,13 +15,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const radiusKm = travelRadius && typeof travelRadius === 'number' ? travelRadius : 20
+
     // Try Google Places API first (better coverage)
     let attractions: Awaited<ReturnType<typeof searchGooglePlaces>> = []
     let error: string | null = null
 
     try {
-      attractions = await searchGooglePlaces(destination, focus)
-      console.log(`Google Places found ${attractions.length} attractions for ${destination}`)
+      attractions = await searchGooglePlaces(destination, focus, radiusKm)
+      console.log(`Google Places found ${attractions.length} attractions for ${destination} within ${radiusKm}km`)
     } catch (googleError) {
       console.warn('Google Places API failed, trying Geoapify fallback:', googleError)
       error = googleError instanceof Error ? googleError.message : 'Google Places API error'

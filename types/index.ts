@@ -16,6 +16,13 @@ export interface Attraction {
   address?: string
   description?: string
   photoReference?: string
+  rating?: number
+  userRatingsTotal?: number
+  priceLevel?: number // 0-4, where 0 is free and 4 is very expensive
+  openingHours?: string[]
+  website?: string
+  phoneNumber?: string
+  placeId?: string // Google Place ID for deduplication
 }
 
 export interface RoutePoint {
@@ -99,4 +106,13 @@ export interface WeatherForecast {
   temperature: number
   condition: string
   description: string
+}
+
+export interface TripPreferences {
+  budget?: 'budget' | 'moderate' | 'luxury' | 'flexible'
+  cuisinePreferences?: string[] // e.g., ['Italian', 'Japanese', 'Local']
+  transportPreference?: 'walking' | 'public' | 'taxi' | 'rental' | 'flexible'
+  departureTime?: 'morning' | 'afternoon' | 'evening' | 'flexible'
+  arrivalTime?: 'morning' | 'afternoon' | 'evening' | 'flexible'
+  travelRadius?: number // in kilometers, default 20km
 }

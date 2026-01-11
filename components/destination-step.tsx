@@ -19,7 +19,8 @@ interface DestinationStepProps {
     focus: TripFocus[],
     checkIn: string,
     checkOut: string,
-    days: number
+    days: number,
+    preferences: TripPreferences
   ) => void
 }
 
@@ -36,6 +37,14 @@ export function DestinationStep({ onSubmit }: DestinationStepProps) {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
+  
+  // New preference fields
+  const [budget, setBudget] = useState<TripPreferences['budget']>('flexible')
+  const [cuisinePreferences, setCuisinePreferences] = useState<string[]>([])
+  const [transportPreference, setTransportPreference] = useState<TripPreferences['transportPreference']>('flexible')
+  const [departureTime, setDepartureTime] = useState<TripPreferences['departureTime']>('flexible')
+  const [arrivalTime, setArrivalTime] = useState<TripPreferences['arrivalTime']>('flexible')
+  const [travelRadius, setTravelRadius] = useState(20)
 
   // Update checkOut when checkIn or dayCount changes
   useEffect(() => {
@@ -92,7 +101,15 @@ export function DestinationStep({ onSubmit }: DestinationStepProps) {
       alert('Please select a destination and at least one trip focus')
       return
     }
-    onSubmit(destination, selectedFocus, checkIn, checkOut, dayCount)
+    const preferences: TripPreferences = {
+      budget,
+      cuisinePreferences: cuisinePreferences.length > 0 ? cuisinePreferences : undefined,
+      transportPreference,
+      departureTime,
+      arrivalTime,
+      travelRadius,
+    }
+    onSubmit(destination, selectedFocus, checkIn, checkOut, dayCount, preferences)
   }
 
   const toggleFocus = (focus: TripFocus) => {

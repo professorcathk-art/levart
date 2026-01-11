@@ -13,9 +13,71 @@ const FOCUS_TO_TYPES: Record<string, string[]> = {
   family: ['amusement_park', 'zoo', 'aquarium', 'park', 'tourist_attraction'],
 }
 
+// Helper function to calculate distance between two coordinates (Haversine formula)
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371 // Earth's radius in km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180
+  const dLon = ((lon2 - lon1) * Math.PI) / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
+// Deduplicate attractions by grouping similar names and locations
+function deduplicateAttractions(attractions: Attraction[]): Attraction[] {
+  const seen = new Map<string, Attraction>()
+  
+  for (const attraction of attractions) {
+    const key = attraction.placeId || attraction.id
+    const normalizedName = attraction.name.toLowerCase().trim()
+    
+    // Check if we've seen a similar attraction
+    let found = false
+    for (const [existingKey, existing] of seen.entries()) {
+      const existingName = existing.name.toLowerCase().trim()
+      const distance = calculateDistance(
+        attraction.lat,
+        attraction.lon,
+        existing.lat,
+        existing.lon
+      )
+      
+      // If names are very similar and locations are close (< 500m), consider them duplicates
+      if (
+        (normalizedName === existingName ||
+          normalizedName.includes(existingName) ||
+          existingName.includes(normalizedName)) &&
+        distance < 0.5
+      ) {
+        // Keep the one with better rating or more reviews
+        if (
+          (attraction.rating || 0) > (existing.rating || 0) ||
+          (attraction.userRatingsTotal || 0) > (existing.userRatingsTotal || 0)
+        ) {
+          seen.set(existingKey, attraction)
+        }
+        found = true
+        break
+      }
+    }
+    
+    if (!found) {
+      seen.set(key, attraction)
+    }
+  }
+  
+  return Array.from(seen.values())
+}
+
 export async function searchAttractions(
   destination: string,
-  focus: string[]
+  focus: string[],
+  radiusKm: number = 20
 ): Promise<Attraction[]> {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
   if (!apiKey) {
@@ -72,7 +134,7 @@ export async function searchAttractions(
         new URLSearchParams({
           query: `${types.size > 0 ? Array.from(types).slice(0, 3).join(' ') + ' ' : ''}in ${destination}`,
           location: `${lat},${lng}`,
-          radius: '50000', // 50km radius
+          radius: (radiusKm * 1000).toString(), // Convert km to meters
           key: apiKey,
         })
     )
@@ -94,9 +156,16 @@ export async function searchAttractions(
         }
         formatted_address?: string
         rating?: number
+        user_ratings_total?: number
+        price_level?: number
+        opening_hours?: {
+          weekday_text?: string[]
+        }
         photos?: Array<{
           photo_reference: string
         }>
+        international_phone_number?: string
+        website?: string
       }>
       status: string
     }
@@ -117,16 +186,39 @@ export async function searchAttractions(
           }
           return true
         })
-        .slice(0, 50) // Limit to 50 results
-        .map((place) => ({
-          id: place.place_id,
-          name: place.name,
-          category: place.types[0] || 'unknown',
-          lat: place.geometry.location.lat,
-          lon: place.geometry.location.lng,
-          address: place.formatted_address,
-          photoReference: place.photos && place.photos.length > 0 ? place.photos[0].photo_reference : undefined,
-        }))
+        .slice(0, 60) // Get more results before deduplication
+        .map((place) => {
+          // Calculate distance from center to filter by radius
+          const distance = calculateDistance(
+            lat,
+            lng,
+            place.geometry.location.lat,
+            place.geometry.location.lng
+          )
+          
+          // Filter by radius (don't cross city borders)
+          if (distance > radiusKm) {
+            return null
+          }
+          
+          return {
+            id: place.place_id,
+            placeId: place.place_id,
+            name: place.name,
+            category: place.types[0] || 'unknown',
+            lat: place.geometry.location.lat,
+            lon: place.geometry.location.lng,
+            address: place.formatted_address,
+            photoReference: place.photos && place.photos.length > 0 ? place.photos[0].photo_reference : undefined,
+            rating: place.rating,
+            userRatingsTotal: place.user_ratings_total,
+            priceLevel: place.price_level,
+            openingHours: place.opening_hours?.weekday_text,
+            phoneNumber: place.international_phone_number,
+            website: place.website,
+          } as Attraction
+        })
+        .filter((a): a is Attraction => a !== null)
     }
 
     // If we didn't get enough results, try Nearby Search as fallback
@@ -135,7 +227,7 @@ export async function searchAttractions(
         `${GOOGLE_PLACES_BASE_URL}/nearbysearch/json?` +
           new URLSearchParams({
             location: `${lat},${lng}`,
-            radius: '50000',
+            radius: (radiusKm * 1000).toString(),
             type: Array.from(types)[0], // Use first type
             key: apiKey,
           })
@@ -161,15 +253,31 @@ export async function searchAttractions(
 
         if (nearbyData.status === 'OK' && nearbyData.results) {
           const nearbyAttractions = nearbyData.results
-            .slice(0, 50 - attractions.length)
-            .map((place) => ({
-              id: place.place_id,
-              name: place.name,
-              category: place.types[0] || 'unknown',
-              lat: place.geometry.location.lat,
-              lon: place.geometry.location.lng,
-              address: place.vicinity,
-            }))
+            .slice(0, 60 - attractions.length)
+            .map((place) => {
+              const distance = calculateDistance(
+                lat,
+                lng,
+                place.geometry.location.lat,
+                place.geometry.location.lng
+              )
+              
+              if (distance > radiusKm) {
+                return null
+              }
+              
+              return {
+                id: place.place_id,
+                placeId: place.place_id,
+                name: place.name,
+                category: place.types[0] || 'unknown',
+                lat: place.geometry.location.lat,
+                lon: place.geometry.location.lng,
+                address: place.vicinity,
+                rating: place.rating,
+              } as Attraction
+            })
+            .filter((a): a is Attraction => a !== null)
 
           // Merge and deduplicate by place_id
           const existingIds = new Set(attractions.map((a) => a.id))
@@ -179,8 +287,18 @@ export async function searchAttractions(
       }
     }
 
-    console.log(`Google Places returned ${attractions.length} attractions for ${destination}`)
-    return attractions
+    // Deduplicate attractions
+    const deduplicated = deduplicateAttractions(attractions)
+    
+    // Sort by rating and review count (most popular first)
+    const sorted = deduplicated.sort((a, b) => {
+      const aScore = (a.rating || 0) * (a.userRatingsTotal || 0)
+      const bScore = (b.rating || 0) * (b.userRatingsTotal || 0)
+      return bScore - aScore
+    })
+    
+    console.log(`Google Places returned ${sorted.length} unique attractions for ${destination} (from ${attractions.length} total)`)
+    return sorted.slice(0, 50) // Return top 50 after deduplication
   } catch (error) {
     console.error('Error fetching attractions from Google Places:', error)
     throw error

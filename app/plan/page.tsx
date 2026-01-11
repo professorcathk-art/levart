@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { DestinationStep } from '@/components/destination-step'
 import { AttractionsStep } from '@/components/attractions-step'
 import { ItineraryStep } from '@/components/itinerary-step'
-import type { Attraction, TripFocus, Itinerary } from '@/types'
+import type { Attraction, TripFocus, Itinerary, TripPreferences } from '@/types'
 import Link from 'next/link'
 
 type Step = 'destination' | 'attractions' | 'itinerary'
@@ -19,19 +19,22 @@ export default function PlanPage() {
   const [attractions, setAttractions] = useState<Attraction[]>([])
   const [selectedAttractions, setSelectedAttractions] = useState<Attraction[]>([])
   const [itinerary, setItinerary] = useState<Itinerary | null>(null)
+  const [preferences, setPreferences] = useState<TripPreferences>({})
 
   const handleDestinationSubmit = (
     dest: string,
     focus: TripFocus[],
     checkInDate: string,
     checkOutDate: string,
-    days: number
+    days: number,
+    prefs: TripPreferences
   ) => {
     setDestination(dest)
     setTripFocus(focus)
     setCheckIn(checkInDate)
     setCheckOut(checkOutDate)
     setDayCount(days)
+    setPreferences(prefs)
     setStep('attractions')
   }
 
@@ -65,6 +68,7 @@ export default function PlanPage() {
             <AttractionsStep
               destination={destination}
               tripFocus={tripFocus}
+              travelRadius={preferences.travelRadius}
               onSubmit={handleAttractionsSubmit}
               onBack={() => setStep('destination')}
             />

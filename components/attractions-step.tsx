@@ -6,6 +6,7 @@ import type { Attraction, TripFocus } from '@/types'
 interface AttractionsStepProps {
   destination: string
   tripFocus: TripFocus[]
+  travelRadius?: number
   onSubmit: (attractions: Attraction[], selected: Attraction[]) => void
   onBack: () => void
 }
@@ -13,6 +14,7 @@ interface AttractionsStepProps {
 export function AttractionsStep({
   destination,
   tripFocus,
+  travelRadius = 20,
   onSubmit,
   onBack,
 }: AttractionsStepProps) {
@@ -34,7 +36,7 @@ export function AttractionsStep({
       const response = await fetch('/api/attractions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ destination, focus: tripFocus }),
+        body: JSON.stringify({ destination, focus: tripFocus, travelRadius }),
       })
 
       if (!response.ok) {
@@ -135,10 +137,36 @@ export function AttractionsStep({
               className="mt-1 mr-3"
             />
             <div className="flex-1">
-              <div className="font-semibold">{attraction.name}</div>
-              <div className="text-sm text-gray-500">{attraction.category}</div>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <div className="font-semibold">{attraction.name}</div>
+                  <div className="text-sm text-gray-500">{attraction.category}</div>
+                </div>
+                {attraction.rating && (
+                  <div className="flex items-center gap-1 text-sm">
+                    <span className="text-yellow-500">⭐</span>
+                    <span className="font-semibold">{attraction.rating.toFixed(1)}</span>
+                    {attraction.userRatingsTotal && (
+                      <span className="text-gray-500 text-xs">
+                        ({attraction.userRatingsTotal.toLocaleString()})
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
               {attraction.address && (
-                <div className="text-xs text-gray-400">{attraction.address}</div>
+                <div className="text-xs text-gray-400 mt-1">{attraction.address}</div>
+              )}
+              {attraction.priceLevel !== undefined && (
+                <div className="text-xs text-gray-500 mt-1">
+                  Price: {'$'.repeat(attraction.priceLevel + 1)}
+                  {attraction.priceLevel === 0 && ' (Free)'}
+                </div>
+              )}
+              {attraction.openingHours && attraction.openingHours.length > 0 && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {attraction.openingHours[0]}
+                </div>
               )}
             </div>
           </label>
