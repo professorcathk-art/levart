@@ -1,0 +1,26 @@
+---
+name: techspec
+description: This is a new rule
+---
+Technical preferences:
+
+- Always use kebab-case for component names (e.g my-component.tsx)
+- Favour using React Server Components and Next.js SSR features where possible
+- Minimize the usage of client components ('use client') to small, isolated components
+- Always add loading and error states to data fetching components
+- Implement error handling and error logging
+- Use semantic HTML elements where possible
+
+[NEW - from official sources]
+- Enable strict TypeScript mode (strict: true in tsconfig.json)  [Official TS best practice]
+- Never use 'any' type; use 'unknown' with proper narrowing    [Official TS best practice]
+- Return proper HTTP status codes from API routes               [Official REST standard]
+- Use environment variables for all external service keys       [Official security practice]
+
+General preferences:
+
+[Keep all your original general preferences + ADD:]
+- Remain flexible: these rules guide best practices but should not restrict 
+  implementing new creative features or patterns if technically sound and 
+  user-requested
+- When uncertain, explain trade-offs and ask for clarification
