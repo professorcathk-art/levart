@@ -123,7 +123,7 @@ export async function searchAttractions(
       })
       
       const fallbackResponse = await fetch(
-        `${GEOAPIFY_BASE_URL}/search?${fallbackParams.toString()}`
+        `${GEOAPIFY_BASE_URL}?${fallbackParams.toString()}`
       )
       
       if (fallbackResponse.ok) {
