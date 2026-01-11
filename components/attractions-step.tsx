@@ -18,8 +18,14 @@ export function AttractionsStep({
 }: AttractionsStepProps) {
   const [attractions, setAttractions] = useState<Attraction[]>([])
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true) // Start with loading true
   const [error, setError] = useState<string | null>(null)
+
+  // Fetch attractions automatically when component mounts
+  useEffect(() => {
+    fetchAttractions()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run once on mount
 
   const fetchAttractions = async () => {
     setLoading(true)
