@@ -294,8 +294,8 @@ export function ItineraryStep({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <a
               href={
-                affiliateId
-                  ? `https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkOut || checkIn}&affiliateId=${affiliateId}`
+                affiliateConfig
+                  ? `https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkOut || checkIn}&Allianceid=${affiliateConfig.allianceId}&SID=${affiliateConfig.sid}&trip_sub1=${affiliateConfig.tripSub1}${affiliateConfig.tripSub3 ? `&trip_sub3=${affiliateConfig.tripSub3}` : ''}`
                   : `https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkOut || checkIn}`
               }
               target="_blank"
@@ -307,8 +307,8 @@ export function ItineraryStep({
             </a>
             <a
               href={
-                affiliateId
-                  ? `https://www.trip.com/flights?to=${encodeURIComponent(destination)}&departureDate=${checkIn}&affiliateId=${affiliateId}`
+                affiliateConfig
+                  ? `https://www.trip.com/flights?to=${encodeURIComponent(destination)}&departureDate=${checkIn}&Allianceid=${affiliateConfig.allianceId}&SID=${affiliateConfig.sid}&trip_sub1=${affiliateConfig.tripSub1}${affiliateConfig.tripSub3 ? `&trip_sub3=${affiliateConfig.tripSub3}` : ''}`
                   : `https://www.trip.com/flights?to=${encodeURIComponent(destination)}&departureDate=${checkIn}`
               }
               target="_blank"
