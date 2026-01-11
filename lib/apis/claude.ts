@@ -57,21 +57,36 @@ Generate a JSON array with ${dayCount} day objects. Each day object should have:
   "activities": [
     {
       "time": "morning" | "afternoon" | "evening",
-      "activity": string,
-      "location": string,
-      "duration": string (optional),
-      "cost": string (optional)
+      "activity": string (attraction/activity name),
+      "location": string (address or area),
+      "duration": string (e.g., "2 hours"),
+      "cost": string (e.g., "$10" or "Free"),
+      "distance": string (e.g., "1.2 km"),
+      "type": "attraction" | "restaurant" | "shopping" | "nightlife" | "nature" | "culture",
+      "address": string (full address),
+      "openingHours": string (e.g., "9 AM - 6 PM"),
+      "difficulty": "easy" | "moderate" | "hard",
+      "crowdLevel": "low" | "medium" | "high",
+      "accessibility": boolean,
+      "popular": boolean,
+      "free": boolean,
+      "tips": string[] (2-3 pro tips),
+      "nearbyAlternatives": string[] (1-2 alternatives)
     }
   ],
   "restaurants": [
     {
       "name": string,
-      "cuisine": string (optional),
-      "cost": string (optional)
+      "cuisine": string (e.g., "Italian", "Local"),
+      "cost": string (e.g., "$20-30"),
+      "address": string
     }
   ],
-  "transport": string[],
-  "estimatedCost": string
+  "transport": string[] (e.g., ["Walking", "Subway", "Taxi"]),
+  "estimatedCost": string (e.g., "$150"),
+  "totalDistance": number (kilometers),
+  "totalDuration": number (minutes),
+  "difficulty": "easy" | "moderate" | "hard"
 }
 
 Return ONLY valid JSON, no markdown, no code blocks.`
