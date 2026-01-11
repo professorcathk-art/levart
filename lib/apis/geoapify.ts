@@ -44,8 +44,8 @@ export async function searchAttractions(
     )
 
     let searchParams: URLSearchParams
-    if (autocompleteResponse.ok) {
-      const autocompleteData = (await autocompleteResponse.json()) as {
+    if (geocodeResponse.ok) {
+      const geocodeData = (await geocodeResponse.json()) as {
         features?: Array<{
           properties: {
             lat: number
@@ -54,8 +54,9 @@ export async function searchAttractions(
         }>
       }
       
-      if (autocompleteData.features && autocompleteData.features.length > 0) {
-        const coords = autocompleteData.features[0].properties
+      if (geocodeData.features && geocodeData.features.length > 0) {
+        const coords = geocodeData.features[0].properties
+        console.log(`Geocoded ${destination} to: ${coords.lat}, ${coords.lon}`)
         // Use coordinates-based search for better results
         searchParams = new URLSearchParams({
           categories: categoriesParam,
@@ -83,7 +84,7 @@ export async function searchAttractions(
     }
 
     const response = await fetch(
-      `${GEOAPIFY_BASE_URL}/search?${searchParams.toString()}`
+      `${GEOAPIFY_BASE_URL}?${searchParams.toString()}`
     )
 
     if (!response.ok) {
