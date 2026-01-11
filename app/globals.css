@@ -55,6 +55,39 @@
       transition-duration: 0.01ms !important;
     }
   }
+  
+  /* Print styles for PDF export */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    
+    @page {
+      size: A4;
+      margin: 20mm;
+    }
+    
+    .page-break {
+      page-break-after: always;
+    }
+    
+    .print-area {
+      visibility: visible;
+    }
+    
+    body {
+      background: white;
+      color: black;
+    }
+    
+    /* Hide interactive elements */
+    button,
+    a,
+    .hover\:shadow-xl,
+    .hover\:scale-105 {
+      display: none !important;
+    }
+  }
 }
 
 :root {

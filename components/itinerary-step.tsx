@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { MapComponent } from '@/components/map-component'
+import { EnhancedDayCard } from '@/components/itinerary/enhanced-day-card'
+import { PDFExport } from '@/components/itinerary/pdf-export'
 import type { Attraction, TripFocus, Itinerary } from '@/types'
 
 interface ItineraryStepProps {
@@ -169,165 +171,77 @@ export function ItineraryStep({
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-2xl font-bold">{destination}</h2>
-            <p className="text-gray-600">
+            <h2 className="text-3xl font-bold text-[#FF9A76]">{destination}</h2>
+            <p className="text-gray-600 text-lg">
               {dayCount} days • {checkIn}
             </p>
           </div>
           <button
             onClick={onBack}
-            className="text-gray-600 hover:text-gray-900"
+            className="text-gray-600 hover:text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
           >
             ← Back
           </button>
         </div>
 
-        <div className="mb-6">
+        {/* Map */}
+        <div className="mb-6 rounded-xl overflow-hidden shadow-md">
           <MapComponent
             attractions={selectedAttractions}
             routePolyline={itinerary.route.polyline}
           />
         </div>
+      </div>
 
-        <div className="space-y-6">
-          {itinerary.days.map((day) => (
-            <div
-              key={day.day}
-              className="border border-gray-200 rounded-lg p-6"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold">Day {day.day}</h3>
-                  <p className="text-sm text-gray-500">{day.date}</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-semibold">
-                    {day.weather.temperature}°C
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {day.weather.description}
-                  </div>
-                </div>
-              </div>
+      {/* Enhanced Itinerary Display */}
+      <div className="space-y-8">
+        {itinerary.days.map((day, index) => (
+          <EnhancedDayCard
+            key={day.day}
+            day={day}
+            destination={destination}
+            dayIndex={index}
+          />
+        ))}
+      </div>
 
-              <div className="space-y-4">
-                {['morning', 'afternoon', 'evening'].map((time) => {
-                  const activities = day.activities.filter(
-                    (a) => a.time === time
-                  )
-                  if (activities.length === 0) return null
-                  return (
-                    <div key={time}>
-                      <h4 className="font-semibold capitalize mb-2">{time}</h4>
-                      <ul className="space-y-2 ml-4">
-                        {activities.map((activity, idx) => (
-                          <li key={idx} className="text-gray-700">
-                            <span className="font-medium">{activity.activity}</span>
-                            {activity.location && (
-                              <span className="text-gray-500">
-                                {' '}
-                                • {activity.location}
-                              </span>
-                            )}
-                            {activity.duration && (
-                              <span className="text-gray-500">
-                                {' '}
-                                • {activity.duration}
-                              </span>
-                            )}
-                            {activity.cost && (
-                              <span className="text-gray-500">
-                                {' '}
-                                • {activity.cost}
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )
-                })}
+      {/* PDF Export Component */}
+      <PDFExport itinerary={itinerary} />
 
-                {day.restaurants.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Restaurants</h4>
-                    <ul className="space-y-1 ml-4">
-                      {day.restaurants.map((restaurant, idx) => (
-                        <li key={idx} className="text-gray-700">
-                          {restaurant.name}
-                          {restaurant.cuisine && (
-                            <span className="text-gray-500">
-                              {' '}
-                              • {restaurant.cuisine}
-                            </span>
-                          )}
-                          {restaurant.cost && (
-                            <span className="text-gray-500">
-                              {' '}
-                              • {restaurant.cost}
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {day.transport.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Transport</h4>
-                    <ul className="space-y-1 ml-4">
-                      {day.transport.map((t, idx) => (
-                        <li key={idx} className="text-gray-700">{t}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-
-                {day.estimatedCost && (
-                  <div className="pt-2 border-t border-gray-200">
-                    <span className="font-semibold">Estimated Cost: </span>
-                    <span className="text-gray-700">{day.estimatedCost}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <h3 className="text-xl font-bold mb-4">Book Your Trip</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <a
-              href={
-                affiliateConfig
-                  ? `https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkOut || checkIn}&Allianceid=${affiliateConfig.allianceId}&SID=${affiliateConfig.sid}&trip_sub1=${affiliateConfig.tripSub1}${affiliateConfig.tripSub3 ? `&trip_sub3=${affiliateConfig.tripSub3}` : ''}`
-                  : `https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkOut || checkIn}`
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => handleAffiliateClick('hotel')}
-              className="block px-6 py-4 bg-blue-600 text-white rounded-lg text-center font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Book Hotels on Trip.com
-            </a>
-            <a
-              href={
-                affiliateConfig
-                  ? `https://www.trip.com/flights?to=${encodeURIComponent(destination)}&departureDate=${checkIn}&Allianceid=${affiliateConfig.allianceId}&SID=${affiliateConfig.sid}&trip_sub1=${affiliateConfig.tripSub1}${affiliateConfig.tripSub3 ? `&trip_sub3=${affiliateConfig.tripSub3}` : ''}`
-                  : `https://www.trip.com/flights?to=${encodeURIComponent(destination)}&departureDate=${checkIn}`
-              }
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => handleAffiliateClick('flight')}
-              className="block px-6 py-4 bg-green-600 text-white rounded-lg text-center font-semibold hover:bg-green-700 transition-colors"
-            >
-              Book Flights on Trip.com
-            </a>
-          </div>
+      {/* Booking CTAs */}
+      <div className="bg-white rounded-lg shadow-lg p-6 md:p-8 mt-8">
+        <h3 className="text-2xl font-bold mb-6 text-[#FF9A76]">Book Your Trip</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <a
+            href={
+              affiliateConfig
+                ? `https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkOut || checkIn}&Allianceid=${affiliateConfig.allianceId}&SID=${affiliateConfig.sid}&trip_sub1=${affiliateConfig.tripSub1}${affiliateConfig.tripSub3 ? `&trip_sub3=${affiliateConfig.tripSub3}` : ''}`
+                : `https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkOut || checkIn}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => handleAffiliateClick('hotel')}
+            className="block px-6 py-4 bg-gradient-to-r from-[#FF9A76] to-[#FFB86C] text-white rounded-xl text-center font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+          >
+            🏨 Book Hotels on Trip.com
+          </a>
+          <a
+            href={
+              affiliateConfig
+                ? `https://www.trip.com/flights?to=${encodeURIComponent(destination)}&departureDate=${checkIn}&Allianceid=${affiliateConfig.allianceId}&SID=${affiliateConfig.sid}&trip_sub1=${affiliateConfig.tripSub1}${affiliateConfig.tripSub3 ? `&trip_sub3=${affiliateConfig.tripSub3}` : ''}`
+                : `https://www.trip.com/flights?to=${encodeURIComponent(destination)}&departureDate=${checkIn}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => handleAffiliateClick('flight')}
+            className="block px-6 py-4 bg-gradient-to-r from-[#7ECCC4] to-[#87CEEB] text-white rounded-xl text-center font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+          >
+            ✈️ Book Flights on Trip.com
+          </a>
         </div>
       </div>
     </div>

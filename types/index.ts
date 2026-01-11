@@ -36,12 +36,24 @@ export interface DayActivity {
   location: string
   duration?: string
   cost?: string
+  distance?: string
+  type?: 'attraction' | 'restaurant' | 'shopping' | 'nightlife' | 'nature' | 'culture'
+  photo?: string
+  address?: string
+  openingHours?: string
+  difficulty?: 'easy' | 'moderate' | 'hard'
+  crowdLevel?: 'low' | 'medium' | 'high'
+  accessibility?: boolean
+  popular?: boolean
+  free?: boolean
+  tips?: string[]
+  nearbyAlternatives?: string[]
 }
 
 export interface DayItinerary {
   day: number
   date: string
-  weather: {
+  weather?: {
     temperature: number
     condition: string
     description: string
@@ -51,9 +63,15 @@ export interface DayItinerary {
     name: string
     cuisine?: string
     cost?: string
+    photo?: string
+    address?: string
   }>
   transport: string[]
   estimatedCost: string
+  totalDistance?: number
+  totalDuration?: number
+  difficulty?: 'easy' | 'moderate' | 'hard'
+  destinationPhoto?: string
 }
 
 export interface Itinerary {
