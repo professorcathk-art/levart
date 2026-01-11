@@ -108,13 +108,15 @@ export async function searchAttractions(
     }
     
     const features = data.features || []
+    console.log(`Geoapify returned ${features.length} features for ${destination}`)
     
     if (features.length === 0) {
       console.warn('No attractions found for:', destination, 'with categories:', categoriesParam)
-      // Try a broader search without categories as fallback
+      console.warn('Trying fallback search with broader categories...')
+      // Try a broader search with tourism categories
       const fallbackParams = new URLSearchParams({
         text: destination,
-        categories: 'tourism,entertainment,commercial,catering',
+        categories: 'tourism.sights,tourism.attraction,entertainment,commercial,catering',
         limit: '50',
         apiKey,
       })
