@@ -55,12 +55,14 @@ export function EnhancedDayCard({ day, destination, dayIndex }: EnhancedDayCardP
   const [loadingPhotos, setLoadingPhotos] = useState(true)
 
   useEffect(() => {
-    // Fetch destination photo
-    fetch(`/api/unsplash/search?q=${encodeURIComponent(destination)}`)
+    // Fetch destination photo using Google Places Photos
+    fetch(`/api/photos/search?q=${encodeURIComponent(destination)}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.photo) {
-          setDestinationPhoto(data.photo.urls.regular)
+          setDestinationPhoto(data.photo)
+        } else if (data.placeholder) {
+          setDestinationPhoto(data.placeholder)
         }
         setLoadingPhotos(false)
       })
@@ -69,9 +71,9 @@ export function EnhancedDayCard({ day, destination, dayIndex }: EnhancedDayCardP
 
   const getActivityPhoto = async (activityName: string) => {
     try {
-      const res = await fetch(`/api/unsplash/search?q=${encodeURIComponent(activityName)}`)
+      const res = await fetch(`/api/photos/search?q=${encodeURIComponent(activityName)}`)
       const data = await res.json()
-      return data.photo?.urls?.regular || null
+      return data.photo || data.placeholder || null
     } catch {
       return null
     }
@@ -212,11 +214,13 @@ function ActivityCard({ activity, index }: { activity: any; index: number }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`/api/unsplash/search?q=${encodeURIComponent(activity.activity)}`)
+    fetch(`/api/photos/search?q=${encodeURIComponent(activity.activity)}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.photo) {
-          setPhoto(data.photo.urls.regular)
+          setPhoto(data.photo)
+        } else if (data.placeholder) {
+          setPhoto(data.placeholder)
         }
         setLoading(false)
       })
@@ -375,11 +379,13 @@ function RestaurantCard({ restaurant }: { restaurant: any }) {
   const [photo, setPhoto] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch(`/api/unsplash/search?q=${encodeURIComponent(restaurant.name + ' restaurant')}`)
+    fetch(`/api/photos/search?q=${encodeURIComponent(restaurant.name + ' restaurant')}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.photo) {
-          setPhoto(data.photo.urls.regular)
+          setPhoto(data.photo)
+        } else if (data.placeholder) {
+          setPhoto(data.placeholder)
         }
       })
       .catch(() => {})

@@ -182,3 +182,66 @@ export async function searchAttractions(
     throw error
   }
 }
+
+export async function getPlacePhoto(photoReference: string, maxWidth = 800): Promise<string | null> {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+  if (!apiKey) {
+    return null
+  }
+
+  try {
+    const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?` +
+      new URLSearchParams({
+        maxwidth: maxWidth.toString(),
+        photo_reference: photoReference,
+        key: apiKey,
+      })
+    return photoUrl
+  } catch (error) {
+    console.error('Error getting place photo:', error)
+    return null
+  }
+}
+
+export async function searchPlacePhotos(query: string): Promise<string | null> {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+  if (!apiKey) {
+    return null
+  }
+
+  try {
+    // Use Text Search to find place
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/place/textsearch/json?` +
+        new URLSearchParams({
+          query: query,
+          key: apiKey,
+        })
+    )
+
+    if (!response.ok) {
+      return null
+    }
+
+    const data = (await response.json()) as {
+      results?: Array<{
+        photos?: Array<{
+          photo_reference: string
+        }>
+      }>
+      status: string
+    }
+
+    if (data.status === 'OK' && data.results && data.results.length > 0) {
+      const firstResult = data.results[0]
+      if (firstResult.photos && firstResult.photos.length > 0) {
+        return getPlacePhoto(firstResult.photos[0].photo_reference)
+      }
+    }
+
+    return null
+  } catch (error) {
+    console.error('Error searching place photos:', error)
+    return null
+  }
+}

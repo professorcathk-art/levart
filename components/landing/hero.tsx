@@ -1,6 +1,6 @@
 'use client'
 
-import { PawTrail } from '../paw-print'
+import { PawTrail, PawPrint } from '../paw-print'
 import Link from 'next/link'
 
 export function Hero() {
