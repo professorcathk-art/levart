@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'LevarTrip - AI Trip Planner',
-  description: 'Generate AI-powered itineraries and book hotels/flights via Trip.com',
+  title: 'Levart - Your Friendly AI Travel Companion',
+  description: 'Plan perfect trips with AI-powered itineraries. Warm, friendly, and completely free.',
 }
 
 export default function RootLayout({
