@@ -82,6 +82,11 @@ Return ONLY valid JSON, no markdown, no code blocks.`
   }
 
   try {
+    console.log('Calling AIML API with model: claude-3-5-sonnet-20241022')
+    console.log('API Key present:', !!apiKey)
+    console.log('API Key length:', apiKey.length)
+    console.log('Prompt length:', userPrompt.length)
+    
     const completion = await openai.chat.completions.create({
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 4096,
