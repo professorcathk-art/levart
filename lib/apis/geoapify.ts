@@ -1,6 +1,7 @@
 import type { Attraction } from '@/types'
 
 const GEOAPIFY_BASE_URL = 'https://api.geoapify.com/v2/places'
+const GEOAPIFY_GEOCODE_URL = 'https://api.geoapify.com/v1/geocode'
 
 // Map trip focus to Geoapify categories
 const FOCUS_TO_CATEGORIES: Record<string, string[]> = {
@@ -32,9 +33,9 @@ export async function searchAttractions(
   const categoriesParam = Array.from(categories).join(',')
 
   try {
-    // First, try to get coordinates for the destination using autocomplete
-    const autocompleteResponse = await fetch(
-      `https://api.geoapify.com/v1/geocode/autocomplete?` +
+    // First, try to get coordinates for the destination using geocoding
+    const geocodeResponse = await fetch(
+      `${GEOAPIFY_GEOCODE_URL}/search?` +
         new URLSearchParams({
           text: destination,
           limit: '1',
