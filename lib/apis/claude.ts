@@ -87,35 +87,49 @@ Return ONLY valid JSON, no markdown, no code blocks.`
     console.log('API Key length:', apiKey.length)
     console.log('Prompt length:', userPrompt.length)
     
-    const completion = await openai.chat.completions.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 4096,
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
-    }).catch(async (error: unknown) => {
-      // Read error response body if available
-      if (error && typeof error === 'object' && 'response' in error) {
-        const response = (error as { response?: { text?: () => Promise<string> } }).response
-        if (response?.text) {
-          try {
-            const errorText = await response.text()
-            console.error('AIML API error response:', errorText)
-            throw new Error(`AIML API error: ${errorText}`)
-          } catch {
-            // If we can't read the body, throw original error
-          }
+    let completion
+    try {
+      completion = await openai.chat.completions.create({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 4096,
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt,
+          },
+          {
+            role: 'user',
+            content: userPrompt,
+          },
+        ],
+      })
+    } catch (apiError: unknown) {
+      // If 400 error, try alternative model name
+      if (apiError && typeof apiError === 'object' && 'status' in apiError && apiError.status === 400) {
+        console.log('400 error with claude-3-5-sonnet-20241022, trying claude-3-5-sonnet...')
+        try {
+          completion = await openai.chat.completions.create({
+            model: 'claude-3-5-sonnet',
+            max_tokens: 4096,
+            messages: [
+              {
+                role: 'system',
+                content: systemPrompt,
+              },
+              {
+                role: 'user',
+                content: userPrompt,
+              },
+            ],
+          })
+        } catch (retryError) {
+          console.error('Retry also failed:', retryError)
+          throw apiError // Throw original error
         }
+      } else {
+        throw apiError
       }
-      throw error
-    })
+    }
 
     const content = completion.choices[0]?.message?.content
     if (!content) {
