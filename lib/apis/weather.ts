@@ -1,11 +1,6 @@
-const OPEN_METEO_BASE_URL = 'https://api.open-meteo.com/v1/forecast'
+import type { WeatherForecast } from '@/types'
 
-export interface WeatherForecast {
-  date: string
-  temperature: number
-  condition: string
-  description: string
-}
+const OPEN_METEO_BASE_URL = 'https://api.open-meteo.com/v1/forecast'
 
 export async function getWeatherForecast(
   lat: number,

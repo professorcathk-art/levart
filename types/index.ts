@@ -73,3 +73,10 @@ export interface AffiliateClick {
   destination: string
   timestamp: string
 }
+
+export interface WeatherForecast {
+  date: string
+  temperature: number
+  condition: string
+  description: string
+}
