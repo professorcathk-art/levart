@@ -116,10 +116,12 @@ export function PDFExport({ itinerary }: PDFExportProps) {
               <h2 className="text-3xl font-bold text-[#FF9A76] mb-2">
                 Day {day.day} - {day.date}
               </h2>
-              {day.weather && (
+              {day.weather ? (
                 <p className="text-gray-600">
                   {day.weather.temperature}°C - {day.weather.description}
                 </p>
+              ) : (
+                <p className="text-gray-600">Weather information not available</p>
               )}
             </div>
 
