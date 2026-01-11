@@ -21,10 +21,6 @@ export function AttractionsStep({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetchAttractions()
-  }, [destination, tripFocus])
-
   const fetchAttractions = async () => {
     setLoading(true)
     setError(null)
@@ -111,7 +107,7 @@ export function AttractionsStep({
 
       <p className="text-gray-600 mb-4">
         Found {attractions.length} attractions in {destination}. Select the ones
-        you'd like to visit.
+        you&apos;d like to visit.
       </p>
 
       <div className="space-y-3 mb-6 max-h-96 overflow-y-auto">

@@ -31,18 +31,6 @@ export function ItineraryStep({
   const [error, setError] = useState<string | null>(null)
   const [affiliateId, setAffiliateId] = useState('')
 
-  useEffect(() => {
-    // Fetch affiliate ID
-    fetch('/api/affiliate/config')
-      .then((res) => res.json())
-      .then((data) => setAffiliateId(data.affiliateId || ''))
-      .catch(() => {})
-
-    if (!itinerary) {
-      generateItinerary()
-    }
-  }, [])
-
   const generateItinerary = async () => {
     setLoading(true)
     setError(null)
@@ -93,6 +81,19 @@ export function ItineraryStep({
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    // Fetch affiliate ID
+    fetch('/api/affiliate/config')
+      .then((res) => res.json())
+      .then((data) => setAffiliateId(data.affiliateId || ''))
+      .catch(() => {})
+
+    if (!itinerary) {
+      generateItinerary()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleAffiliateClick = async (
     clickType: 'hotel' | 'flight',
