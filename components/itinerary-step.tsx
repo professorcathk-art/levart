@@ -278,7 +278,11 @@ export function ItineraryStep({
           <h3 className="text-xl font-bold mb-4">Book Your Trip</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <a
-              href={`https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkOut || checkIn}&affiliateId=${affiliateId}`}
+              href={
+                affiliateId
+                  ? `https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkOut || checkIn}&affiliateId=${affiliateId}`
+                  : `https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${checkIn}&checkOut=${checkOut || checkIn}`
+              }
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => handleAffiliateClick('hotel')}
@@ -287,7 +291,11 @@ export function ItineraryStep({
               Book Hotels on Trip.com
             </a>
             <a
-              href={`https://www.trip.com/flights?to=${encodeURIComponent(destination)}&departureDate=${checkIn}&affiliateId=${affiliateId}`}
+              href={
+                affiliateId
+                  ? `https://www.trip.com/flights?to=${encodeURIComponent(destination)}&departureDate=${checkIn}&affiliateId=${affiliateId}`
+                  : `https://www.trip.com/flights?to=${encodeURIComponent(destination)}&departureDate=${checkIn}`
+              }
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => handleAffiliateClick('flight')}
