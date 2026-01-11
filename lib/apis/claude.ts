@@ -95,6 +95,21 @@ Return ONLY valid JSON, no markdown, no code blocks.`
           content: userPrompt,
         },
       ],
+    }).catch(async (error: unknown) => {
+      // Read error response body if available
+      if (error && typeof error === 'object' && 'response' in error) {
+        const response = (error as { response?: { text?: () => Promise<string> } }).response
+        if (response?.text) {
+          try {
+            const errorText = await response.text()
+            console.error('AIML API error response:', errorText)
+            throw new Error(`AIML API error: ${errorText}`)
+          } catch {
+            // If we can't read the body, throw original error
+          }
+        }
+      }
+      throw error
     })
 
     const content = completion.choices[0]?.message?.content
@@ -134,6 +149,24 @@ Return ONLY valid JSON, no markdown, no code blocks.`
     })
   } catch (error) {
     console.error('Error generating itinerary:', error)
-    throw error
+    
+    // Try to extract more details from OpenAI SDK error
+    if (error && typeof error === 'object') {
+      const errorObj = error as Record<string, unknown>
+      if (errorObj.status === 400) {
+        const errorMessage = errorObj.message || errorObj.error || 'Bad Request'
+        const errorDetails = errorObj.details || ''
+        throw new Error(`AIML API returned 400 Bad Request: ${errorMessage} ${errorDetails}`)
+      }
+      if (errorObj.status === 401) {
+        throw new Error('AIML API authentication failed. Check your API key.')
+      }
+      if (errorObj.status === 429) {
+        throw new Error('AIML API rate limit exceeded. Please try again later.')
+      }
+    }
+    
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    throw new Error(`Failed to generate itinerary: ${errorMessage}`)
   }
 }
