@@ -1,11 +1,6 @@
-import OpenAI from 'openai'
+import { generateText } from 'ai'
+import { getPlannerModel } from '@/lib/ai/provider'
 import type { Attraction, DayItinerary, TripFocus, WeatherForecast, TripPreferences } from '@/types'
-
-// AIML API is OpenAI-compatible
-const openai = new OpenAI({
-  baseURL: 'https://api.aimlapi.com/v1',
-  apiKey: process.env.AIML_API_KEY || '',
-})
 
 export async function generateItinerary(
   destination: string,
@@ -19,6 +14,8 @@ export async function generateItinerary(
   dayCount: number,
   preferences?: TripPreferences
 ): Promise<DayItinerary[]> {
+  void preferences
+
   const systemPrompt = `You are an expert travel planner. Generate detailed day-by-day itineraries in JSON format.
 Each day should include morning, afternoon, and evening activities based on the selected attractions and route.
 Include restaurant suggestions, transport recommendations, and cost estimates.
@@ -46,87 +43,20 @@ Route Info:
 Weather Forecast:
 ${weatherList}
 
-Generate a JSON array with ${dayCount} day objects. Each day object should have:
-{
-  "day": number (1-based),
-  "date": string (YYYY-MM-DD),
-  "weather": {
-    "temperature": number,
-    "condition": string,
-    "description": string
-  },
-  "activities": [
-    {
-      "time": "morning" | "afternoon" | "evening",
-      "activity": string (attraction/activity name),
-      "location": string (address or area),
-      "duration": string (e.g., "2 hours"),
-      "cost": string (e.g., "$10" or "Free"),
-      "distance": string (e.g., "1.2 km"),
-      "type": "attraction" | "restaurant" | "shopping" | "nightlife" | "nature" | "culture",
-      "address": string (full address),
-      "openingHours": string (e.g., "9 AM - 6 PM"),
-      "difficulty": "easy" | "moderate" | "hard",
-      "crowdLevel": "low" | "medium" | "high",
-      "accessibility": boolean,
-      "popular": boolean,
-      "free": boolean,
-      "tips": string[] (2-3 pro tips),
-      "nearbyAlternatives": string[] (1-2 alternatives)
-    }
-  ],
-  "restaurants": [
-    {
-      "name": string,
-      "cuisine": string (e.g., "Italian", "Local"),
-      "cost": string (e.g., "$20-30"),
-      "address": string
-    }
-  ],
-  "transport": string[] (e.g., ["Walking", "Subway", "Taxi"]),
-  "estimatedCost": string (e.g., "$150"),
-  "totalDistance": number (kilometers),
-  "totalDuration": number (minutes),
-  "difficulty": "easy" | "moderate" | "hard"
-}
-
-Return ONLY valid JSON, no markdown, no code blocks.`
-
-  const apiKey = process.env.AIML_API_KEY
-  if (!apiKey) {
-    throw new Error('AIML_API_KEY is not configured')
-  }
+Generate a JSON array with ${dayCount} day objects. Return ONLY valid JSON, no markdown, no code blocks.`
 
   try {
-    // Use correct AIML API model name: claude-sonnet-4-5 (Claude 4.5 Sonnet)
-    // See: https://docs.aimlapi.com/api-references/text-models-llm/anthropic/claude-4-5-sonnet
-    console.log('Calling AIML API with model: claude-sonnet-4-5')
-    console.log('API Key present:', !!apiKey)
-    console.log('API Key length:', apiKey.length)
-    console.log('Prompt length:', userPrompt.length)
-    
-    const completion = await openai.chat.completions.create({
-      model: 'claude-sonnet-4-5', // Correct AIML API model name for Claude 4.5 Sonnet
-      max_tokens: 4096,
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
-        {
-          role: 'user',
-          content: userPrompt,
-        },
-      ],
+    const { text } = await generateText({
+      model: getPlannerModel(),
+      system: systemPrompt,
+      prompt: userPrompt,
     })
 
-    const content = completion.choices[0]?.message?.content
-    if (!content) {
+    if (!text) {
       throw new Error('No response content from Claude')
     }
 
-    // Extract JSON from response (handle potential markdown code blocks)
-    let jsonText = content.trim()
+    let jsonText = text.trim()
     if (jsonText.startsWith('```')) {
       jsonText = jsonText.replace(/^```(?:json)?\n/, '').replace(/\n```$/, '')
     }
@@ -136,14 +66,15 @@ Return ONLY valid JSON, no markdown, no code blocks.`
       itinerary = JSON.parse(jsonText) as DayItinerary[]
     } catch (parseError) {
       console.error('Failed to parse Claude response:', jsonText)
-      throw new Error(`Invalid JSON response from Claude: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`)
+      throw new Error(
+        `Invalid JSON response from Claude: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`
+      )
     }
 
     if (!Array.isArray(itinerary)) {
       throw new Error('Claude response is not an array')
     }
 
-    // Merge weather data from API
     return itinerary.map((day, index) => {
       if (weatherForecasts[index]) {
         day.weather = {
@@ -157,23 +88,6 @@ Return ONLY valid JSON, no markdown, no code blocks.`
     })
   } catch (error) {
     console.error('Error generating itinerary:', error)
-    
-    // Try to extract more details from OpenAI SDK error
-    if (error && typeof error === 'object') {
-      const errorObj = error as Record<string, unknown>
-      if (errorObj.status === 400) {
-        const errorMessage = errorObj.message || errorObj.error || 'Bad Request'
-        const errorDetails = errorObj.details || ''
-        throw new Error(`AIML API returned 400 Bad Request: ${errorMessage} ${errorDetails}`)
-      }
-      if (errorObj.status === 401) {
-        throw new Error('AIML API authentication failed. Check your API key.')
-      }
-      if (errorObj.status === 429) {
-        throw new Error('AIML API rate limit exceeded. Please try again later.')
-      }
-    }
-    
     const errorMessage = error instanceof Error ? error.message : String(error)
     throw new Error(`Failed to generate itinerary: ${errorMessage}`)
   }
