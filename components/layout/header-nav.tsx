@@ -9,7 +9,7 @@ export function HeaderNav({ children }: { children: ReactNode }) {
   const { t } = useLocale()
 
   return (
-    <nav className="flex items-center gap-3 text-sm font-semibold text-[#1A1A1A] sm:gap-4">
+    <nav className="flex max-w-[70vw] items-center gap-2 text-xs font-semibold text-[#1A1A1A] sm:max-w-none sm:gap-4 sm:text-sm">
       <Link href="/plan" className="hover:text-[#FF9A76]">
         {t('navPlan')}
       </Link>
@@ -28,7 +28,7 @@ export function SignInLink() {
   return (
     <Link
       href="/login"
-      className="rounded-full bg-gradient-to-r from-[#FF9A76] to-[#FFB86C] px-4 py-2 text-white shadow"
+      className="rounded-full bg-gradient-to-r from-[#FF9A76] to-[#FFB86C] px-3 py-1.5 text-xs text-white shadow sm:px-4 sm:py-2 sm:text-sm"
     >
       {t('navSignIn')}
     </Link>

@@ -13,7 +13,8 @@ import { getSupabasePublicEnv } from '@/lib/supabase/env'
 import { getPlannerModel } from '@/lib/ai/provider'
 import { getPlannerPrompt } from '@/lib/ai/prompts'
 import { createPlannerTools, type PlannerContext } from '@/lib/ai/tools'
-import { emptyItinerary, parseItinerary } from '@/lib/trips/itinerary'
+import { emptyItinerary, itineraryHasPlan, parseItinerary } from '@/lib/trips/itinerary'
+import { formatItineraryForPrompt } from '@/lib/trips/versions'
 import type { PlannerMessage } from '@/lib/ai/types'
 
 export const maxDuration = 60
@@ -22,6 +23,7 @@ interface ChatRequestBody {
   messages?: UIMessage[]
   tripId?: string
   locale?: string
+  itinerary?: unknown
 }
 
 async function persistDraft(
@@ -186,7 +188,18 @@ export async function POST(request: Request) {
       }
     }
 
+    if (body.itinerary) {
+      const incomingPlan = parseItinerary(body.itinerary)
+      if (itineraryHasPlan(incomingPlan) || incomingPlan.notes || incomingPlan.days.length > 0) {
+        ctx.itinerary = incomingPlan
+      }
+    }
+
     const modelMessages = await convertToModelMessages(incoming)
+    const instructions = `${getPlannerPrompt(body.locale)}
+
+CURRENT_PLAN:
+${formatItineraryForPrompt(ctx.itinerary)}`
 
     const stream = createUIMessageStream<PlannerMessage>({
       execute: ({ writer }) => {
@@ -200,7 +213,7 @@ export async function POST(request: Request) {
 
         const result = streamText({
           model: getPlannerModel(),
-          instructions: getPlannerPrompt(body.locale),
+          instructions,
           messages: modelMessages,
           tools: createPlannerTools(ctx),
           stopWhen: isStepCount(8),
@@ -211,6 +224,12 @@ export async function POST(request: Request) {
               type: 'data-itinerary',
               data: ctx.itinerary,
             })
+            if (ctx.lastChange) {
+              writer.write({
+                type: 'data-planChange',
+                data: { summary: ctx.lastChange },
+              })
+            }
             if (user && tripId && supabase) {
               await persistDraft(supabase, tripId, ctx)
             }

@@ -6,6 +6,7 @@ import { searchAttractions as searchGeoapify } from '@/lib/apis/geoapify'
 import { getWeatherForecast } from '@/lib/apis/weather'
 import { optimizeRoute } from '@/lib/apis/osrm'
 import { addDays, emptyItinerary, isTripFocus } from '@/lib/trips/itinerary'
+import { addVersion, formatItineraryForPrompt, preserveUserEdits, summarizeDiff } from '@/lib/trips/versions'
 import type { Attraction, Itinerary, TripFocus } from '@/types'
 
 const activitySchema = z.object({
@@ -56,6 +57,7 @@ const daySchema = z.object({
 export interface PlannerContext {
   itinerary: Itinerary
   dirty: boolean
+  lastChange?: string
 }
 
 async function findAttractions(
@@ -175,24 +177,46 @@ export function createPlannerTools(ctx: PlannerContext) {
         }
       },
     }),
+    get_current_itinerary: tool({
+      description: 'Read the current live draft itinerary before editing it.',
+      inputSchema: z.object({}),
+      execute: async () => ({
+        plan: formatItineraryForPrompt(ctx.itinerary),
+        destination: ctx.itinerary.destination,
+        dayCount: ctx.itinerary.days.length,
+      }),
+    }),
     update_itinerary: tool({
       description:
-        'Create or replace the live itinerary shown beside the chat. Call this whenever the plan should change.',
+        'Update the live itinerary. Use this after every requested change. Locked traveler notes and activities are preserved automatically.',
       inputSchema: z.object({
         destination: z.string(),
         tripFocus: z.array(z.string()),
         checkIn: z.string().optional(),
         checkOut: z.string().optional(),
         days: z.array(daySchema),
+        changeSummary: z
+          .string()
+          .optional()
+          .describe('One sentence describing what you changed so the traveler can see the difference'),
         selectedAttractionIds: z.array(z.string()).optional(),
       }),
-      execute: async ({ destination, tripFocus, checkIn, checkOut, days, selectedAttractionIds }) => {
+      execute: async ({
+        destination,
+        tripFocus,
+        checkIn,
+        checkOut,
+        days,
+        changeSummary,
+        selectedAttractionIds,
+      }) => {
+        const previous = ctx.itinerary
         const focus = tripFocus.filter(isTripFocus) as TripFocus[]
         const selected = selectedAttractionIds
           ? ctx.itinerary.selectedAttractions.filter((item) => selectedAttractionIds.includes(item.id))
           : ctx.itinerary.selectedAttractions
 
-        ctx.itinerary = emptyItinerary({
+        const drafted = emptyItinerary({
           ...ctx.itinerary,
           destination,
           tripFocus: focus,
@@ -201,14 +225,20 @@ export function createPlannerTools(ctx: PlannerContext) {
           days,
           selectedAttractions: selected,
         })
+        const merged = preserveUserEdits(previous, drafted)
+        const summary = changeSummary || summarizeDiff(previous, merged)
+        ctx.itinerary = addVersion(previous, merged, 'ai', summary)
+        ctx.lastChange = summary
         ctx.dirty = true
 
         return {
           ok: true,
           destination,
-          dayCount: days.length,
+          dayCount: merged.days.length,
           checkIn,
           checkOut,
+          changeSummary: summary,
+          preservedLockedEdits: true,
         }
       },
     }),

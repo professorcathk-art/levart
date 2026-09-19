@@ -8,5 +8,8 @@ export type PlannerMessage = UIMessage<
     trip: {
       tripId: string
     }
+    planChange: {
+      summary: string
+    }
   }
 >

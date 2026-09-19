@@ -7,13 +7,16 @@ import { DefaultChatTransport } from 'ai'
 import { AuthPrompt } from '@/components/auth/auth-prompt'
 import { ChatPane } from '@/components/chat/chat-pane'
 import { ConfirmBar } from '@/components/chat/confirm-bar'
+import { PlanEditor } from '@/components/chat/plan-editor'
 import { PlanPane } from '@/components/chat/plan-pane'
+import { VersionHistory } from '@/components/chat/version-history'
 import { ThinkingCat } from '@/components/companion/thinking-cat'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { itineraryHasPlan, parseItinerary } from '@/lib/trips/itinerary'
 import { clearGuestDraft, readGuestDraft, writeGuestDraft } from '@/lib/trips/guest-draft'
+import { addVersion, markUserEdits, restoreVersion, summarizeDiff } from '@/lib/trips/versions'
 import type { PlannerMessage } from '@/lib/ai/types'
-import type { Itinerary, TripStatus } from '@/types'
+import type { Itinerary, PlanVersion, TripStatus } from '@/types'
 
 interface PlannerWorkspaceProps {
   signedIn: boolean
@@ -53,7 +56,7 @@ export function PlannerWorkspace(props: PlannerWorkspaceProps) {
 
   if (!ready) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-gradient-to-br from-[#FFF8F3] via-[#FFE8E0] to-[#FFD4C4]">
+      <div className="flex h-[calc(100dvh-4rem)] flex-col items-center justify-center bg-gradient-to-br from-[#FFF8F3] via-[#FFE8E0] to-[#FFD4C4]">
         <ThinkingCat />
         <p className="mt-2 text-sm text-gray-500">{t('openingPlanner')}</p>
       </div>
@@ -83,6 +86,7 @@ function PlannerWorkspaceReady({
   const tripIdRef = useRef(initialTripId)
   const importedRef = useRef(false)
   const localeRef = useRef(locale)
+  const itineraryRef = useRef(initialItinerary ?? null)
   const [tripId, setTripId] = useState(initialTripId)
   const [itinerary, setItinerary] = useState<Itinerary | null>(initialItinerary ?? null)
   const [status, setStatus] = useState<TripStatus>(initialStatus)
@@ -90,6 +94,9 @@ function PlannerWorkspaceReady({
   const [authOpen, setAuthOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [lastChange, setLastChange] = useState<string | null>(initialItinerary?.lastChange ?? null)
 
   useEffect(() => {
     tripIdRef.current = tripId
@@ -99,6 +106,10 @@ function PlannerWorkspaceReady({
     localeRef.current = locale
   }, [locale])
 
+  useEffect(() => {
+    itineraryRef.current = itinerary
+  }, [itinerary])
+
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
@@ -106,6 +117,7 @@ function PlannerWorkspaceReady({
         body: () => ({
           tripId: tripIdRef.current,
           locale: localeRef.current,
+          itinerary: itineraryRef.current,
         }),
       }),
     []
@@ -118,6 +130,11 @@ function PlannerWorkspaceReady({
     onData: (dataPart) => {
       if (dataPart.type === 'data-itinerary') {
         setItinerary(dataPart.data)
+        if (dataPart.data.lastChange) setLastChange(dataPart.data.lastChange)
+        setMobileTab('plan')
+      }
+      if (dataPart.type === 'data-planChange') {
+        setLastChange(dataPart.data.summary)
         setMobileTab('plan')
       }
       if (dataPart.type === 'data-trip') {
@@ -205,6 +222,40 @@ function PlannerWorkspaceReady({
     }
   }
 
+  const persistItinerary = async (next: Itinerary) => {
+    setItinerary(next)
+    itineraryRef.current = next
+    if (!signedIn) {
+      writeGuestDraft({ itinerary: next, messages })
+    }
+    if (tripId && signedIn) {
+      await fetch(`/api/trips/${tripId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itinerary: next }),
+      })
+    }
+  }
+
+  const handleSaveEdits = async (draft: Itinerary) => {
+    if (!itinerary) return
+    const marked = markUserEdits(draft)
+    const next = addVersion(itinerary, marked, 'user', summarizeDiff(itinerary, marked) || 'Saved your edits')
+    setLastChange(next.lastChange ?? 'Saved your edits')
+    await persistItinerary(next)
+    setEditorOpen(false)
+    setMobileTab('plan')
+  }
+
+  const handleRestore = async (version: PlanVersion) => {
+    if (!itinerary) return
+    const next = restoreVersion(itinerary, version)
+    setLastChange(next.lastChange ?? version.summary)
+    await persistItinerary(next)
+    setHistoryOpen(false)
+    setMobileTab('plan')
+  }
+
   const handleReopen = async () => {
     if (!tripId) return
     const response = await fetch(`/api/trips/${tripId}/reopen`, { method: 'POST' })
@@ -214,7 +265,7 @@ function PlannerWorkspaceReady({
   }
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col bg-gradient-to-br from-[#FFF8F3] via-[#FFE8E0] to-[#FFD4C4]">
+    <div className="flex h-[calc(100dvh-4rem)] flex-col bg-gradient-to-br from-[#FFF8F3] via-[#FFE8E0] to-[#FFD4C4]">
       <div className="flex items-center justify-between border-b border-[#FF9A76]/10 bg-white/70 px-4 py-2 md:hidden">
         <div className="flex rounded-full bg-[#FFF8F3] p-1">
           <button
@@ -245,11 +296,16 @@ function PlannerWorkspaceReady({
           />
         </section>
         <section className={`min-h-0 ${mobileTab === 'plan' ? 'block' : 'hidden'} md:block`}>
-          <PlanPane itinerary={itinerary} />
+          <PlanPane
+            itinerary={itinerary}
+            lastChange={lastChange}
+            onEdit={itineraryHasPlan(itinerary) && status !== 'confirmed' ? () => setEditorOpen(true) : undefined}
+            onHistory={itinerary?.versions?.length ? () => setHistoryOpen(true) : undefined}
+          />
         </section>
       </div>
 
-      <div className="border-t border-[#FF9A76]/10 bg-white/80 p-3">
+      <div className="border-t border-[#FF9A76]/10 bg-white/90 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         {actionError && (
           <p className="mb-2 text-center text-sm text-red-600" role="alert">
             {actionError}
@@ -271,6 +327,16 @@ function PlannerWorkspaceReady({
         description={t('authConfirmBody')}
         nextPath={tripId ? `/plan/${tripId}` : '/plan'}
       />
+      {editorOpen && itinerary && (
+        <PlanEditor itinerary={itinerary} onSave={handleSaveEdits} onClose={() => setEditorOpen(false)} />
+      )}
+      {historyOpen && itinerary && (
+        <VersionHistory
+          versions={itinerary.versions ?? []}
+          onRestore={handleRestore}
+          onClose={() => setHistoryOpen(false)}
+        />
+      )}
     </div>
   )
 }

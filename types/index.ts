@@ -59,6 +59,8 @@ export interface DayActivity {
   free?: boolean
   tips?: string[]
   nearbyAlternatives?: string[]
+  notes?: string
+  userLocked?: boolean
 }
 
 export interface DayItinerary {
@@ -84,6 +86,16 @@ export interface DayItinerary {
   totalDuration?: number
   difficulty?: 'easy' | 'moderate' | 'hard'
   destinationPhoto?: string
+  notes?: string
+  userLocked?: boolean
+}
+
+export interface PlanVersion {
+  id: string
+  createdAt: string
+  source: 'ai' | 'user' | 'restore'
+  summary: string
+  itinerary: Itinerary
 }
 
 export interface Itinerary {
@@ -94,6 +106,9 @@ export interface Itinerary {
   days: DayItinerary[]
   checkIn?: string
   checkOut?: string
+  notes?: string
+  versions?: PlanVersion[]
+  lastChange?: string
 }
 
 export interface AffiliateClick {

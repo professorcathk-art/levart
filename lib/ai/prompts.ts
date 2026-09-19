@@ -27,5 +27,13 @@ Language rule:
 - Starter assumptions and questions must also be in Traditional Chinese.`
 
 export function getPlannerPrompt(locale?: string) {
-  return locale === 'zh-Hant' ? PLANNER_CHINESE_PROMPT : PLANNER_SYSTEM_PROMPT
+  const base = locale === 'zh-Hant' ? PLANNER_CHINESE_PROMPT : PLANNER_SYSTEM_PROMPT
+  return `${base}
+
+When a current draft is provided:
+- Read CURRENT_PLAN before answering.
+- The traveler can see that draft on the right. Your job is to change it when they ask.
+- Always call update_itinerary after a change request, even a small one, so they can see the difference.
+- Keep every [LOCKED] activity, traveler note, and day note. Copy them into the updated plan.
+- Only rewrite the parts they asked to change. Say in chat exactly what you changed.`
 }

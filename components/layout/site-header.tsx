@@ -20,8 +20,8 @@ function SiteLogo() {
 function HeaderChrome({ children }: { children: ReactNode }) {
   return (
     <header className="sticky top-0 z-40 border-b border-[#FF9A76]/10 bg-[#FFF8F3]/90 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 text-xl font-bold text-[#FF9A76]">
+      <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-3 sm:h-16 sm:px-4">
+        <Link href="/" className="flex shrink-0 items-center gap-2 text-lg font-bold text-[#FF9A76] sm:text-xl">
           <SiteLogo />
           Levart
         </Link>

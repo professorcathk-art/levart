@@ -26,7 +26,9 @@ export default function RootLayout({
             <SiteHeader />
           </Suspense>
           {children}
-          <WalkingCat />
+          <div className="hidden md:block">
+            <WalkingCat />
+          </div>
         </LocaleProvider>
       </body>
     </html>
