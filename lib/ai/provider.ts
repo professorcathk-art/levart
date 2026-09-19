@@ -1,16 +1,16 @@
 import { createOpenAI } from '@ai-sdk/openai'
 
 export function getPlannerModel() {
-  const apiKey = process.env.AIML_API_KEY
+  const apiKey = process.env.DEEPSEEK_API_KEY
   if (!apiKey) {
-    throw new Error('AIML_API_KEY is not configured')
+    throw new Error('DEEPSEEK_API_KEY is not configured')
   }
 
-  const aiml = createOpenAI({
-    name: 'aiml',
-    baseURL: 'https://api.aimlapi.com/v1',
+  const deepseek = createOpenAI({
+    name: 'deepseek',
+    baseURL: 'https://api.deepseek.com',
     apiKey,
   })
 
-  return aiml('claude-sonnet-4-5')
+  return deepseek('deepseek-flash')
 }
