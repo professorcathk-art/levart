@@ -57,6 +57,74 @@
     }
   }
 
+  @keyframes catWalk {
+    0% {
+      transform: translateX(-7rem);
+    }
+    45% {
+      transform: translateX(calc(100vw - 7rem));
+    }
+    50% {
+      transform: translateX(calc(100vw - 7rem)) scaleX(-1);
+    }
+    95% {
+      transform: translateX(-7rem) scaleX(-1);
+    }
+    100% {
+      transform: translateX(-7rem);
+    }
+  }
+
+  @keyframes catBob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+
+  @keyframes catTail {
+    0%,
+    100% {
+      transform: rotate(-8deg);
+    }
+    50% {
+      transform: rotate(10deg);
+    }
+  }
+
+  @keyframes thinkBubble {
+    0%,
+    100% {
+      opacity: 0.25;
+      transform: translateY(0) scale(0.9);
+    }
+    50% {
+      opacity: 1;
+      transform: translateY(-4px) scale(1);
+    }
+  }
+
+  .cat-walk {
+    animation: catWalk 28s linear infinite;
+  }
+
+  .cat-bob {
+    animation: catBob 1.4s ease-in-out infinite;
+  }
+
+  .cat-tail {
+    transform-box: fill-box;
+    transform-origin: left center;
+    animation: catTail 0.7s ease-in-out infinite;
+  }
+
+  .think-dot {
+    animation: thinkBubble 1.2s ease-in-out infinite;
+  }
+
   @keyframes pawWalkLeft {
     0% {
       transform: translateX(calc(100vw + 100px)) scale(0.8);

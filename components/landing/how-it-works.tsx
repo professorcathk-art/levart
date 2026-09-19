@@ -1,43 +1,27 @@
 'use client'
 
 import { PawPrint } from '../paw-print'
+import { useLocale } from '@/components/i18n/locale-provider'
+import type { MessageKey } from '@/lib/i18n/dictionaries'
 
-const steps = [
-  {
-    number: '01',
-    title: 'Chat about the trip',
-    description: 'Tell Levart the destination, dates, and vibe. No forms to grind through.',
-    icon: '💬',
-    color: '#FF9A76',
-  },
-  {
-    number: '02',
-    title: 'Watch the plan appear',
-    description: 'A live itinerary updates on the side as you refine morning, food, and routes.',
-    icon: '🗺️',
-    color: '#7ECCC4',
-  },
-  {
-    number: '03',
-    title: 'Confirm when it feels right',
-    description: 'Freeze a beautiful plan, then share a private link or publish it for others.',
-    icon: '✨',
-    color: '#FFB86C',
-  },
+const steps: Array<{ number: string; title: MessageKey; body: MessageKey; icon: string; color: string }> = [
+  { number: '01', title: 'how1Title', body: 'how1Body', icon: '💬', color: '#FF9A76' },
+  { number: '02', title: 'how2Title', body: 'how2Body', icon: '🗺️', color: '#7ECCC4' },
+  { number: '03', title: 'how3Title', body: 'how3Body', icon: '✨', color: '#FFB86C' },
 ]
 
 export function HowItWorks() {
+  const { t } = useLocale()
+
   return (
     <section className="bg-white py-20">
       <div className="container mx-auto px-4">
         <div className="mb-16 text-center">
           <h2 className="mb-4 text-4xl font-bold md:text-5xl">
-            <span className="text-[#FF9A76]">How it</span>{' '}
-            <span className="text-[#7ECCC4]">works</span>
+            <span className="text-[#FF9A76]">{t('howTitle1')}</span>{' '}
+            <span className="text-[#7ECCC4]">{t('howTitle2')}</span>
           </h2>
-          <p className="mx-auto max-w-2xl text-xl text-[#2D2D2D]">
-            Plan like a conversation. Confirm only when you are satisfied.
-          </p>
+          <p className="mx-auto max-w-2xl text-xl text-[#2D2D2D]">{t('howSubtitle')}</p>
         </div>
 
         <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
@@ -51,8 +35,8 @@ export function HowItWorks() {
                   {step.number}
                 </div>
                 <div className="mb-4 text-5xl">{step.icon}</div>
-                <h3 className="mb-3 text-2xl font-bold">{step.title}</h3>
-                <p className="leading-relaxed text-[#2D2D2D]">{step.description}</p>
+                <h3 className="mb-3 text-2xl font-bold">{t(step.title)}</h3>
+                <p className="leading-relaxed text-[#2D2D2D]">{t(step.body)}</p>
               </div>
             </div>
           ))}

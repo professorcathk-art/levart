@@ -22,7 +22,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const body = (await request.json()) as { itinerary?: unknown }
+    const body = (await request.json()) as {
+      itinerary?: unknown
+      messages?: Array<{ role?: string; parts?: unknown }>
+    }
     const itinerary = parseItinerary(body.itinerary ?? emptyItinerary())
     const supabase = await createClient()
 
@@ -48,7 +51,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create trip' }, { status: 500 })
     }
 
-    await supabase.from('conversations').insert({ trip_id: data.id })
+    const { data: conversation } = await supabase
+      .from('conversations')
+      .insert({ trip_id: data.id })
+      .select('id')
+      .single()
+
+    const rows = (body.messages ?? [])
+      .filter((message) => message.role === 'user' || message.role === 'assistant')
+      .map((message) => ({
+        conversation_id: conversation?.id,
+        role: message.role,
+        parts: message.parts ?? [],
+      }))
+      .filter((row) => row.conversation_id)
+
+    if (rows.length > 0) {
+      const { error: messageError } = await supabase.from('messages').insert(rows)
+      if (messageError) {
+        console.error('Failed to import guest messages:', messageError)
+      }
+    }
+
     return NextResponse.json({ trip: mapTrip(data) }, { status: 201 })
   } catch (error) {
     console.error('Create trip failed:', error)

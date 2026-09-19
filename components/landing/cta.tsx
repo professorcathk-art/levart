@@ -2,32 +2,33 @@
 
 import { PawPrint } from '../paw-print'
 import Link from 'next/link'
+import { useLocale } from '@/components/i18n/locale-provider'
 
 export function CTA() {
+  const { t } = useLocale()
+
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#FF9A76] via-[#FFB86C] to-[#7ECCC4] py-20">
       <div className="container relative z-10 mx-auto px-4">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="mb-6 text-4xl font-bold text-white md:text-5xl">
-            Ready to talk through
+            {t('ctaTitle1')}
             <br />
-            <span className="text-[#FFF8F3]">your next adventure?</span>
+            <span className="text-[#FFF8F3]">{t('ctaTitle2')}</span>
           </h2>
-          <p className="mb-8 text-xl text-white/90">
-            Start chatting immediately. Sign in when you are ready to confirm and share.
-          </p>
+          <p className="mb-8 text-xl text-white/90">{t('ctaBody')}</p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
               href="/plan"
               className="rounded-full bg-white px-10 py-5 text-xl font-bold text-[#FF9A76] shadow-2xl transition hover:scale-105"
             >
-              Start planning
+              {t('startPlanning')}
             </Link>
             <Link
               href="/community"
               className="rounded-full border-2 border-white px-10 py-5 text-xl font-bold text-white"
             >
-              Browse community
+              {t('browseCommunity')}
             </Link>
           </div>
         </div>

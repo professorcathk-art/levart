@@ -2,6 +2,7 @@ import { Suspense, type ReactNode } from 'react'
 import Link from 'next/link'
 import { getCurrentProfile } from '@/lib/supabase/auth'
 import { UserMenu } from '@/components/layout/user-menu'
+import { HeaderNav, MyTripsLink, SignInLink } from '@/components/layout/header-nav'
 
 function SiteLogo() {
   return (
@@ -24,28 +25,9 @@ function HeaderChrome({ children }: { children: ReactNode }) {
           <SiteLogo />
           Levart
         </Link>
-        <nav className="flex items-center gap-4 text-sm font-semibold text-[#1A1A1A]">
-          <Link href="/plan" className="hover:text-[#FF9A76]">
-            Plan
-          </Link>
-          <Link href="/community" className="hover:text-[#FF9A76]">
-            Community
-          </Link>
-          {children}
-        </nav>
+        <HeaderNav>{children}</HeaderNav>
       </div>
     </header>
-  )
-}
-
-function SignInLink() {
-  return (
-    <Link
-      href="/login"
-      className="rounded-full bg-gradient-to-r from-[#FF9A76] to-[#FFB86C] px-4 py-2 text-white shadow"
-    >
-      Sign in
-    </Link>
   )
 }
 
@@ -58,9 +40,7 @@ async function SiteHeaderAuth() {
 
   return (
     <>
-      <Link href="/trips" className="hidden hover:text-[#FF9A76] sm:inline">
-        My trips
-      </Link>
+      <MyTripsLink />
       <UserMenu profile={profile} />
     </>
   )

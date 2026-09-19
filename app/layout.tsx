@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 import './globals.css'
+import { LocaleProvider } from '@/components/i18n/locale-provider'
+import { WalkingCat } from '@/components/companion/walking-cat'
 import { SiteHeader } from '@/components/layout/site-header'
 
 export const dynamic = 'force-dynamic'
@@ -19,10 +21,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-[#FFF8F3] text-[#1A1A1A]">
-        <Suspense fallback={null}>
-          <SiteHeader />
-        </Suspense>
-        {children}
+        <LocaleProvider>
+          <Suspense fallback={null}>
+            <SiteHeader />
+          </Suspense>
+          {children}
+          <WalkingCat />
+        </LocaleProvider>
       </body>
     </html>
   )

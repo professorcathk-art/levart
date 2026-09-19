@@ -16,3 +16,16 @@ If they have not picked a destination yet, suggest a few options and wait.
 If they want a first draft quickly, make reasonable assumptions and say what you assumed.
 
 Always keep the itinerary internally consistent: dates, day numbers, and destination must match.`
+
+export const PLANNER_CHINESE_PROMPT = `${PLANNER_SYSTEM_PROMPT}
+
+Language rule:
+- The traveler chose Traditional Chinese (繁體中文).
+- Write every chat reply in Traditional Chinese.
+- Write itinerary fields in Traditional Chinese too: activity names, locations, restaurant notes, transport, tips, and weather descriptions.
+- Keep official place names recognizable. You may add the local name in parentheses if useful.
+- Starter assumptions and questions must also be in Traditional Chinese.`
+
+export function getPlannerPrompt(locale?: string) {
+  return locale === 'zh-Hant' ? PLANNER_CHINESE_PROMPT : PLANNER_SYSTEM_PROMPT
+}

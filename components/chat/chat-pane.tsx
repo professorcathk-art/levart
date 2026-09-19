@@ -4,6 +4,8 @@ import { useState } from 'react'
 import type { UIMessage } from 'ai'
 import { MessageList } from '@/components/chat/message-list'
 import { StarterChips } from '@/components/chat/starter-chips'
+import { ThinkingCat } from '@/components/companion/thinking-cat'
+import { useLocale } from '@/components/i18n/locale-provider'
 
 interface ChatPaneProps {
   messages: UIMessage[]
@@ -14,6 +16,7 @@ interface ChatPaneProps {
 }
 
 export function ChatPane({ messages, status, error, onSend, disabled }: ChatPaneProps) {
+  const { t } = useLocale()
   const [input, setInput] = useState('')
   const busy = status === 'submitted' || status === 'streaming' || disabled
 
@@ -30,21 +33,16 @@ export function ChatPane({ messages, status, error, onSend, disabled }: ChatPane
         {messages.length === 0 ? (
           <div className="mx-auto max-w-xl space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-[#FF9A76]">Chat your trip into shape</h1>
-              <p className="mt-2 text-gray-600">
-                Tell Levart where you want to go, when, and what you love. Watch the plan appear on the right.
-              </p>
+              <h1 className="text-3xl font-bold text-[#FF9A76]">{t('chatTitle')}</h1>
+              <p className="mt-2 text-gray-600">{t('chatSubtitle')}</p>
             </div>
             <StarterChips onSelect={submit} disabled={busy} />
+            {status === 'submitted' || status === 'streaming' ? <ThinkingCat /> : null}
           </div>
         ) : (
           <div className="mx-auto max-w-xl">
             <MessageList messages={messages} />
-            {busy && (
-              <p className="mt-4 text-sm text-gray-500" aria-live="polite">
-                Levart is thinking…
-              </p>
-            )}
+            {(status === 'submitted' || status === 'streaming') && <ThinkingCat />}
           </div>
         )}
         {error && (
@@ -63,14 +61,14 @@ export function ChatPane({ messages, status, error, onSend, disabled }: ChatPane
       >
         <div className="mx-auto flex max-w-xl gap-2">
           <label className="sr-only" htmlFor="planner-input">
-            Message Levart
+            {t('chatLabel')}
           </label>
           <input
             id="planner-input"
             value={input}
             onChange={(event) => setInput(event.target.value)}
             disabled={busy}
-            placeholder="Ask to add a food day, swap a museum, change dates…"
+            placeholder={t('chatPlaceholder')}
             className="flex-1 rounded-full border border-gray-200 px-4 py-3 outline-none focus:border-[#FF9A76] focus:ring-2 focus:ring-[#FF9A76]/20 disabled:opacity-60"
           />
           <button
@@ -78,7 +76,7 @@ export function ChatPane({ messages, status, error, onSend, disabled }: ChatPane
             disabled={busy || !input.trim()}
             className="rounded-full bg-gradient-to-r from-[#FF9A76] to-[#FFB86C] px-5 py-3 font-semibold text-white disabled:opacity-50"
           >
-            Send
+            {t('chatSend')}
           </button>
         </div>
       </form>

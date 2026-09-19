@@ -8,11 +8,12 @@ import { AuthPrompt } from '@/components/auth/auth-prompt'
 import { ChatPane } from '@/components/chat/chat-pane'
 import { ConfirmBar } from '@/components/chat/confirm-bar'
 import { PlanPane } from '@/components/chat/plan-pane'
+import { ThinkingCat } from '@/components/companion/thinking-cat'
+import { useLocale } from '@/components/i18n/locale-provider'
 import { itineraryHasPlan, parseItinerary } from '@/lib/trips/itinerary'
+import { clearGuestDraft, readGuestDraft, writeGuestDraft } from '@/lib/trips/guest-draft'
 import type { PlannerMessage } from '@/lib/ai/types'
 import type { Itinerary, TripStatus } from '@/types'
-
-const GUEST_DRAFT_KEY = 'levart-guest-draft'
 
 interface PlannerWorkspaceProps {
   signedIn: boolean
@@ -20,17 +21,68 @@ interface PlannerWorkspaceProps {
   initialItinerary?: Itinerary | null
   initialMessages?: PlannerMessage[]
   initialStatus?: TripStatus
+  restoredFromGuest?: boolean
 }
 
-export function PlannerWorkspace({
+export function PlannerWorkspace(props: PlannerWorkspaceProps) {
+  const { t } = useLocale()
+  const [ready, setReady] = useState(false)
+  const [seedItinerary, setSeedItinerary] = useState<Itinerary | null>(props.initialItinerary ?? null)
+  const [seedMessages, setSeedMessages] = useState<PlannerMessage[]>(props.initialMessages ?? [])
+  const [restoredFromGuest, setRestoredFromGuest] = useState(false)
+
+  useEffect(() => {
+    if (props.initialTripId && props.initialItinerary) {
+      setReady(true)
+      return
+    }
+
+    const draft = readGuestDraft()
+    let restored = false
+    if (!props.initialItinerary && draft?.itinerary && itineraryHasPlan(draft.itinerary)) {
+      setSeedItinerary(parseItinerary(draft.itinerary))
+      restored = true
+    }
+    if ((!props.initialMessages || props.initialMessages.length === 0) && draft?.messages?.length) {
+      setSeedMessages(draft.messages)
+      restored = true
+    }
+    setRestoredFromGuest(restored)
+    setReady(true)
+  }, [props.initialItinerary, props.initialMessages, props.initialTripId])
+
+  if (!ready) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-gradient-to-br from-[#FFF8F3] via-[#FFE8E0] to-[#FFD4C4]">
+        <ThinkingCat />
+        <p className="mt-2 text-sm text-gray-500">{t('openingPlanner')}</p>
+      </div>
+    )
+  }
+
+  return (
+    <PlannerWorkspaceReady
+      {...props}
+      initialItinerary={seedItinerary}
+      initialMessages={seedMessages}
+      restoredFromGuest={restoredFromGuest}
+    />
+  )
+}
+
+function PlannerWorkspaceReady({
   signedIn,
   initialTripId,
   initialItinerary,
   initialMessages = [],
   initialStatus = 'draft',
+  restoredFromGuest = false,
 }: PlannerWorkspaceProps) {
   const router = useRouter()
+  const { locale, t } = useLocale()
   const tripIdRef = useRef(initialTripId)
+  const importedRef = useRef(false)
+  const localeRef = useRef(locale)
   const [tripId, setTripId] = useState(initialTripId)
   const [itinerary, setItinerary] = useState<Itinerary | null>(initialItinerary ?? null)
   const [status, setStatus] = useState<TripStatus>(initialStatus)
@@ -44,36 +96,23 @@ export function PlannerWorkspace({
   }, [tripId])
 
   useEffect(() => {
-    if (signedIn || initialItinerary) return
-    const raw = sessionStorage.getItem(GUEST_DRAFT_KEY)
-    if (!raw) return
-    try {
-      const parsed = JSON.parse(raw) as { itinerary?: unknown }
-      const guestItinerary = parseItinerary(parsed.itinerary)
-      if (itineraryHasPlan(guestItinerary)) {
-        setItinerary(guestItinerary)
-      }
-    } catch {
-      sessionStorage.removeItem(GUEST_DRAFT_KEY)
-    }
-  }, [signedIn, initialItinerary])
-
-  useEffect(() => {
-    if (signedIn || !itinerary) return
-    sessionStorage.setItem(GUEST_DRAFT_KEY, JSON.stringify({ itinerary }))
-  }, [itinerary, signedIn])
+    localeRef.current = locale
+  }, [locale])
 
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
         api: '/api/chat',
-        body: () => ({ tripId: tripIdRef.current }),
+        body: () => ({
+          tripId: tripIdRef.current,
+          locale: localeRef.current,
+        }),
       }),
     []
   )
 
   const { messages, sendMessage, status: chatStatus, error } = useChat<PlannerMessage>({
-    id: initialTripId ?? 'new-plan',
+    id: initialTripId ?? 'restored-plan',
     messages: initialMessages,
     transport,
     onData: (dataPart) => {
@@ -92,12 +131,42 @@ export function PlannerWorkspace({
     },
   })
 
+  useEffect(() => {
+    if (signedIn || initialTripId) return
+    writeGuestDraft({ itinerary, messages })
+  }, [itinerary, messages, signedIn, initialTripId])
+
+  useEffect(() => {
+    if (!signedIn || !restoredFromGuest || initialTripId || importedRef.current) return
+    if (!itineraryHasPlan(itinerary) && messages.length === 0) return
+
+    importedRef.current = true
+    void (async () => {
+      try {
+        const response = await fetch('/api/trips', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ itinerary, messages }),
+        })
+        if (!response.ok) return
+        const payload = (await response.json()) as { trip: { id: string } }
+        setTripId(payload.trip.id)
+        tripIdRef.current = payload.trip.id
+        clearGuestDraft()
+        router.replace(`/plan/${payload.trip.id}`)
+      } catch (err) {
+        console.error('Failed to import guest draft:', err)
+        importedRef.current = false
+      }
+    })()
+  }, [signedIn, restoredFromGuest, initialTripId, itinerary, messages, router])
+
   const ensureTrip = async (): Promise<string | null> => {
     if (tripId) return tripId
     const response = await fetch('/api/trips', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itinerary }),
+      body: JSON.stringify({ itinerary, messages }),
     })
     if (!response.ok) {
       const payload = (await response.json().catch(() => ({}))) as { error?: string }
@@ -112,6 +181,7 @@ export function PlannerWorkspace({
   const handleConfirm = async () => {
     setActionError(null)
     if (!signedIn) {
+      writeGuestDraft({ itinerary, messages })
       setAuthOpen(true)
       return
     }
@@ -126,7 +196,7 @@ export function PlannerWorkspace({
         const payload = (await response.json().catch(() => ({}))) as { error?: string }
         throw new Error(payload.error || 'Could not confirm trip')
       }
-      sessionStorage.removeItem(GUEST_DRAFT_KEY)
+      clearGuestDraft()
       router.push(`/trips/${id}`)
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Could not confirm trip')
@@ -152,14 +222,14 @@ export function PlannerWorkspace({
             onClick={() => setMobileTab('chat')}
             className={`rounded-full px-4 py-1.5 text-sm font-semibold ${mobileTab === 'chat' ? 'bg-[#FF9A76] text-white' : 'text-gray-600'}`}
           >
-            Chat
+            {t('tabChat')}
           </button>
           <button
             type="button"
             onClick={() => setMobileTab('plan')}
             className={`rounded-full px-4 py-1.5 text-sm font-semibold ${mobileTab === 'plan' ? 'bg-[#FF9A76] text-white' : 'text-gray-600'}`}
           >
-            Plan
+            {t('tabPlan')}
           </button>
         </div>
       </div>
@@ -197,8 +267,8 @@ export function PlannerWorkspace({
       <AuthPrompt
         open={authOpen}
         onClose={() => setAuthOpen(false)}
-        title="Sign in to confirm this trip"
-        description="Your draft stays on this device until you sign in. Then you can confirm, share, or publish it."
+        title={t('authConfirmTitle')}
+        description={t('authConfirmBody')}
         nextPath={tripId ? `/plan/${tripId}` : '/plan'}
       />
     </div>

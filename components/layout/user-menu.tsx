@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useLocale } from '@/components/i18n/locale-provider'
 import type { Profile } from '@/types'
 
 interface UserMenuProps {
@@ -13,6 +14,7 @@ interface UserMenuProps {
 export function UserMenu({ profile }: UserMenuProps) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
+  const { t } = useLocale()
 
   const handleSignOut = async () => {
     try {
@@ -46,7 +48,7 @@ export function UserMenu({ profile }: UserMenuProps) {
             onClick={() => setOpen(false)}
             className="block rounded-xl px-3 py-2 text-sm hover:bg-[#FFF8F3]"
           >
-            My trips
+            {t('navMyTrips')}
           </Link>
           <Link
             href={`/u/${profile.username}`}

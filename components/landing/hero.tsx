@@ -3,8 +3,11 @@
 import { PawTrail, PawPrint } from '../paw-print'
 import { WalkingPawPrints } from './walking-paw-prints'
 import Link from 'next/link'
+import { useLocale } from '@/components/i18n/locale-provider'
 
 export function Hero() {
+  const { t } = useLocale()
+
   return (
     <section className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden bg-gradient-to-br from-[#FFF8F3] via-[#FFE8E0] to-[#FFD4C4]">
       <WalkingPawPrints />
@@ -13,26 +16,25 @@ export function Hero() {
       <div className="container relative z-10 mx-auto px-4 py-20">
         <div className="mx-auto max-w-4xl text-center">
           <h1 className="mb-6 animate-fade-in-up text-5xl font-bold md:text-7xl">
-            <span className="text-[#FF9A76]">Chat your trip</span>
+            <span className="text-[#FF9A76]">{t('heroTitle1')}</span>
             <br />
-            <span className="text-[#7ECCC4]">into a beautiful plan</span>
+            <span className="text-[#7ECCC4]">{t('heroTitle2')}</span>
           </h1>
           <p className="mb-8 animate-fade-in-up text-xl text-gray-700 animation-delay-200">
-            Talk with Levart like ChatGPT. Watch a live itinerary appear beside you.
-            Confirm when it feels right, then share it or publish it to the community.
+            {t('heroBody')}
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
               href="/plan"
               className="rounded-full bg-gradient-to-r from-[#FF9A76] to-[#FFB86C] px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:scale-105"
             >
-              Start planning
+              {t('startPlanning')}
             </Link>
             <Link
               href="/community"
               className="rounded-full border-2 border-[#FF9A76]/30 bg-white/80 px-8 py-4 text-lg font-semibold text-[#FF9A76]"
             >
-              See community trips
+              {t('seeCommunityTrips')}
             </Link>
           </div>
         </div>

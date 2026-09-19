@@ -11,7 +11,7 @@ import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { getSupabasePublicEnv } from '@/lib/supabase/env'
 import { getPlannerModel } from '@/lib/ai/provider'
-import { PLANNER_SYSTEM_PROMPT } from '@/lib/ai/prompts'
+import { getPlannerPrompt } from '@/lib/ai/prompts'
 import { createPlannerTools, type PlannerContext } from '@/lib/ai/tools'
 import { emptyItinerary, parseItinerary } from '@/lib/trips/itinerary'
 import type { PlannerMessage } from '@/lib/ai/types'
@@ -21,6 +21,7 @@ export const maxDuration = 60
 interface ChatRequestBody {
   messages?: UIMessage[]
   tripId?: string
+  locale?: string
 }
 
 async function persistDraft(
@@ -199,7 +200,7 @@ export async function POST(request: Request) {
 
         const result = streamText({
           model: getPlannerModel(),
-          instructions: PLANNER_SYSTEM_PROMPT,
+          instructions: getPlannerPrompt(body.locale),
           messages: modelMessages,
           tools: createPlannerTools(ctx),
           stopWhen: isStepCount(8),

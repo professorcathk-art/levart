@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { getAuthCallbackUrl } from '@/lib/site-url'
+import { useLocale } from '@/components/i18n/locale-provider'
 
 interface AuthFormProps {
   mode: 'login' | 'signup'
@@ -12,6 +14,7 @@ interface AuthFormProps {
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { t } = useLocale()
   const next = searchParams.get('next') ?? '/'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -33,13 +36,13 @@ export function AuthForm({ mode }: AuthFormProps) {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+            emailRedirectTo: getAuthCallbackUrl(next),
           },
         })
         if (signUpError) {
           throw signUpError
         }
-        setInfo('Check your email to confirm your account, then sign in.')
+        setInfo(t('signupCheckEmail'))
         return
       }
 
@@ -54,7 +57,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       router.replace(next)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed')
+      setError(err instanceof Error ? err.message : t('authFailed'))
     } finally {
       setLoading(false)
     }
@@ -67,31 +70,29 @@ export function AuthForm({ mode }: AuthFormProps) {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+          redirectTo: getAuthCallbackUrl(next),
         },
       })
       if (oauthError) {
         setError(oauthError.message)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed')
+      setError(err instanceof Error ? err.message : t('authFailed'))
     }
   }
 
   return (
     <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl">
       <h1 className="mb-2 text-3xl font-bold text-[#FF9A76]">
-        {mode === 'login' ? 'Welcome back' : 'Create your account'}
+        {mode === 'login' ? t('loginTitle') : t('signupTitle')}
       </h1>
       <p className="mb-6 text-gray-600">
-        {mode === 'login'
-          ? 'Sign in to save, confirm, and share your trip.'
-          : 'Save plans, publish to the community, and comment on others.'}
+        {mode === 'login' ? t('loginBody') : t('signupBody')}
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">Email</span>
+          <span className="mb-1 block text-sm font-medium text-gray-700">{t('email')}</span>
           <input
             type="email"
             required
@@ -101,7 +102,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-gray-700">Password</span>
+          <span className="mb-1 block text-sm font-medium text-gray-700">{t('password')}</span>
           <input
             type="password"
             required
@@ -128,7 +129,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           disabled={loading}
           className="w-full rounded-full bg-gradient-to-r from-[#FF9A76] to-[#FFB86C] px-6 py-3 font-semibold text-white shadow-lg transition hover:shadow-xl disabled:opacity-60"
         >
-          {loading ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Sign up'}
+          {loading ? t('pleaseWait') : mode === 'login' ? t('navSignIn') : t('authSignUp')}
         </button>
       </form>
 
@@ -137,22 +138,22 @@ export function AuthForm({ mode }: AuthFormProps) {
         onClick={handleGoogle}
         className="mt-4 w-full rounded-full border border-gray-200 bg-white px-6 py-3 font-semibold text-gray-700 transition hover:border-[#7ECCC4]"
       >
-        Continue with Google
+        {t('continueGoogle')}
       </button>
 
       <p className="mt-6 text-center text-sm text-gray-600">
         {mode === 'login' ? (
           <>
-            New here?{' '}
+            {t('newHere')}{' '}
             <Link href={`/signup?next=${encodeURIComponent(next)}`} className="font-semibold text-[#FF9A76]">
-              Create an account
+              {t('createAccount')}
             </Link>
           </>
         ) : (
           <>
-            Already have an account?{' '}
+            {t('haveAccount')}{' '}
             <Link href={`/login?next=${encodeURIComponent(next)}`} className="font-semibold text-[#FF9A76]">
-              Sign in
+              {t('navSignIn')}
             </Link>
           </>
         )}

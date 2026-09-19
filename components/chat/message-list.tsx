@@ -1,12 +1,14 @@
 'use client'
 
 import type { UIMessage } from 'ai'
+import { useLocale } from '@/components/i18n/locale-provider'
 
 interface MessageListProps {
   messages: UIMessage[]
 }
 
 export function MessageList({ messages }: MessageListProps) {
+  const { t } = useLocale()
   return (
     <div className="space-y-4">
       {messages.map((message) => (
@@ -33,7 +35,7 @@ export function MessageList({ messages }: MessageListProps) {
               }
               return (
                 <p key={`${message.id}-${index}`} className="text-xs opacity-70">
-                  Updating your plan…
+                  {t('chatUpdating')}
                 </p>
               )
             }
