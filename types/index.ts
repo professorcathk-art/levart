@@ -1,4 +1,4 @@
-export type TripFocus = 
+export type TripFocus =
   | 'shopping'
   | 'food'
   | 'climbing'
@@ -6,6 +6,9 @@ export type TripFocus =
   | 'nightlife'
   | 'beach'
   | 'family'
+
+export type TripStatus = 'draft' | 'confirmed'
+export type TripVisibility = 'private' | 'unlisted' | 'public'
 
 export interface Attraction {
   id: string
@@ -18,11 +21,11 @@ export interface Attraction {
   photoReference?: string
   rating?: number
   userRatingsTotal?: number
-  priceLevel?: number // 0-4, where 0 is free and 4 is very expensive
+  priceLevel?: number
   openingHours?: string[]
   website?: string
   phoneNumber?: string
-  placeId?: string // Google Place ID for deduplication
+  placeId?: string
 }
 
 export interface RoutePoint {
@@ -72,7 +75,7 @@ export interface DayItinerary {
     cuisine?: string
     cost?: string
     photoUrl?: string
-    photo?: string // Legacy support
+    photo?: string
     address?: string
   }>
   transport: string[]
@@ -96,6 +99,7 @@ export interface Itinerary {
 export interface AffiliateClick {
   userId?: string
   itineraryId?: string
+  tripId?: string
   clickType: 'hotel' | 'flight' | 'activity'
   destination: string
   timestamp: string
@@ -110,9 +114,67 @@ export interface WeatherForecast {
 
 export interface TripPreferences {
   budget?: 'budget' | 'moderate' | 'luxury' | 'flexible'
-  cuisinePreferences?: string[] // e.g., ['Italian', 'Japanese', 'Local']
+  cuisinePreferences?: string[]
   transportPreference?: 'walking' | 'public' | 'taxi' | 'rental' | 'flexible'
   departureTime?: 'morning' | 'afternoon' | 'evening' | 'flexible'
   arrivalTime?: 'morning' | 'afternoon' | 'evening' | 'flexible'
-  travelRadius?: number // in kilometers, default 20km
+  travelRadius?: number
 }
+
+export interface Profile {
+  id: string
+  username: string
+  displayName: string
+  avatarUrl?: string | null
+}
+
+export interface Trip {
+  id: string
+  ownerId: string | null
+  destination: string
+  tripFocus: TripFocus[]
+  checkIn?: string | null
+  checkOut?: string | null
+  status: TripStatus
+  visibility: TripVisibility
+  slug?: string | null
+  itinerary: Itinerary
+  selectedAttractions: Attraction[]
+  route: RouteData
+  coverPhoto?: string | null
+  createdAt: string
+  updatedAt: string
+  confirmedAt?: string | null
+  owner?: Profile
+  avgRating?: number
+  ratingCount?: number
+  commentCount?: number
+}
+
+export interface TripComment {
+  id: string
+  tripId: string
+  userId: string
+  parentId?: string | null
+  body: string
+  createdAt: string
+  author?: Profile
+}
+
+export interface DestinationSuggestion {
+  name: string
+  country: string
+  state?: string
+  formatted: string
+  display: string
+}
+
+export const TRIP_FOCUS_OPTIONS: { id: TripFocus; label: string; emoji: string }[] = [
+  { id: 'food', label: 'Food', emoji: '🍜' },
+  { id: 'culture', label: 'Culture', emoji: '🎭' },
+  { id: 'shopping', label: 'Shopping', emoji: '🛍️' },
+  { id: 'beach', label: 'Beach', emoji: '🏖️' },
+  { id: 'nightlife', label: 'Nightlife', emoji: '🌃' },
+  { id: 'family', label: 'Family', emoji: '👨‍👩‍👧' },
+  { id: 'climbing', label: 'Outdoors', emoji: '🧗' },
+]

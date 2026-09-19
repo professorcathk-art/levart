@@ -5,76 +5,54 @@ import { PawPrint } from '../paw-print'
 const steps = [
   {
     number: '01',
-    title: 'Choose Your Destination',
-    description: 'Tell us where you want to go and what you love to do',
-    icon: '🌍',
+    title: 'Chat about the trip',
+    description: 'Tell Levart the destination, dates, and vibe. No forms to grind through.',
+    icon: '💬',
     color: '#FF9A76',
   },
   {
     number: '02',
-    title: 'AI Finds Attractions',
-    description: 'Our AI discovers the best places matching your interests',
-    icon: '✨',
+    title: 'Watch the plan appear',
+    description: 'A live itinerary updates on the side as you refine morning, food, and routes.',
+    icon: '🗺️',
     color: '#7ECCC4',
   },
   {
     number: '03',
-    title: 'Get Your Itinerary',
-    description: 'Receive a personalized day-by-day plan with routes & tips',
-    icon: '📅',
+    title: 'Confirm when it feels right',
+    description: 'Freeze a beautiful plan, then share a private link or publish it for others.',
+    icon: '✨',
     color: '#FFB86C',
   },
 ]
 
 export function HowItWorks() {
   return (
-    <section className="py-20 bg-white">
+    <section className="bg-white py-20">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            <span className="text-[#FF9A76]">How It</span>{' '}
-            <span className="text-[#7ECCC4]">Works</span>
+        <div className="mb-16 text-center">
+          <h2 className="mb-4 text-4xl font-bold md:text-5xl">
+            <span className="text-[#FF9A76]">How it</span>{' '}
+            <span className="text-[#7ECCC4]">works</span>
           </h2>
-          <p className="text-xl text-[#2D2D2D] max-w-2xl mx-auto font-medium">
-            Planning your perfect trip is as easy as 1, 2, 3
+          <p className="mx-auto max-w-2xl text-xl text-[#2D2D2D]">
+            Plan like a conversation. Confirm only when you are satisfied.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {steps.map((step, index) => (
-            <div
-              key={step.number}
-              className="relative group"
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              <div className="relative bg-gradient-to-br from-white to-gray-50 rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border-2 border-transparent hover:border-[#FF9A76]/20">
-                {/* Paw print accent */}
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
+          {steps.map((step) => (
+            <div key={step.number} className="group relative">
+              <div className="relative rounded-3xl border-2 border-transparent bg-gradient-to-br from-white to-gray-50 p-8 shadow-lg transition hover:-translate-y-2 hover:border-[#FF9A76]/20 hover:shadow-2xl">
+                <div className="absolute right-4 top-4 opacity-0 transition group-hover:opacity-100">
                   <PawPrint size={30} color={step.color} opacity={0.3} bounce />
                 </div>
-
-                {/* Step number */}
-                <div
-                  className="text-6xl font-bold mb-4 opacity-20"
-                  style={{ color: step.color }}
-                >
+                <div className="mb-4 text-6xl font-bold opacity-20" style={{ color: step.color }}>
                   {step.number}
                 </div>
-
-                {/* Icon */}
-                <div className="text-5xl mb-4">{step.icon}</div>
-
-                {/* Title */}
-                <h3 className="text-2xl font-bold mb-3 text-[#1A1A1A]">{step.title}</h3>
-
-                {/* Description */}
-                <p className="text-[#2D2D2D] leading-relaxed font-medium">{step.description}</p>
-
-                {/* Decorative corner */}
-                <div
-                  className="absolute bottom-0 right-0 w-20 h-20 rounded-tl-full opacity-10"
-                  style={{ background: `linear-gradient(135deg, ${step.color}, transparent)` }}
-                />
+                <div className="mb-4 text-5xl">{step.icon}</div>
+                <h3 className="mb-3 text-2xl font-bold">{step.title}</h3>
+                <p className="leading-relaxed text-[#2D2D2D]">{step.description}</p>
               </div>
             </div>
           ))}

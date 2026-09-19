@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { userId, itineraryId, clickType, destination } = body
+    const { userId, itineraryId, tripId, clickType, destination } = body
 
     if (!clickType || !destination) {
       return NextResponse.json(
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     const { error } = await supabase.from('affiliate_clicks').insert({
       user_id: userId || null,
       itinerary_id: itineraryId || null,
+      trip_id: tripId || null,
       click_type: clickType,
       destination,
     })

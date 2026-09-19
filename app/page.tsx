@@ -2,6 +2,7 @@ import { Hero } from '@/components/landing/hero'
 import { HowItWorks } from '@/components/landing/how-it-works'
 import { Features } from '@/components/landing/features'
 import { WhyLevart } from '@/components/landing/why-levart'
+import { CommunityTeaser } from '@/components/landing/community-teaser'
 import { CTA } from '@/components/landing/cta'
 import { Footer } from '@/components/landing/footer'
 
@@ -12,6 +13,7 @@ export default function HomePage() {
       <HowItWorks />
       <Features />
       <WhyLevart />
+      <CommunityTeaser />
       <CTA />
       <Footer />
     </main>

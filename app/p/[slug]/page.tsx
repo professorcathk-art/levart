@@ -1,0 +1,50 @@
+import { notFound } from 'next/navigation'
+import { CommentThread } from '@/components/community/comment-thread'
+import { RatingControl } from '@/components/community/rating-control'
+import { TripView } from '@/components/plan/trip-view'
+import { getAuthUser } from '@/lib/supabase/auth'
+import { createClient } from '@/lib/supabase/server'
+import { getPublicTripBySlug, getTripComments } from '@/lib/trips/queries'
+
+export default async function PublicTripPage({ params }: { params: { slug: string } }) {
+  const trip = await getPublicTripBySlug(params.slug)
+  if (!trip) {
+    notFound()
+  }
+
+  const user = await getAuthUser()
+  const comments = await getTripComments(trip.id)
+  let myStars: number | null = null
+
+  if (user) {
+    const supabase = await createClient()
+    const { data } = await supabase
+      .from('ratings')
+      .select('stars')
+      .eq('trip_id', trip.id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+    myStars = data?.stars ?? null
+  }
+
+  return (
+    <main className="mx-auto max-w-5xl space-y-8 px-4 py-10">
+      <TripView trip={trip} />
+      <RatingControl
+        tripId={trip.id}
+        slug={params.slug}
+        signedIn={Boolean(user)}
+        initialStars={myStars}
+        avgRating={trip.avgRating ?? 0}
+        ratingCount={trip.ratingCount ?? 0}
+      />
+      <CommentThread
+        tripId={trip.id}
+        slug={params.slug}
+        signedIn={Boolean(user)}
+        currentUserId={user?.id}
+        initialComments={comments}
+      />
+    </main>
+  )
+}

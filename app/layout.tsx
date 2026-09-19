@@ -1,9 +1,13 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { SiteHeader } from '@/components/layout/site-header'
+
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Levart - Your Friendly AI Travel Companion',
-  description: 'Plan perfect trips with AI-powered itineraries. Warm, friendly, and completely free.',
+  title: 'Levart - Chat with AI to plan your trip',
+  description:
+    'Chat with Levart to refine your itinerary, confirm when it feels right, then share or publish it for others to view, rate, and comment.',
 }
 
 export default function RootLayout({
@@ -13,7 +17,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="min-h-screen bg-[#FFF8F3] text-[#1A1A1A]">
+        <SiteHeader />
+        {children}
+      </body>
     </html>
   )
 }

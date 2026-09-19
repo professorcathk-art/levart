@@ -36,11 +36,14 @@ export function MapComponent({
 
     mapboxgl.accessToken = mapboxToken
 
-    // Calculate center from attractions
     const centerLat =
-      attractions.reduce((sum, a) => sum + a.lat, 0) / attractions.length
+      attractions.length > 0
+        ? attractions.reduce((sum, a) => sum + a.lat, 0) / attractions.length
+        : 0
     const centerLon =
-      attractions.reduce((sum, a) => sum + a.lon, 0) / attractions.length
+      attractions.length > 0
+        ? attractions.reduce((sum, a) => sum + a.lon, 0) / attractions.length
+        : 0
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
