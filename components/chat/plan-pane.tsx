@@ -42,7 +42,7 @@ export function PlanPane({ itinerary }: PlanPaneProps) {
         )}
       </header>
 
-      {itinerary.selectedAttractions.length > 0 && itinerary.route.polyline && (
+      {itinerary.selectedAttractions.length > 0 && itinerary.route?.polyline && (
         <div className="mb-6 overflow-hidden rounded-2xl shadow">
           <MapComponent
             attractions={itinerary.selectedAttractions}

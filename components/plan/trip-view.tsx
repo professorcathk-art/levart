@@ -30,9 +30,9 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
             By {trip.owner.displayName}
           </Link>
         )}
-        {trip.tripFocus.length > 0 && (
+        {(trip.tripFocus ?? []).length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
-            {trip.tripFocus.map((focus) => (
+            {(trip.tripFocus ?? []).map((focus) => (
               <span key={focus} className="rounded-full bg-white/20 px-3 py-1 text-sm capitalize">
                 {focus}
               </span>
@@ -67,11 +67,11 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
         </div>
       </header>
 
-      {trip.selectedAttractions.length > 0 && (
+      {(trip.selectedAttractions ?? []).length > 0 && (
         <div className="overflow-hidden rounded-3xl shadow-lg">
           <MapComponent
-            attractions={trip.selectedAttractions}
-            routePolyline={trip.route.polyline || '[]'}
+            attractions={trip.selectedAttractions ?? []}
+            routePolyline={trip.route?.polyline || '[]'}
           />
         </div>
       )}

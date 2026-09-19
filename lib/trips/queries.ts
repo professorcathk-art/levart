@@ -20,17 +20,58 @@ const TRIP_SELECT = `
   cover_photo,
   created_at,
   updated_at,
-  confirmed_at,
-  profiles:owner_id (id, username, display_name, avatar_url)
+  confirmed_at
 `
+
+type QueryClient = NonNullable<
+  ReturnType<typeof createPublicClient> | ReturnType<typeof createAdminClient>
+>
+
+async function getQueryClient(client?: QueryClient | null): Promise<QueryClient | null> {
+  if (client) return client
+  try {
+    return await createClient()
+  } catch (error) {
+    console.error('Failed to create Supabase client:', error)
+    return null
+  }
+}
+
+async function attachOwners(trips: Trip[], client?: QueryClient | null): Promise<Trip[]> {
+  const ownerIds = Array.from(
+    new Set(trips.map((trip) => trip.ownerId).filter((id): id is string => Boolean(id)))
+  )
+  if (ownerIds.length === 0) return trips
+
+  const supabase = await getQueryClient(client)
+  if (!supabase) return trips
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, username, display_name, avatar_url')
+    .in('id', ownerIds)
+
+  if (error || !data) {
+    if (error) console.error('Failed to load trip owners:', error)
+    return trips
+  }
+
+  const owners = new Map(data.map((row) => [row.id as string, mapProfile(row)]))
+  return trips.map((trip) => ({
+    ...trip,
+    owner: trip.ownerId ? owners.get(trip.ownerId) ?? trip.owner : trip.owner,
+  }))
+}
 
 async function attachStats(
   trips: Trip[],
-  client?: ReturnType<typeof createPublicClient>
+  client?: QueryClient | null
 ): Promise<Trip[]> {
   if (trips.length === 0) return trips
 
-  const supabase = client ?? (await createClient())
+  const supabase = await getQueryClient(client)
+  if (!supabase) return trips
+
   const ids = trips.map((trip) => trip.id)
   const [{ data: ratings }, { data: comments }] = await Promise.all([
     supabase.from('ratings').select('trip_id, stars').in('trip_id', ids),
@@ -62,7 +103,8 @@ async function attachStats(
 }
 
 export async function getOwnedTrip(tripId: string, userId: string): Promise<Trip | null> {
-  const supabase = await createClient()
+  const supabase = await getQueryClient()
+  if (!supabase) return null
   const { data, error } = await supabase
     .from('trips')
     .select(TRIP_SELECT)
@@ -76,12 +118,13 @@ export async function getOwnedTrip(tripId: string, userId: string): Promise<Trip
   }
 
   if (!data) return null
-  const [trip] = await attachStats([mapTrip(data)])
+  const [trip] = await attachOwners(await attachStats([mapTrip(data)]))
   return trip
 }
 
 export async function getMyTrips(userId: string): Promise<Trip[]> {
-  const supabase = await createClient()
+  const supabase = await getQueryClient()
+  if (!supabase) return []
   const { data, error } = await supabase
     .from('trips')
     .select(TRIP_SELECT)
@@ -93,11 +136,12 @@ export async function getMyTrips(userId: string): Promise<Trip[]> {
     return []
   }
 
-  return attachStats((data ?? []).map(mapTrip))
+  return attachOwners(await attachStats((data ?? []).map(mapTrip)))
 }
 
 export async function getPublicTripBySlug(slug: string): Promise<Trip | null> {
-  const supabase = await createClient()
+  const supabase = await getQueryClient()
+  if (!supabase) return null
   const { data, error } = await supabase
     .from('trips')
     .select(TRIP_SELECT)
@@ -112,7 +156,7 @@ export async function getPublicTripBySlug(slug: string): Promise<Trip | null> {
   }
 
   if (!data) return null
-  const [trip] = await attachStats([mapTrip(data)])
+  const [trip] = await attachOwners(await attachStats([mapTrip(data)]))
   return trip
 }
 
@@ -120,40 +164,51 @@ export async function getCommunityTrips(options?: {
   destination?: string
   sort?: 'recent' | 'rating'
 }): Promise<Trip[]> {
-  const supabase = createPublicClient()
-  let query = supabase
-    .from('trips')
-    .select(TRIP_SELECT)
-    .eq('visibility', 'public')
-    .eq('status', 'confirmed')
+  try {
+    const supabase = createPublicClient()
+    if (!supabase) return []
 
-  if (options?.destination) {
-    query = query.ilike('destination', `%${options.destination}%`)
-  }
+    let query = supabase
+      .from('trips')
+      .select(TRIP_SELECT)
+      .eq('visibility', 'public')
+      .eq('status', 'confirmed')
 
-  if (options?.sort === 'rating') {
-    query = query.order('created_at', { ascending: false })
-  } else {
-    query = query.order('confirmed_at', { ascending: false, nullsFirst: false })
-  }
+    if (options?.destination) {
+      query = query.ilike('destination', `%${options.destination}%`)
+    }
 
-  const { data, error } = await query.limit(48)
+    if (options?.sort === 'rating') {
+      query = query.order('created_at', { ascending: false })
+    } else {
+      query = query.order('confirmed_at', { ascending: false })
+    }
 
-  if (error) {
+    const { data, error } = await query.limit(48)
+
+    if (error) {
+      console.error('Failed to load community trips:', error)
+      return []
+    }
+
+    const trips = await attachOwners(
+      await attachStats((data ?? []).map(mapTrip), supabase),
+      supabase
+    )
+    if (options?.sort === 'rating') {
+      return trips.sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0))
+    }
+    return trips
+  } catch (error) {
     console.error('Failed to load community trips:', error)
     return []
   }
-
-  const trips = await attachStats((data ?? []).map(mapTrip), supabase)
-  if (options?.sort === 'rating') {
-    return trips.sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0))
-  }
-  return trips
 }
 
 export async function getSharedTrip(token: string): Promise<Trip | null> {
   try {
     const admin = createAdminClient()
+    if (!admin) return null
     const { data: link, error: linkError } = await admin
       .from('share_links')
       .select('trip_id, revoked_at')
@@ -176,7 +231,8 @@ export async function getSharedTrip(token: string): Promise<Trip | null> {
       return null
     }
 
-    return mapTrip(data)
+    const [trip] = await attachOwners([mapTrip(data)], admin)
+    return trip
   } catch (error) {
     console.error('Share lookup failed:', error)
     return null
@@ -184,7 +240,8 @@ export async function getSharedTrip(token: string): Promise<Trip | null> {
 }
 
 export async function getProfileByUsername(username: string): Promise<Profile | null> {
-  const supabase = await createClient()
+  const supabase = await getQueryClient()
+  if (!supabase) return null
   const { data, error } = await supabase
     .from('profiles')
     .select('id, username, display_name, avatar_url')
@@ -200,7 +257,8 @@ export async function getProfileByUsername(username: string): Promise<Profile | 
 }
 
 export async function getPublishedTripsForUser(userId: string): Promise<Trip[]> {
-  const supabase = await createClient()
+  const supabase = await getQueryClient()
+  if (!supabase) return []
   const { data, error } = await supabase
     .from('trips')
     .select(TRIP_SELECT)
@@ -214,14 +272,15 @@ export async function getPublishedTripsForUser(userId: string): Promise<Trip[]> 
     return []
   }
 
-  return attachStats((data ?? []).map(mapTrip))
+  return attachOwners(await attachStats((data ?? []).map(mapTrip)))
 }
 
 export async function getTripComments(tripId: string): Promise<TripComment[]> {
-  const supabase = await createClient()
+  const supabase = await getQueryClient()
+  if (!supabase) return []
   const { data, error } = await supabase
     .from('comments')
-    .select('id, trip_id, user_id, parent_id, body, created_at, profiles:user_id (id, username, display_name, avatar_url)')
+    .select('id, trip_id, user_id, parent_id, body, created_at')
     .eq('trip_id', tripId)
     .order('created_at', { ascending: true })
 
@@ -230,11 +289,30 @@ export async function getTripComments(tripId: string): Promise<TripComment[]> {
     return []
   }
 
-  return (data ?? []).map(mapComment)
+  const comments = (data ?? []).map(mapComment)
+  const userIds = Array.from(new Set(comments.map((comment) => comment.userId)))
+  if (userIds.length === 0) return comments
+
+  const { data: profiles, error: profileError } = await supabase
+    .from('profiles')
+    .select('id, username, display_name, avatar_url')
+    .in('id', userIds)
+
+  if (profileError || !profiles) {
+    if (profileError) console.error('Failed to load comment authors:', profileError)
+    return comments
+  }
+
+  const authors = new Map(profiles.map((row) => [row.id as string, mapProfile(row)]))
+  return comments.map((comment) => ({
+    ...comment,
+    author: authors.get(comment.userId),
+  }))
 }
 
 export async function getTripMessages(tripId: string, userId: string) {
-  const supabase = await createClient()
+  const supabase = await getQueryClient()
+  if (!supabase) return []
   const { data: conversation, error: conversationError } = await supabase
     .from('conversations')
     .select('id')

@@ -62,15 +62,19 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const handleGoogle = async () => {
     setError(null)
-    const supabase = createClient()
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
-    })
-    if (oauthError) {
-      setError(oauthError.message)
+    try {
+      const supabase = createClient()
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        },
+      })
+      if (oauthError) {
+        setError(oauthError.message)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Authentication failed')
     }
   }
 

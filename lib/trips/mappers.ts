@@ -60,10 +60,18 @@ export function mapTrip(row: TripRow): Trip {
   const attractions = Array.isArray(row.selected_attractions)
     ? (row.selected_attractions as Attraction[])
     : itinerary.selectedAttractions
-  const route =
+  const routeSource =
     row.route_data && typeof row.route_data === 'object'
-      ? (row.route_data as RouteData)
-      : itinerary.route ?? EMPTY_ROUTE
+      ? (row.route_data as Partial<RouteData>)
+      : itinerary.route
+  const route: RouteData = {
+    points: Array.isArray(routeSource?.points) ? routeSource.points : EMPTY_ROUTE.points,
+    polyline: typeof routeSource?.polyline === 'string' ? routeSource.polyline : EMPTY_ROUTE.polyline,
+    totalDistance:
+      typeof routeSource?.totalDistance === 'number' ? routeSource.totalDistance : EMPTY_ROUTE.totalDistance,
+    totalDuration:
+      typeof routeSource?.totalDuration === 'number' ? routeSource.totalDuration : EMPTY_ROUTE.totalDuration,
+  }
 
   return {
     id: row.id,

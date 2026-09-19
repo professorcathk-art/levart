@@ -79,8 +79,12 @@ export function createPlannerTools(ctx: PlannerContext) {
         query: z.string().describe('Partial destination name'),
       }),
       execute: async ({ query }) => {
-        const suggestions = await searchDestinations(query)
-        return { suggestions }
+        try {
+          return { suggestions: await searchDestinations(query) }
+        } catch (error) {
+          console.error('Destination search failed:', error)
+          return { suggestions: [], error: 'Could not search destinations' }
+        }
       },
     }),
     search_attractions: tool({
@@ -91,7 +95,13 @@ export function createPlannerTools(ctx: PlannerContext) {
         radiusKm: z.number().optional(),
       }),
       execute: async ({ destination, focus, radiusKm }) => {
-        const attractions = await findAttractions(destination, focus, radiusKm ?? 20)
+        let attractions: Attraction[] = []
+        try {
+          attractions = await findAttractions(destination, focus, radiusKm ?? 20)
+        } catch (error) {
+          console.error('Attraction search failed:', error)
+          return { count: 0, attractions: [], error: 'Could not search attractions' }
+        }
         if (attractions.length > 0) {
           ctx.itinerary.selectedAttractions = attractions.slice(0, 16)
           ctx.itinerary.destination = destination

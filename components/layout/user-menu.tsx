@@ -15,8 +15,12 @@ export function UserMenu({ profile }: UserMenuProps) {
   const router = useRouter()
 
   const handleSignOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+    } catch (error) {
+      console.error('Failed to sign out:', error)
+    }
     setOpen(false)
     router.refresh()
     router.push('/')
@@ -31,9 +35,9 @@ export function UserMenu({ profile }: UserMenuProps) {
         aria-expanded={open}
       >
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF9A76] text-white">
-          {profile.displayName.slice(0, 1).toUpperCase()}
+          {(profile.displayName || profile.username || '?').slice(0, 1).toUpperCase()}
         </span>
-        <span className="hidden sm:inline">{profile.displayName}</span>
+        <span className="hidden sm:inline">{profile.displayName || profile.username}</span>
       </button>
       {open && (
         <div className="absolute right-0 z-50 mt-2 w-48 rounded-2xl bg-white p-2 shadow-xl">

@@ -7,7 +7,9 @@ import {
   toUIMessageStream,
   type UIMessage,
 } from 'ai'
+import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
+import { getSupabasePublicEnv } from '@/lib/supabase/env'
 import { getPlannerModel } from '@/lib/ai/provider'
 import { PLANNER_SYSTEM_PROMPT } from '@/lib/ai/prompts'
 import { createPlannerTools, type PlannerContext } from '@/lib/ai/tools'
@@ -83,10 +85,27 @@ export async function POST(request: Request) {
       return Response.json({ error: 'Missing messages' }, { status: 400 })
     }
 
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    try {
+      getPlannerModel()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Planning AI is not configured'
+      return Response.json({ error: message }, { status: 503 })
+    }
+
+    let supabase: Awaited<ReturnType<typeof createClient>> | null = null
+    let user: User | null = null
+
+    if (getSupabasePublicEnv()) {
+      try {
+        supabase = await createClient()
+        const {
+          data: { user: authUser },
+        } = await supabase.auth.getUser()
+        user = authUser
+      } catch (error) {
+        console.error('Chat auth unavailable:', error)
+      }
+    }
 
     let tripId = body.tripId
     let conversationId: string | null = null
@@ -95,7 +114,7 @@ export async function POST(request: Request) {
       dirty: false,
     }
 
-    if (user && !tripId) {
+    if (user && supabase && !tripId) {
       const { data: trip, error: tripError } = await supabase
         .from('trips')
         .insert({
@@ -123,7 +142,7 @@ export async function POST(request: Request) {
           conversationId = conversation.id
         }
       }
-    } else if (user && tripId) {
+    } else if (user && supabase && tripId) {
       const { data: trip, error } = await supabase
         .from('trips')
         .select('id, owner_id, status, itinerary, destination, trip_focus, check_in, check_out')
@@ -191,7 +210,7 @@ export async function POST(request: Request) {
               type: 'data-itinerary',
               data: ctx.itinerary,
             })
-            if (user && tripId) {
+            if (user && tripId && supabase) {
               await persistDraft(supabase, tripId, ctx)
             }
           },
@@ -200,7 +219,7 @@ export async function POST(request: Request) {
         writer.merge(toUIMessageStream({ stream: result.stream }))
       },
       onFinish: async ({ messages }) => {
-        if (user && conversationId) {
+        if (user && conversationId && supabase) {
           await persistMessages(supabase, conversationId, messages)
         }
       },

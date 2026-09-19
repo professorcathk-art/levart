@@ -8,7 +8,12 @@ interface CommunityPageProps {
 export default async function CommunityPage({ searchParams }: CommunityPageProps) {
   const destination = searchParams.q?.trim()
   const sort = searchParams.sort === 'rating' ? 'rating' : 'recent'
-  const trips = await getCommunityTrips({ destination, sort })
+  let trips: Awaited<ReturnType<typeof getCommunityTrips>> = []
+  try {
+    trips = await getCommunityTrips({ destination, sort })
+  } catch (error) {
+    console.error('Failed to load community page:', error)
+  }
 
   return (
     <main className="mx-auto min-h-[calc(100vh-4rem)] max-w-6xl px-4 py-10">

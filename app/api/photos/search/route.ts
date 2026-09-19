@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { searchPlacePhotos, getPlacePhoto } from '@/lib/apis/google-places'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams

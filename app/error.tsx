@@ -10,7 +10,7 @@ export default function ErrorPage({
   return (
     <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-xl flex-col items-center justify-center px-4 text-center">
       <h1 className="text-3xl font-bold text-[#FF9A76]">Something went wrong</h1>
-      <p className="mt-3 text-gray-600">{error.message || 'Please try again.'}</p>
+      <p className="mt-3 text-gray-600">Please try again.</p>
       <button
         type="button"
         onClick={reset}

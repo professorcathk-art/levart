@@ -17,14 +17,18 @@ export default async function PublicTripPage({ params }: { params: { slug: strin
   let myStars: number | null = null
 
   if (user) {
-    const supabase = await createClient()
-    const { data } = await supabase
-      .from('ratings')
-      .select('stars')
-      .eq('trip_id', trip.id)
-      .eq('user_id', user.id)
-      .maybeSingle()
-    myStars = data?.stars ?? null
+    try {
+      const supabase = await createClient()
+      const { data } = await supabase
+        .from('ratings')
+        .select('stars')
+        .eq('trip_id', trip.id)
+        .eq('user_id', user.id)
+        .maybeSingle()
+      myStars = data?.stars ?? null
+    } catch (error) {
+      console.error('Failed to load rating:', error)
+    }
   }
 
   return (
