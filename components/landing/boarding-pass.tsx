@@ -30,13 +30,13 @@ export function BoardingPass({ open, city }: BoardingPassProps) {
             transition={{ type: 'spring', stiffness: 280, damping: 22 }}
             className="relative w-full max-w-md overflow-hidden rounded-3xl bg-[#FFF1E6] text-[#2B2D42] shadow-2xl"
           >
-            <div className="bg-gradient-to-r from-[#E07A5F] to-[#FFB86C] px-6 py-3 text-sm font-semibold tracking-[0.2em] text-white">
-              LEVART AIR
+            <div className="bg-gradient-to-r from-[#E07A5F] to-[#FFB86C] px-6 py-3 font-mono text-xs font-semibold tracking-[0.22em] text-white">
+              CATPAWTRIP AIR
             </div>
             <div className="grid grid-cols-[1fr_auto] gap-4 p-6">
               <div>
-                <p className="text-xs uppercase tracking-widest text-[#E07A5F]">{t('boardingNow')}</p>
-                <h2 id="boarding-pass-title" className="mt-1 text-2xl font-bold leading-tight">
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#E07A5F]">{t('boardingNow')}</p>
+                <h2 id="boarding-pass-title" className="mt-1 text-2xl font-extrabold leading-tight">
                   {city}
                 </h2>
                 <p className="mt-3 text-sm text-[#2B2D42]/70">{t('boardingSeat')}</p>

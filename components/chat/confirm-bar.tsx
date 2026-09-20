@@ -51,7 +51,7 @@ export function ConfirmBar({
         type="button"
         disabled={confirming}
         onClick={onConfirm}
-        className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#FF9A76] disabled:opacity-60"
+        className="relative overflow-hidden rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#FF9A76] shadow-sm transition-all hover:scale-[1.03] disabled:opacity-60"
       >
         {confirming ? t('confirming') : t('confirmPlan')}
       </button>

@@ -25,7 +25,7 @@ export function ViewModesDemo() {
     <section className="bg-white py-20">
       <div className="container mx-auto px-4">
         <div className="mb-10 text-center">
-          <h2 className="text-3xl font-bold text-[#2B2D42] md:text-5xl">{t('modesTitle')}</h2>
+          <h2 className="text-3xl font-extrabold text-[#2B2D42] md:text-5xl">{t('modesTitle')}</h2>
           <p className="mx-auto mt-3 max-w-2xl text-[#2B2D42]/70">{t('modesBody')}</p>
         </div>
         <div className="mx-auto max-w-3xl">
@@ -56,10 +56,10 @@ export function ViewModesDemo() {
                       ? 'rounded-r-xl border-l-4 border-[#E07A5F] bg-white px-4 py-3'
                       : style === 'handbook'
                         ? 'rounded-[24px] border border-[#E8DFD1] bg-[#FFFDF9] p-4 shadow-[2px_3px_0_rgba(90,70,40,0.06)]'
-                        : 'rounded-2xl border border-white bg-white p-4 shadow-sm'
+                        : 'rounded-2xl border border-orange-100/80 bg-white p-4 shadow-sm'
                   }
                 >
-                  <p className="text-xs font-semibold uppercase tracking-wide text-[#E07A5F]">{t(stop.time)}</p>
+                  <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#E07A5F]">{t(stop.time)}</p>
                   <p className={`mt-1 font-semibold ${style === 'handbook' ? 'font-serif text-lg' : ''}`}>
                     {stop.place}
                   </p>

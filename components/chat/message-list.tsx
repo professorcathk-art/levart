@@ -28,6 +28,14 @@ export function MessageList({ messages }: MessageListProps) {
                 </p>
               )
             }
+            if (part.type === 'file') {
+              const name = 'filename' in part && part.filename ? part.filename : t('attachFile')
+              return (
+                <p key={`${message.id}-${index}`} className="mt-1 text-xs opacity-80">
+                  📎 {name}
+                </p>
+              )
+            }
             if (part.type.startsWith('tool-') && 'state' in part) {
               const state = (part as { state?: string }).state
               if (state === 'output-available' || state === 'done') {

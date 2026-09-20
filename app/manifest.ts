@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Levart 貓爪印',
+    name: 'Catpawtrip 貓爪印',
     short_name: '貓爪印',
     description: 'Chat your trip into a beautiful plan, then take it with you offline.',
     start_url: '/',

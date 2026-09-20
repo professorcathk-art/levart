@@ -24,7 +24,7 @@ export default function OpenGraphImage() {
           <div style={{ position: 'absolute', left: 68, top: 22, width: 44, height: 36, background: 'white', borderRadius: 40 }} />
           <div style={{ position: 'absolute', left: 116, top: 42, width: 44, height: 36, background: 'white', borderRadius: 40 }} />
         </div>
-        <div style={{ fontSize: 88, fontWeight: 800 }}>Levart</div>
+        <div style={{ fontSize: 72, fontWeight: 800 }}>Catpawtrip</div>
         <div style={{ fontSize: 36, marginTop: 12, opacity: 0.95 }}>Chat your trip into a beautiful plan</div>
       </div>
     ),

@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+import { List, MapPinned } from 'lucide-react'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { DayMapPanel } from '@/components/itinerary/day-map-panel'
 import { DaySection } from '@/components/itinerary/day-section'
@@ -49,10 +50,10 @@ function BoardChrome({ itinerary, destination, trip }: ItineraryBoardProps) {
                 role="tab"
                 aria-selected={selected}
                 onClick={() => setSelectedDay(item.day)}
-                className={`inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold ${
+                className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 font-mono text-[11px] font-semibold uppercase tracking-[0.16em] transition-all ${
                   selected
-                    ? 'bg-[#2B2D42] text-white'
-                    : 'bg-white text-slate-600 shadow-sm ring-1 ring-black/5'
+                    ? 'border-[#2B2D42] bg-[#2B2D42] text-white shadow-md'
+                    : 'border-orange-100/80 bg-white/90 text-slate-600 shadow-sm backdrop-blur-sm hover:scale-[1.03] hover:shadow-md'
                 }`}
               >
                 {t('planDay', { day: item.day })}
@@ -71,7 +72,7 @@ function BoardChrome({ itinerary, destination, trip }: ItineraryBoardProps) {
           {day ? (
             <DaySection day={day} destination={destination} currency={itinerary.currency} trip={trip} />
           ) : (
-            <p className="rounded-xl bg-white p-6 text-sm text-slate-500 shadow-sm">{t('filterEmpty')}</p>
+            <p className="rounded-xl border border-orange-100/80 bg-white/90 p-6 text-sm font-medium text-slate-500 shadow-sm">{t('filterEmpty')}</p>
           )}
         </div>
         <aside className={mobilePane === 'list' ? 'hidden lg:block' : 'block'}>
@@ -84,9 +85,10 @@ function BoardChrome({ itinerary, destination, trip }: ItineraryBoardProps) {
       <button
         type="button"
         onClick={() => setMobilePane(mobilePane === 'list' ? 'map' : 'list')}
-        className="fixed bottom-6 left-1/2 z-30 inline-flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-[#2B2D42] px-5 text-sm font-semibold text-white shadow-lg lg:hidden"
+        className="fixed bottom-6 left-1/2 z-30 inline-flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full border border-white/20 bg-[#2B2D42] px-5 text-sm font-semibold text-white shadow-lg transition-all hover:scale-[1.03] lg:hidden"
       >
-        {mobilePane === 'list' ? `🗺️ ${t('mapView')}` : `📋 ${t('listView')}`}
+        {mobilePane === 'list' ? <MapPinned className="h-4 w-4" aria-hidden /> : <List className="h-4 w-4" aria-hidden />}
+        {mobilePane === 'list' ? t('mapView') : t('listView')}
       </button>
     </div>
   )

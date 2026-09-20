@@ -17,7 +17,7 @@ export function Footer() {
       <div className="container relative z-10 mx-auto px-4">
         <div className="mb-8 grid gap-8 md:grid-cols-3">
           <div>
-            <h3 className="mb-1 text-2xl font-bold text-[#E07A5F]">Levart</h3>
+            <h3 className="mb-1 text-2xl font-extrabold text-[#E07A5F]">Catpawtrip</h3>
             <p className="mb-3 text-sm font-semibold tracking-[0.18em] text-[#E07A5F]/80">{t('brandNameZh')}</p>
             <p className="text-sm text-gray-400">{t('footerTagline')}</p>
           </div>
@@ -57,8 +57,18 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-gray-800 pt-8 text-sm text-gray-400">
-          © {new Date().getFullYear()} Levart. {t('footerCredit')}
+        <div className="flex flex-col gap-3 border-t border-gray-800 pt-8 text-sm text-gray-400 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            © {new Date().getFullYear()} Catpawtrip. {t('footerCredit')}
+          </p>
+          <p className="flex gap-4 text-xs">
+            <Link href="/contact" className="hover:text-[#FF9A76]">
+              {t('footerContact')}
+            </Link>
+            <Link href="/contact?type=bug" className="hover:text-[#FF9A76]">
+              {t('footerBug')}
+            </Link>
+          </p>
         </div>
       </div>
     </footer>

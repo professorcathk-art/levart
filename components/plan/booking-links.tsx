@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Hotel } from 'lucide-react'
 import { useLocale } from '@/components/i18n/locale-provider'
+import { IconBadge } from '@/components/ui/icon-badge'
 
 interface BookingLinksProps {
   destination: string
@@ -89,15 +91,14 @@ export function StayBookLink({
   const end = checkOut || start
 
   return (
-    <a
-      href={`https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${start}&checkOut=${end}${affiliateSuffix(config)}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      onClick={() => logAffiliateClick('hotel', destination, tripId)}
-      className="inline-flex min-h-9 items-center rounded-full px-2.5 text-xs font-semibold text-[#E07A5F] ring-1 ring-[#E07A5F]/25 hover:bg-[#FFF1E6]"
-    >
-      {t('bookStay')}
-    </a>
+    <span onClick={() => logAffiliateClick('hotel', destination, tripId)}>
+      <IconBadge
+        icon={Hotel}
+        href={`https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${start}&checkOut=${end}${affiliateSuffix(config)}`}
+      >
+        {t('bookStay')}
+      </IconBadge>
+    </span>
   )
 }
 

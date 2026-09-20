@@ -37,7 +37,7 @@ export function DaySection({ day, destination, currency, trip }: DaySectionProps
       className={
         handbook
           ? 'relative overflow-hidden rounded-[28px] border border-[#E8DFD1] bg-[#FAF7F2] p-4 shadow-sm md:p-5'
-          : 'rounded-xl border border-slate-100 bg-white p-4 shadow-sm md:p-5'
+          : 'rounded-xl border border-orange-100/80 bg-white/90 p-4 shadow-sm transition-all hover:shadow-md md:p-5'
       }
     >
       {handbook && (
@@ -47,10 +47,10 @@ export function DaySection({ day, destination, currency, trip }: DaySectionProps
         />
       )}
       <header className="mb-6">
-        <h3 className={`text-xl font-bold ${handbook ? 'font-serif text-[#3F3428]' : 'text-slate-800'}`}>
+        <h3 className={`text-xl font-extrabold ${handbook ? 'font-serif text-[#3F3428]' : 'text-slate-800'}`}>
           {t('planDay', { day: day.day })}
         </h3>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
           {day.date ? `${day.date} · ` : ''}
           {t(timeline.length === 1 ? 'daySummaryOne' : 'daySummary', {
             stops: timeline.length,

@@ -223,7 +223,6 @@ export async function getSharedTrip(token: string): Promise<Trip | null> {
       .from('trips')
       .select(TRIP_SELECT)
       .eq('id', link.trip_id)
-      .eq('status', 'confirmed')
       .maybeSingle()
 
     if (error || !data) {

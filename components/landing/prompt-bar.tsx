@@ -3,6 +3,8 @@
 import { FormEvent, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import { Sparkles } from 'lucide-react'
+import { PawMark } from '@/components/ui/paw-mark'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { BoardingPass } from '@/components/landing/boarding-pass'
 import { guessBoardingCity, saveHeroPrompt } from '@/lib/landing/hero-prompt'
@@ -58,10 +60,15 @@ export function PromptBar() {
           <motion.button
             type="submit"
             whileTap={{ scale: 0.97 }}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#E07A5F] to-[#FFB86C] px-5 font-semibold text-white shadow-md"
+            className="relative inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-[#E07A5F] to-[#FFB86C] px-5 font-semibold text-white shadow-md"
           >
+            {boarding && (
+              <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <PawMark size={28} className="paw-stamp text-white" />
+              </span>
+            )}
+            <Sparkles className="h-4 w-4" aria-hidden />
             {t('heroGenerate')}
-            <span aria-hidden>🐾</span>
           </motion.button>
         </form>
         <div className="flex flex-wrap items-center justify-center gap-2">
@@ -75,7 +82,7 @@ export function PromptBar() {
                 setPrompt(next)
                 launch(next)
               }}
-              className="min-h-11 rounded-full border border-[#E07A5F]/20 bg-white/70 px-3 py-1.5 text-sm text-[#2B2D42] transition hover:bg-[#FFF1E6]"
+              className="min-h-11 rounded-full border border-orange-100/80 bg-white/90 px-3 py-1.5 text-sm font-medium text-[#2B2D42] shadow-sm backdrop-blur-sm transition-all hover:scale-[1.03] hover:shadow-md"
             >
               {t(chip.label)}
             </button>

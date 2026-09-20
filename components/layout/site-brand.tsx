@@ -9,7 +9,7 @@ export function SiteBrand() {
   return (
     <Link
       href="/"
-      aria-label={`Levart ${t('brandNameZh')}`}
+      aria-label={`Catpawtrip ${t('brandNameZh')}`}
       className="flex min-w-0 shrink-0 items-center gap-2 text-[#E07A5F]"
     >
       <svg width={22} height={22} viewBox="0 0 100 100" aria-hidden className="shrink-0">
@@ -21,7 +21,7 @@ export function SiteBrand() {
         <ellipse cx="60" cy="25" rx="10" ry="8" fill="#E07A5F" />
       </svg>
       <span className="flex min-w-0 flex-col leading-tight">
-        <span className="text-lg font-bold sm:text-xl">Levart</span>
+        <span className="text-lg font-extrabold sm:text-xl">Catpawtrip</span>
         <span className="text-[10px] font-semibold tracking-[0.16em] text-[#E07A5F]/75 sm:text-xs">
           {t('brandNameZh')}
         </span>

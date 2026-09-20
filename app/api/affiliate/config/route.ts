@@ -5,7 +5,7 @@ export async function GET() {
   // Based on Trip.com format: Allianceid, SID, trip_sub1, trip_sub3
   const allianceId = process.env.TRIP_COM_ALLIANCE_ID || '7695682'
   const sid = process.env.TRIP_COM_SID || '288370027'
-  const tripSub1 = process.env.TRIP_COM_SUB1 || 'levart'
+  const tripSub1 = process.env.TRIP_COM_SUB1 || 'catpawtrip'
   const tripSub3 = process.env.TRIP_COM_SUB3 || ''
 
   return NextResponse.json({

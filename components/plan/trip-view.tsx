@@ -33,11 +33,11 @@ function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewPro
 
   return (
     <div className="space-y-6 pb-20 lg:pb-10">
-      <header className="overflow-hidden rounded-3xl bg-gradient-to-br from-[#FF9A76] to-[#7ECCC4] p-6 text-white shadow-xl md:p-8">
-        <p className="text-sm uppercase tracking-wide text-white/80">
+      <header className="overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-[#FF9A76] to-[#7ECCC4] p-6 text-white shadow-xl md:p-8">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80">
           {trip.status === 'confirmed' ? t('statusConfirmed') : t('statusDraft')}
         </p>
-        <h1 className="mt-2 text-3xl font-bold md:text-5xl">{trip.destination || t('untitledTrip')}</h1>
+        <h1 className="mt-2 text-3xl font-extrabold md:text-5xl">{trip.destination || t('untitledTrip')}</h1>
         <p className="mt-2 text-base text-white/90 md:text-lg">
           {t('planDays', { count: trip.itinerary.days.length })}
           {trip.checkIn ? ` • ${trip.checkIn}` : ''}
@@ -58,7 +58,10 @@ function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewPro
         {(trip.tripFocus ?? []).length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
             {(trip.tripFocus ?? []).map((focus) => (
-              <span key={focus} className="rounded-full bg-white/20 px-3 py-1 text-sm capitalize">
+              <span
+                key={focus}
+                className="rounded-full border border-white/30 bg-white/15 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.16em]"
+              >
                 {focus}
               </span>
             ))}
@@ -75,7 +78,7 @@ function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewPro
             </Link>
           )}
           {isOwner && <DeleteTripButton tripId={trip.id} redirectTo="/trips" />}
-          {showShare && isOwner && trip.status === 'confirmed' && (
+          {isOwner && (showShare || trip.status === 'draft') && (
             <ShareSheet
               tripId={trip.id}
               destination={trip.destination}
@@ -110,8 +113,8 @@ function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewPro
       {tab === 'overview' && (
         <section className="space-y-6">
           {trip.itinerary.notes && (
-            <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-[#E07A5F]">{t('tripNotes')}</h2>
+            <div className="rounded-xl border border-orange-100/80 bg-white/90 p-6 shadow-sm">
+              <h2 className="text-xl font-extrabold text-[#E07A5F]">{t('tripNotes')}</h2>
               <p className="mt-2 whitespace-pre-wrap text-slate-700">{trip.itinerary.notes}</p>
             </div>
           )}
@@ -125,10 +128,10 @@ function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewPro
                   setMobilePane('list')
                   setTab('itinerary')
                 }}
-                className="min-h-11 rounded-xl border border-slate-100 bg-white p-5 text-left shadow-sm transition hover:shadow-md"
+                className="min-h-11 rounded-xl border border-orange-100/80 bg-white/90 p-5 text-left shadow-sm transition-all hover:shadow-md"
               >
-                <p className="text-sm font-semibold text-[#7ECCC4]">{t('planDay', { day: day.day })}</p>
-                <p className="mt-2 font-bold">{day.activities[0]?.activity || day.date}</p>
+                <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7ECCC4]">{t('planDay', { day: day.day })}</p>
+                <p className="mt-2 font-extrabold">{day.activities[0]?.activity || day.date}</p>
                 <p className="mt-1 text-sm text-slate-500">
                   {day.activities.length} {t('stops')}
                 </p>
@@ -146,8 +149,8 @@ function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewPro
       {tab === 'tips' && (
         <section className="space-y-4">
           {tips.map((section) => (
-            <article key={section.id} className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
-              <h2 className="text-xl font-bold text-[#E07A5F]">
+            <article key={section.id} className="rounded-xl border border-orange-100/80 bg-white/90 p-6 shadow-sm transition-all hover:shadow-md">
+              <h2 className="text-xl font-extrabold text-[#E07A5F]">
                 {section.id === 'fromPlan'
                   ? t('tipsFromPlan')
                   : section.id === 'style'

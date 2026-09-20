@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Trash2 } from 'lucide-react'
 import { useLocale } from '@/components/i18n/locale-provider'
+import { IconBadge } from '@/components/ui/icon-badge'
 
 interface DeleteTripButtonProps {
   tripId: string
@@ -37,13 +39,13 @@ export function DeleteTripButton({ tripId, redirectTo }: DeleteTripButtonProps) 
   }
 
   return (
-    <button
-      type="button"
-      onClick={onDelete}
+    <IconBadge
+      icon={Trash2}
+      onClick={() => void onDelete()}
       disabled={busy}
-      className="min-h-11 shrink-0 rounded-full border border-red-200 px-4 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+      className="min-h-11 border-red-200 px-4 text-sm text-red-600"
     >
       {busy ? t('deletingTrip') : t('deleteTrip')}
-    </button>
+    </IconBadge>
   )
 }

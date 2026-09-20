@@ -14,10 +14,6 @@ export async function POST(_request: NextRequest, { params }: { params: { id: st
   if (!trip) {
     return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
   }
-  if (trip.status !== 'confirmed') {
-    return NextResponse.json({ error: 'Confirm the plan before sharing' }, { status: 400 })
-  }
-
   const supabase = await createClient()
   const { data: existing } = await supabase
     .from('share_links')

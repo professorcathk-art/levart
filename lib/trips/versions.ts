@@ -5,6 +5,37 @@ function hasPlan(itinerary: Itinerary | null | undefined) {
 }
 
 const MAX_VERSIONS = 15
+export const ORIGINAL_PREFIX = 'Original draft'
+
+export function isOriginalVersion(version: PlanVersion) {
+  return version.summary.startsWith(ORIGINAL_PREFIX)
+}
+
+export function ensureOriginal(itinerary: Itinerary): Itinerary {
+  if (!hasPlan(itinerary)) return itinerary
+  const versions = [...(itinerary.versions ?? [])]
+  if (versions.some(isOriginalVersion) || versions.length === 0) return itinerary
+  const oldest = versions[versions.length - 1]
+  versions[versions.length - 1] = {
+    ...oldest,
+    summary: `${ORIGINAL_PREFIX} · ${oldest.itinerary.destination || itinerary.destination || 'trip'}`,
+  }
+  return { ...itinerary, versions }
+}
+
+function samePlan(a: Itinerary, b: Itinerary) {
+  return (
+    a.destination === b.destination &&
+    flattenActivities(a).join('\n') === flattenActivities(b).join('\n')
+  )
+}
+
+function trimVersions(versions: PlanVersion[]) {
+  if (versions.length <= MAX_VERSIONS) return versions
+  const original = versions.find(isOriginalVersion) ?? versions[versions.length - 1]
+  const rest = versions.filter((version) => version.id !== original.id).slice(0, MAX_VERSIONS - 1)
+  return [...rest, original]
+}
 
 export function stripVersions(itinerary: Itinerary): Itinerary {
   return {
@@ -61,18 +92,35 @@ export function addVersion(
 ): Itinerary {
   const versions = [...(next.versions ?? previous?.versions ?? [])]
   if (previous && hasPlan(previous)) {
-    versions.unshift({
+    const alreadyOriginal = versions.some(
+      (version) => isOriginalVersion(version) && samePlan(version.itinerary, previous)
+    )
+    if (!alreadyOriginal) {
+      versions.unshift({
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+        source,
+        summary: summary ?? summarizeDiff(previous, next),
+        itinerary: stripVersions(previous),
+      })
+    }
+  }
+
+  if (hasPlan(next) && !versions.some(isOriginalVersion)) {
+    const seed = previous && hasPlan(previous) ? previous : next
+    versions.push({
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
-      source,
-      summary: summary ?? summarizeDiff(previous, next),
-      itinerary: stripVersions(previous),
+      source: 'ai',
+      summary: `${ORIGINAL_PREFIX} · ${seed.destination || 'trip'}`,
+      itinerary: stripVersions(seed),
     })
   }
+
   return {
     ...next,
     lastChange: summary ?? summarizeDiff(previous, next),
-    versions: versions.slice(0, MAX_VERSIONS),
+    versions: trimVersions(versions),
   }
 }
 

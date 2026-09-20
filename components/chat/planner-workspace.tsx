@@ -15,7 +15,7 @@ import { useLocale } from '@/components/i18n/locale-provider'
 import { itineraryHasPlan, parseItinerary } from '@/lib/trips/itinerary'
 import { consumeHeroPrompt } from '@/lib/landing/hero-prompt'
 import { clearGuestDraft, readGuestDraft, writeGuestDraft } from '@/lib/trips/guest-draft'
-import { addVersion, markUserEdits, restoreVersion, summarizeDiff } from '@/lib/trips/versions'
+import { addVersion, ensureOriginal, markUserEdits, restoreVersion, summarizeDiff } from '@/lib/trips/versions'
 import type { PlannerMessage } from '@/lib/ai/types'
 import type { Itinerary, PlanVersion, TripStatus } from '@/types'
 
@@ -89,7 +89,9 @@ function PlannerWorkspaceReady({
   const localeRef = useRef(locale)
   const itineraryRef = useRef(initialItinerary ?? null)
   const [tripId, setTripId] = useState(initialTripId)
-  const [itinerary, setItinerary] = useState<Itinerary | null>(initialItinerary ?? null)
+  const [itinerary, setItinerary] = useState<Itinerary | null>(
+    initialItinerary ? ensureOriginal(initialItinerary) : null
+  )
   const [status, setStatus] = useState<TripStatus>(initialStatus)
   const [mobileTab, setMobileTab] = useState<'chat' | 'plan'>('chat')
   const [authOpen, setAuthOpen] = useState(false)
@@ -98,6 +100,8 @@ function PlannerWorkspaceReady({
   const [editorOpen, setEditorOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [lastChange, setLastChange] = useState<string | null>(initialItinerary?.lastChange ?? null)
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [shareCopied, setShareCopied] = useState(false)
 
   useEffect(() => {
     tripIdRef.current = tripId
@@ -233,15 +237,68 @@ function PlannerWorkspaceReady({
   const persistItinerary = async (next: Itinerary) => {
     setItinerary(next)
     itineraryRef.current = next
+    setSaveState('saving')
     if (!signedIn) {
       writeGuestDraft({ itinerary: next, messages })
+      setSaveState('saved')
+      return
     }
-    if (tripId && signedIn) {
-      await fetch(`/api/trips/${tripId}`, {
+    if (tripId) {
+      const response = await fetch(`/api/trips/${tripId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ itinerary: next }),
       })
+      setSaveState(response.ok ? 'saved' : 'error')
+      return
+    }
+    setSaveState('saved')
+  }
+
+  const handleActivityChange = async (
+    dayIndex: number,
+    activityIndex: number,
+    patch: Partial<Itinerary['days'][number]['activities'][number]>
+  ) => {
+    if (!itinerary) return
+    const draft = {
+      ...itinerary,
+      days: itinerary.days.map((day, index) =>
+        index === dayIndex
+          ? {
+              ...day,
+              activities: day.activities.map((activity, inner) =>
+                inner === activityIndex ? { ...activity, ...patch, userLocked: true } : activity
+              ),
+            }
+          : day
+      ),
+    }
+    const next = addVersion(itinerary, markUserEdits(draft), 'user', summarizeDiff(itinerary, draft) || 'Saved your edits')
+    setLastChange(next.lastChange ?? 'Saved your edits')
+    await persistItinerary(next)
+  }
+
+  const handleShare = async () => {
+    setActionError(null)
+    if (!signedIn) {
+      setAuthOpen(true)
+      return
+    }
+    try {
+      const id = await ensureTrip()
+      if (!id) throw new Error('Could not save trip')
+      const response = await fetch(`/api/trips/${id}/share`, { method: 'POST' })
+      const payload = (await response.json()) as { url?: string; error?: string }
+      if (!response.ok || !payload.url) {
+        throw new Error(payload.error || 'Could not share')
+      }
+      const absolute = `${window.location.origin}${payload.url}`
+      await navigator.clipboard.writeText(absolute)
+      setShareCopied(true)
+      setLastChange(t('shareLinkCopied'))
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : t('shareFailed'))
     }
   }
 
@@ -300,15 +357,19 @@ function PlannerWorkspaceReady({
             status={chatStatus}
             error={error}
             disabled={status === 'confirmed'}
-            onSend={(text) => sendMessage({ text })}
+            onSend={(text, files) => sendMessage({ text, files })}
           />
         </section>
         <section className={`min-h-0 ${mobileTab === 'plan' ? 'block' : 'hidden'} md:block`}>
           <PlanPane
             itinerary={itinerary}
-            lastChange={lastChange}
+            lastChange={shareCopied ? t('shareLinkCopied') : lastChange}
+            saveState={saveState}
+            editable={status !== 'confirmed'}
             onEdit={itineraryHasPlan(itinerary) && status !== 'confirmed' ? () => setEditorOpen(true) : undefined}
-            onHistory={itinerary?.versions?.length ? () => setHistoryOpen(true) : undefined}
+            onHistory={itineraryHasPlan(itinerary) ? () => setHistoryOpen(true) : undefined}
+            onShare={itineraryHasPlan(itinerary) ? () => void handleShare() : undefined}
+            onActivityChange={status !== 'confirmed' ? handleActivityChange : undefined}
           />
         </section>
       </div>

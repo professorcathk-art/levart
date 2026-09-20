@@ -273,7 +273,7 @@ export function createPlannerTools(ctx: PlannerContext) {
     }),
     search_community_guides: tool({
       description:
-        'Retrieve real traveler notes from published Levart trips and curated destination guides. Call this before writing a first itinerary.',
+        'Retrieve real traveler notes from published Catpawtrip trips and curated destination guides. Call this before writing a first itinerary.',
       inputSchema: z.object({
         destination: z.string(),
       }),

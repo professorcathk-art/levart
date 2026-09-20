@@ -3,7 +3,7 @@ import { HowItWorks } from '@/components/landing/how-it-works'
 import { CommunityShowcase } from '@/components/landing/community-showcase'
 import { ViewModesDemo } from '@/components/landing/view-modes-demo'
 import { Features } from '@/components/landing/features'
-import { WhyLevart } from '@/components/landing/why-levart'
+import { WhyCatpawtrip } from '@/components/landing/why-catpawtrip'
 import { CTA } from '@/components/landing/cta'
 import { Footer } from '@/components/landing/footer'
 import { getCommunityTrips } from '@/lib/trips/queries'
@@ -23,7 +23,7 @@ export default async function HomePage() {
       <HowItWorks />
       <ViewModesDemo />
       <Features />
-      <WhyLevart />
+      <WhyCatpawtrip />
       <CTA />
       <Footer />
     </main>

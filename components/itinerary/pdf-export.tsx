@@ -76,7 +76,7 @@ export function PDFExport({ itinerary }: PDFExportProps) {
             <div className="mb-8">
               <PawPrint size={80} color="#FFFFFF" opacity={0.6} />
             </div>
-            <h1 className="text-6xl font-bold mb-4">Levart</h1>
+            <h1 className="text-6xl font-bold mb-4">Catpawtrip</h1>
             <h2 className="text-4xl mb-8">Trip to {itinerary.destination}</h2>
             <div className="text-xl space-y-2">
               <p>{itinerary.checkIn} - {itinerary.checkOut || itinerary.checkIn}</p>
@@ -229,7 +229,7 @@ export function PDFExport({ itinerary }: PDFExportProps) {
           @media print {
             @page {
               @bottom-center {
-                content: 'Levart by 貓爪印 | Trip to ${itinerary.destination} | Page ' counter(page);
+                content: 'Catpawtrip 貓爪印 | Trip to ${itinerary.destination} | Page ' counter(page);
                 font-size: 10pt;
                 color: #666;
               }

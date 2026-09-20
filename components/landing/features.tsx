@@ -20,7 +20,7 @@ export function Features() {
     <section className="bg-white py-20">
       <div className="container mx-auto px-4">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 text-4xl font-bold md:text-5xl">
+            <h2 className="mb-4 text-4xl font-extrabold md:text-5xl">
             <span className="text-[#FF9A76]">{t('featuresTitle1')}</span>{' '}
             <span className="text-[#7ECCC4]">{t('featuresTitle2')}</span>
           </h2>
@@ -30,7 +30,7 @@ export function Features() {
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="group relative rounded-2xl border border-[#E07A5F]/10 bg-[#FFF1E6]/40 p-6 shadow-sm transition hover:-translate-y-1 hover:bg-white hover:shadow-lg"
+              className="group relative rounded-2xl border border-orange-100/80 bg-white/90 p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md"
             >
               <div className="absolute right-2 top-2 opacity-0 transition group-hover:opacity-100">
                 <PawPrint size={25} color={feature.color} opacity={0.3} bounce />

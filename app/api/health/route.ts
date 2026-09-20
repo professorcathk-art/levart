@@ -29,6 +29,7 @@ export async function GET() {
       process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || process.env.MAPBOX_ACCESS_TOKEN
     ),
     siteUrlConfigured: Boolean(process.env.NEXT_PUBLIC_SITE_URL),
+    resendConfigured: Boolean(process.env.RESEND_API_KEY),
   }
 
   return NextResponse.json({

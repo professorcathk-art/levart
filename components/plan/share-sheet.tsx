@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { Share2 } from 'lucide-react'
 import { useLocale } from '@/components/i18n/locale-provider'
+import { IconBadge } from '@/components/ui/icon-badge'
 import type { TripVisibility } from '@/types'
 
 interface ShareSheetProps {
@@ -91,18 +93,14 @@ export function ShareSheet({ tripId, destination, visibility, slug }: ShareSheet
 
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="rounded-full bg-white px-5 py-2 font-semibold text-[#FF9A76] shadow"
-      >
+      <IconBadge icon={Share2} onClick={() => setOpen(true)} className="min-h-11 bg-white px-4 text-sm text-[#E07A5F]">
         {t('share')}
-      </button>
+      </IconBadge>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
-            <h2 className="text-2xl font-bold text-[#FF9A76]">{t('shareTitle', { destination })}</h2>
+          <div className="w-full max-w-lg rounded-3xl border border-orange-100/80 bg-white/95 p-6 shadow-2xl backdrop-blur-sm">
+            <h2 className="text-2xl font-extrabold text-[#FF9A76]">{t('shareTitle', { destination })}</h2>
             <p className="mt-2 text-sm text-gray-600">{t('shareBody')}</p>
 
             <div className="mt-6 space-y-3">

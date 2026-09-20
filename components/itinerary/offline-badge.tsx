@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { Smartphone } from 'lucide-react'
 import { useLocale } from '@/components/i18n/locale-provider'
+import { IconBadge } from '@/components/ui/icon-badge'
 import { useTripView } from '@/components/itinerary/trip-view-provider'
 import {
   cacheCurrentPage,
@@ -47,20 +49,14 @@ export function OfflineBadge({ trip }: { trip: Trip }) {
         </span>
       )}
       <div className="flex flex-wrap items-center gap-2">
-        <button
-          type="button"
+        <IconBadge
+          icon={Smartphone}
           onClick={() => void save()}
           disabled={busy}
-          aria-pressed={saved}
-          className={`inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-sm font-semibold disabled:opacity-60 ${
-            saved
-              ? 'border border-[#7ECCC4]/50 bg-[#E8F3F1] text-[#1A1A1A]'
-              : 'bg-[#1A1A1A] text-white'
-          }`}
+          className={saved ? 'border-[#7ECCC4]/50 bg-[#E8F3F1] min-h-11 px-4 text-sm' : 'min-h-11 bg-[#1A1A1A] px-4 text-sm text-white'}
         >
-          <span aria-hidden>{saved ? '✓' : '↓'}</span>
           {busy ? t('offlineSaving') : saved ? t('offlineReady') : t('saveOffline')}
-        </button>
+        </IconBadge>
         {saved && (
           <button
             type="button"

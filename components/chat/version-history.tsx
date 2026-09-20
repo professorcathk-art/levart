@@ -1,6 +1,7 @@
 'use client'
 
 import { useLocale } from '@/components/i18n/locale-provider'
+import { isOriginalVersion } from '@/lib/trips/versions'
 import type { PlanVersion } from '@/types'
 
 interface VersionHistoryProps {
@@ -29,11 +30,13 @@ export function VersionHistory({ versions, onRestore, onClose }: VersionHistoryP
               {versions.map((version) => (
                 <li key={version.id} className="rounded-2xl border border-[#FF9A76]/20 p-4">
                   <p className="text-xs uppercase tracking-wide text-[#7ECCC4]">
-                    {version.source === 'user'
-                      ? t('versionUser')
-                      : version.source === 'restore'
-                        ? t('versionRestore')
-                        : t('versionAi')}
+                    {isOriginalVersion(version)
+                      ? t('versionOriginal')
+                      : version.source === 'user'
+                        ? t('versionUser')
+                        : version.source === 'restore'
+                          ? t('versionRestore')
+                          : t('versionAi')}
                   </p>
                   <p className="mt-1 text-sm font-semibold">{version.summary}</p>
                   <p className="mt-1 text-xs text-gray-500">

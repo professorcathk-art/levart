@@ -15,6 +15,7 @@ import { getPlannerPrompt } from '@/lib/ai/prompts'
 import { createPlannerTools, type PlannerContext } from '@/lib/ai/tools'
 import { emptyItinerary, itineraryHasPlan, parseItinerary } from '@/lib/trips/itinerary'
 import { formatItineraryForPrompt } from '@/lib/trips/versions'
+import { filePartsToText, stripHeavyFiles } from '@/lib/ai/chat-files'
 import type { PlannerMessage } from '@/lib/ai/types'
 
 export const maxDuration = 120
@@ -196,10 +197,28 @@ export async function POST(request: Request) {
     }
 
     if (user && conversationId && supabase) {
-      await persistMessages(supabase, conversationId, incoming)
+      await persistMessages(supabase, conversationId, stripHeavyFiles(incoming))
     }
 
-    const modelMessages = await convertToModelMessages(incoming)
+    let modelMessages
+    try {
+      modelMessages = await convertToModelMessages(filePartsToText(incoming))
+    } catch (error) {
+      console.error('File parts not accepted by the model, sending text notes instead:', error)
+      modelMessages = await convertToModelMessages(
+        incoming.map((message) => ({
+          ...message,
+          parts: (message.parts ?? []).map((part) =>
+            part.type === 'file'
+              ? {
+                  type: 'text' as const,
+                  text: `[Attached file: ${'filename' in part && part.filename ? part.filename : 'attachment'}]`,
+                }
+              : part
+          ),
+        }))
+      )
+    }
     const instructions = `${getPlannerPrompt(body.locale)}
 
 CURRENT_PLAN:
@@ -244,7 +263,7 @@ ${formatItineraryForPrompt(ctx.itinerary)}`
       },
       onFinish: async ({ messages }) => {
         if (user && conversationId && supabase) {
-          await persistMessages(supabase, conversationId, messages)
+          await persistMessages(supabase, conversationId, stripHeavyFiles(messages))
         }
       },
     })

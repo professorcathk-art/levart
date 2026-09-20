@@ -18,15 +18,15 @@ export function Hero() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-3xl text-center"
         >
-          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#E07A5F]/15 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#E07A5F] backdrop-blur">
+          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-100/80 bg-white/90 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#E07A5F] shadow-sm backdrop-blur">
             <span aria-hidden>🐾</span>
             {t('heroEyebrow')}
           </p>
-          <h1 className="text-4xl font-bold leading-tight text-[#2B2D42] md:text-6xl">
+          <h1 className="text-4xl font-extrabold leading-tight text-[#2B2D42] md:text-6xl">
             {t('heroTitle1')}
             <span className="mt-2 block text-[#E07A5F]">{t('heroTitle2')}</span>
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg text-[#2B2D42]/70 md:text-xl">{t('heroBody')}</p>
+          <p className="mx-auto mt-5 max-w-2xl text-lg font-medium leading-relaxed text-[#2B2D42]/70 md:text-xl">{t('heroBody')}</p>
           <div className="mt-10">
             <PromptBar />
           </div>

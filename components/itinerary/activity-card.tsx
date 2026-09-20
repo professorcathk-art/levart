@@ -3,7 +3,11 @@
 import { useEffect, useId, useState } from 'react'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { PlaceThumb } from '@/components/itinerary/place-thumb'
+import { MapPin } from 'lucide-react'
+import { PlaceHint } from '@/components/itinerary/place-hint'
 import { StayBookLink } from '@/components/plan/booking-links'
+import { IconBadge } from '@/components/ui/icon-badge'
+import { TicketMark } from '@/components/ui/ticket-mark'
 import { useTripView } from '@/components/itinerary/trip-view-provider'
 import { displayCost } from '@/lib/trips/currency'
 import { mapsSearchUrl } from '@/lib/trips/transit'
@@ -48,14 +52,17 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
 
   const actions = (
     <div className="flex flex-wrap items-center justify-end gap-2">
-      <a
-        href={mapsSearchUrl(query)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex min-h-9 items-center rounded-full px-2.5 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
-      >
-        📍 {t('openMaps')}
-      </a>
+      <PlaceHint
+        title={item.title}
+        location={item.location}
+        destination={destination}
+        tips={activity.tips}
+        notes={activity.notes}
+        address={activity.address}
+      />
+      <IconBadge icon={MapPin} href={mapsSearchUrl(query)}>
+        {t('openMaps')}
+      </IconBadge>
       {item.kind === 'stay' && (
         <StayBookLink
           destination={activity.location || destination}
@@ -89,14 +96,12 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
 
   if (viewStyle === 'concise') {
     return (
-      <article className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:shadow-md">
-        <p className="inline-flex rounded bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600">
-          {t(TIME_KEYS[item.time])}
-        </p>
-        <h4 className="mt-1 text-base font-bold text-slate-800">{item.title}</h4>
+      <article className="rounded-xl border border-orange-100/80 bg-white/90 p-4 shadow-sm transition-all hover:shadow-md">
+        <TicketMark>{t(TIME_KEYS[item.time])}</TicketMark>
+        <h4 className="mt-1 text-base font-extrabold text-slate-800">{item.title}</h4>
         <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">{item.location}</p>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <p className="text-xs text-slate-500">{meta || '—'}</p>
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-wide text-slate-500">{meta || '—'}</p>
           {actions}
         </div>
         {hasDetails && (
@@ -129,13 +134,11 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
             />
           </figure>
           <div className="min-w-0 flex-1">
-            <p className="inline-flex rounded bg-[#F6E6C8] px-2 py-0.5 text-xs font-semibold text-[#C4A574]">
-              {t(TIME_KEYS[item.time])}
-            </p>
+            <TicketMark className="bg-[#F6E6C8] text-[#C4A574]">{t(TIME_KEYS[item.time])}</TicketMark>
             <h4 className="mt-1 font-serif text-xl leading-snug text-[#3F3428]">{item.title}</h4>
             <p className="flex items-center gap-1 text-xs text-[#7A6A58]">{item.location}</p>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-              <p className="text-xs text-[#7A6A58]">{meta}</p>
+              <p className="font-mono text-[11px] font-semibold uppercase tracking-wide text-[#7A6A58]">{meta}</p>
               {actions}
             </div>
           </div>
@@ -146,7 +149,7 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
   }
 
   return (
-    <article className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+    <article className="rounded-xl border border-orange-100/80 bg-white/90 p-4 shadow-sm transition-all hover:shadow-md">
       <div className="flex gap-4">
         <PlaceThumb
           title={item.title}
@@ -156,15 +159,13 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
           className="h-16 w-16 shrink-0 rounded-xl"
         />
         <div className="min-w-0 flex-1">
-          <p className="inline-flex rounded bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600">
-            {t(TIME_KEYS[item.time])}
-          </p>
-          <h4 className="mt-1 text-base font-bold text-slate-800">{item.title}</h4>
+          <TicketMark>{t(TIME_KEYS[item.time])}</TicketMark>
+          <h4 className="mt-1 text-base font-extrabold text-slate-800">{item.title}</h4>
           <p className="flex items-center gap-1 text-xs text-slate-500">{item.location}</p>
         </div>
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-slate-500">{meta || '—'}</p>
+        <p className="font-mono text-[11px] font-semibold uppercase tracking-wide text-slate-500">{meta || '—'}</p>
         {actions}
       </div>
       {hasDetails && (
