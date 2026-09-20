@@ -24,3 +24,15 @@ export function pinsForDay(trip: Trip, dayNumber?: number): Attraction[] {
   const matched = all.filter((pin) => matchesPlace(pin, day))
   return matched.length > 0 ? matched : all
 }
+
+export function dayStopQueries(trip: Trip, dayNumber?: number): string[] {
+  const day = trip.itinerary.days.find((item) => item.day === dayNumber)
+  if (!day) return []
+  const names = [
+    ...day.activities.map((activity) => activity.location || activity.activity),
+    ...day.restaurants.map((restaurant) => restaurant.name),
+  ]
+    .map((name) => name.trim())
+    .filter((name) => name.length >= 2)
+  return [...new Set(names)].slice(0, 8)
+}

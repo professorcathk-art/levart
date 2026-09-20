@@ -54,7 +54,7 @@ export function PlanEditor({ itinerary, onSave, onClose }: PlanEditorProps) {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
-      <div className="flex h-[92dvh] w-full max-w-3xl flex-col rounded-t-3xl bg-white shadow-2xl sm:h-[85dvh] sm:rounded-3xl">
+      <div className="flex h-[92dvh] w-full max-w-3xl flex-col rounded-t-3xl bg-white text-[#1A1A1A] shadow-2xl sm:h-[85dvh] sm:rounded-3xl">
         <header className="flex items-center justify-between border-b px-4 py-3">
           <h2 className="text-lg font-bold text-[#FF9A76]">{t('editPlan')}</h2>
           <button type="button" onClick={onClose} className="text-sm text-gray-500">
@@ -218,7 +218,7 @@ export function PlanEditor({ itinerary, onSave, onClose }: PlanEditorProps) {
           ))}
         </div>
         <footer className="flex gap-3 border-t px-4 py-3">
-          <button type="button" onClick={onClose} className="flex-1 rounded-full border px-4 py-3 font-semibold">
+          <button type="button" onClick={onClose} className="flex-1 rounded-full border border-slate-200 px-4 py-3 font-semibold text-[#1A1A1A]">
             {t('cancel')}
           </button>
           <button

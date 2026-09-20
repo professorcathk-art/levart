@@ -118,8 +118,8 @@ function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewPro
               <p className="mt-2 whitespace-pre-wrap text-slate-700">{trip.itinerary.notes}</p>
             </div>
           )}
-          <div className="grid gap-4 sm:grid-cols-3">
-            {trip.itinerary.days.slice(0, 3).map((day) => (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {trip.itinerary.days.map((day) => (
               <button
                 key={day.day}
                 type="button"

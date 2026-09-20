@@ -98,10 +98,10 @@ export function ShareSheet({ tripId, destination, visibility, slug }: ShareSheet
       </IconBadge>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-lg rounded-3xl border border-orange-100/80 bg-white/95 p-6 shadow-2xl backdrop-blur-sm">
-            <h2 className="text-2xl font-extrabold text-[#FF9A76]">{t('shareTitle', { destination })}</h2>
-            <p className="mt-2 text-sm text-gray-600">{t('shareBody')}</p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 text-[#1A1A1A]">
+          <div className="w-full max-w-lg rounded-3xl border border-orange-100/80 bg-white p-6 text-[#1A1A1A] shadow-2xl">
+            <h2 className="text-2xl font-extrabold text-[#E07A5F]">{t('shareTitle', { destination })}</h2>
+            <p className="mt-2 text-sm text-slate-600">{t('shareBody')}</p>
 
             <div className="mt-6 space-y-3">
               <label className={`block cursor-pointer rounded-2xl border p-4 ${currentVisibility === 'private' ? 'border-[#FF9A76] bg-[#FFF8F3]' : 'border-gray-200'}`}>
@@ -115,8 +115,8 @@ export function ShareSheet({ tripId, destination, visibility, slug }: ShareSheet
                     onChange={() => setVisibility('private')}
                   />
                   <div>
-                    <p className="font-semibold">{t('visibilityPrivate')}</p>
-                    <p className="mt-1 text-sm text-gray-600">{t('visibilityPrivateHint')}</p>
+                    <p className="font-semibold text-[#1A1A1A]">{t('visibilityPrivate')}</p>
+                    <p className="mt-1 text-sm text-slate-600">{t('visibilityPrivateHint')}</p>
                   </div>
                 </div>
               </label>
@@ -132,8 +132,8 @@ export function ShareSheet({ tripId, destination, visibility, slug }: ShareSheet
                     onChange={() => void handleShare()}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold">{t('visibilityLink')}</p>
-                    <p className="mt-1 text-sm text-gray-600">{t('visibilityLinkHint')}</p>
+                    <p className="font-semibold text-[#1A1A1A]">{t('visibilityLink')}</p>
+                    <p className="mt-1 text-sm text-slate-600">{t('visibilityLinkHint')}</p>
                     <button
                       type="button"
                       disabled={busy}
@@ -158,12 +158,12 @@ export function ShareSheet({ tripId, destination, visibility, slug }: ShareSheet
                     onChange={() => void handlePublish()}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold">{t('visibilityPublic')}</p>
-                    <p className="mt-1 text-sm text-gray-600">{t('visibilityPublicHint')}</p>
+                    <p className="font-semibold text-[#1A1A1A]">{t('visibilityPublic')}</p>
+                    <p className="mt-1 text-sm text-slate-600">{t('visibilityPublicHint')}</p>
                     {publicUrl && currentVisibility === 'public' ? (
                       <Link
                         href={publicUrl}
-                        className="mt-3 inline-block rounded-full border border-[#7ECCC4] px-4 py-2 text-sm font-semibold text-[#1A1A1A]"
+                        className="mt-3 inline-block rounded-full bg-[#2B2D42] px-4 py-2 text-sm font-semibold text-white"
                       >
                         {t('viewInCommunity')}
                       </Link>
@@ -172,7 +172,7 @@ export function ShareSheet({ tripId, destination, visibility, slug }: ShareSheet
                         type="button"
                         disabled={busy}
                         onClick={handlePublish}
-                        className="mt-3 rounded-full border border-[#7ECCC4] px-4 py-2 text-sm font-semibold disabled:opacity-60"
+                        className="mt-3 rounded-full bg-[#2B2D42] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
                       >
                         {t('publishToCommunity')}
                       </button>
@@ -182,7 +182,7 @@ export function ShareSheet({ tripId, destination, visibility, slug }: ShareSheet
               </label>
             </div>
 
-            <p className="mt-4 text-xs text-gray-500">{t('shareRatingsNote')}</p>
+            <p className="mt-4 text-xs text-slate-500">{t('shareRatingsNote')}</p>
 
             {error && (
               <p className="mt-3 text-sm text-red-600" role="alert">
@@ -193,7 +193,7 @@ export function ShareSheet({ tripId, destination, visibility, slug }: ShareSheet
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="mt-4 w-full text-sm text-gray-500"
+              className="mt-4 w-full text-sm font-semibold text-slate-600"
             >
               {t('close')}
             </button>

@@ -7,6 +7,7 @@ import { saveHeroPrompt } from '@/lib/landing/hero-prompt'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { BoardingPass } from '@/components/landing/boarding-pass'
+import { PawMark } from '@/components/ui/paw-mark'
 import type { Trip } from '@/types'
 
 interface ShowcaseCardProps {
@@ -38,11 +39,12 @@ export function ShowcaseCard({ trip }: ShowcaseCardProps) {
         <div className="relative">
           <DestinationCover destination={trip.destination} coverPhoto={trip.coverPhoto} className="h-44" />
           {pawsome && (
-            <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-[#E07A5F] shadow">
-              🐾 {t('pawsomePick')}
+            <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/70 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#E07A5F] shadow-sm backdrop-blur-md">
+              <PawMark size={12} />
+              {t('pawsomePick')}
             </span>
           )}
-          <span className="absolute bottom-3 right-3 rounded-full bg-[#2B2D42]/80 px-2.5 py-1 text-xs font-semibold text-white">
+          <span className="absolute bottom-3 right-3 rounded-full bg-[#2B2D42]/80 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
             {t('planDays', { count: days })}
           </span>
         </div>

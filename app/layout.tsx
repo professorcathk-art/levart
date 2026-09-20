@@ -51,7 +51,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${sans.variable} ${mono.variable}`}>
-      <body className="min-h-screen bg-[#FFF8F3] font-sans font-medium leading-relaxed text-[#1A1A1A]">
+      <body className="min-h-screen bg-[#FAF6F0] font-sans font-medium leading-relaxed text-[#2B2D42]">
         <LocaleProvider>
           <Suspense fallback={null}>
             <SiteHeader />

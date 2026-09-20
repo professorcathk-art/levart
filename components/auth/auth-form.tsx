@@ -18,7 +18,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const next = searchParams.get('next') ?? '/'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(searchParams.get('error') === 'auth' ? t('authFailed') : null)
   const [info, setInfo] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -71,10 +71,16 @@ export function AuthForm({ mode }: AuthFormProps) {
         provider: 'google',
         options: {
           redirectTo: getAuthCallbackUrl(next),
+          queryParams: { prompt: 'select_account' },
         },
       })
       if (oauthError) {
-        setError(oauthError.message)
+        const message = oauthError.message.toLowerCase()
+        setError(
+          message.includes('provider') || message.includes('not enabled')
+            ? t('googleNotReady')
+            : oauthError.message
+        )
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('authFailed'))
@@ -140,6 +146,17 @@ export function AuthForm({ mode }: AuthFormProps) {
       >
         {t('continueGoogle')}
       </button>
+
+      <p className="mt-4 text-center text-xs leading-relaxed text-gray-500">
+        {t('authLegalLead')}{' '}
+        <Link href="/terms" className="font-semibold text-[#E07A5F]">
+          {t('footerTerms')}
+        </Link>{' '}
+        {t('authLegalAnd')}{' '}
+        <Link href="/privacy" className="font-semibold text-[#E07A5F]">
+          {t('footerPrivacy')}
+        </Link>
+      </p>
 
       <p className="mt-6 text-center text-sm text-gray-600">
         {mode === 'login' ? (

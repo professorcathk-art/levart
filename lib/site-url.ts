@@ -10,7 +10,8 @@ export function getBrowserSiteUrl() {
 }
 
 export function getAuthCallbackUrl(nextPath: string) {
-  const origin = getBrowserSiteUrl()
+  const origin =
+    typeof window !== 'undefined' ? window.location.origin : getConfiguredSiteUrl() || ''
   const next = nextPath.startsWith('/') ? nextPath : `/${nextPath}`
   return `${origin}/auth/callback?next=${encodeURIComponent(next)}`
 }

@@ -15,7 +15,7 @@ export function VersionHistory({ versions, onRestore, onClose }: VersionHistoryP
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
-      <div className="flex h-[80dvh] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-2xl sm:h-auto sm:max-h-[80dvh] sm:rounded-3xl">
+      <div className="flex h-[80dvh] w-full max-w-lg flex-col rounded-t-3xl bg-white text-[#1A1A1A] shadow-2xl sm:h-auto sm:max-h-[80dvh] sm:rounded-3xl">
         <header className="flex items-center justify-between border-b px-4 py-3">
           <h2 className="text-lg font-bold text-[#FF9A76]">{t('versionHistory')}</h2>
           <button type="button" onClick={onClose} className="text-sm text-gray-500">

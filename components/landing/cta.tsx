@@ -11,7 +11,7 @@ export function CTA() {
   const [stamped, setStamped] = useState(false)
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[#E07A5F] via-[#FFB86C] to-[#7ECCC4] py-20">
+    <section className="relative overflow-hidden bg-gradient-to-br from-[#E07A5F] via-[#FFB86C] to-[#7ECCC4] py-24">
       <div className="container relative z-10 mx-auto px-4">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="mb-6 text-4xl font-extrabold text-white md:text-5xl">
