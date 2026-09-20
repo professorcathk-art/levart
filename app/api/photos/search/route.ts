@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { searchPlacePhotos, getPlacePhoto } from '@/lib/apis/google-places'
+import { resolvePlacePhoto } from '@/lib/photos/search'
+import { getPlacePhoto } from '@/lib/apis/google-places'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,15 +10,13 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get('q')
     const photoReference = searchParams.get('photo_reference')
 
-    // If photo_reference is provided, use it directly (faster)
     if (photoReference) {
       const photoUrl = await getPlacePhoto(photoReference)
       if (photoUrl) {
-        return NextResponse.json({ photo: photoUrl })
+        return NextResponse.json({ photo: photoUrl, source: 'google' })
       }
     }
 
-    // Otherwise, search for the place and get its photo
     if (!query) {
       return NextResponse.json(
         { error: 'Query parameter "q" or "photo_reference" is required' },
@@ -25,17 +24,12 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const photoUrl = await searchPlacePhotos(query)
-    
-    if (!photoUrl) {
-      // Return placeholder if no photo found
-      return NextResponse.json({ 
-        photo: null,
-        placeholder: `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&h=600&fit=crop&q=80`
-      })
-    }
-
-    return NextResponse.json({ photo: photoUrl })
+    const resolved = await resolvePlacePhoto(query)
+    return NextResponse.json({
+      photo: resolved.photo,
+      source: resolved.source,
+      credit: resolved.credit,
+    })
   } catch (error) {
     console.error('Error in photo search:', error)
     return NextResponse.json(

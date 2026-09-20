@@ -24,7 +24,7 @@ export async function searchPhoto(query: string): Promise<UnsplashPhoto | null> 
     const response = await fetch(
       `${UNSPLASH_BASE_URL}/search/photos?` +
         new URLSearchParams({
-          query: query,
+          query: `${query} travel landmark`,
           per_page: '1',
           orientation: 'landscape',
         }),

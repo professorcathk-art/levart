@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useLocale } from '@/components/i18n/locale-provider'
 
 interface BookingLinksProps {
   destination: string
@@ -17,6 +18,7 @@ interface AffiliateConfig {
 }
 
 export function BookingLinks({ destination, checkIn, checkOut, tripId }: BookingLinksProps) {
+  const { t } = useLocale()
   const [config, setConfig] = useState<AffiliateConfig | null>(null)
   const start = checkIn || new Date().toISOString().split('T')[0]
   const end = checkOut || start
@@ -53,7 +55,7 @@ export function BookingLinks({ destination, checkIn, checkOut, tripId }: Booking
 
   return (
     <section className="rounded-3xl bg-white p-6 shadow-lg">
-      <h3 className="mb-4 text-2xl font-bold text-[#FF9A76]">Book your trip</h3>
+      <h3 className="mb-4 text-2xl font-bold text-[#FF9A76]">{t('mapTabBooking')}</h3>
       <div className="grid gap-4 md:grid-cols-2">
         <a
           href={`https://www.trip.com/hotels?city=${encodeURIComponent(destination)}&checkIn=${start}&checkOut=${end}${suffix}`}
@@ -62,7 +64,7 @@ export function BookingLinks({ destination, checkIn, checkOut, tripId }: Booking
           onClick={() => logClick('hotel')}
           className="rounded-xl bg-gradient-to-r from-[#FF9A76] to-[#FFB86C] px-6 py-4 text-center font-semibold text-white"
         >
-          Book hotels on Trip.com
+          {t('bookHotels')}
         </a>
         <a
           href={`https://www.trip.com/flights?to=${encodeURIComponent(destination)}&departureDate=${start}${suffix}`}
@@ -71,7 +73,7 @@ export function BookingLinks({ destination, checkIn, checkOut, tripId }: Booking
           onClick={() => logClick('flight')}
           className="rounded-xl bg-gradient-to-r from-[#7ECCC4] to-[#87CEEB] px-6 py-4 text-center font-semibold text-white"
         >
-          Book flights on Trip.com
+          {t('bookFlights')}
         </a>
       </div>
     </section>

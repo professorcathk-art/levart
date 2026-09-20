@@ -1,16 +1,33 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Suspense } from 'react'
 import './globals.css'
 import { LocaleProvider } from '@/components/i18n/locale-provider'
 import { WalkingCat } from '@/components/companion/walking-cat'
 import { SiteHeader } from '@/components/layout/site-header'
+import { ServiceWorkerRegister } from '@/components/pwa/service-worker-register'
 
 export const dynamic = 'force-dynamic'
+
+export const viewport: Viewport = {
+  themeColor: '#FF9A76',
+  width: 'device-width',
+  initialScale: 1,
+}
 
 export const metadata: Metadata = {
   title: 'Levart - Chat with AI to plan your trip',
   description:
     'Chat with Levart to refine your itinerary, confirm when it feels right, then share or publish it for others to view, rate, and comment.',
+  applicationName: 'Levart',
+  appleWebApp: {
+    capable: true,
+    title: 'Levart',
+    statusBarStyle: 'default',
+  },
+  icons: {
+    icon: '/icon',
+    apple: '/apple-icon',
+  },
 }
 
 export default function RootLayout({
@@ -29,6 +46,7 @@ export default function RootLayout({
           <div className="hidden md:block">
             <WalkingCat />
           </div>
+          <ServiceWorkerRegister />
         </LocaleProvider>
       </body>
     </html>

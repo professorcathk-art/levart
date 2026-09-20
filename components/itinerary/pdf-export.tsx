@@ -3,6 +3,7 @@
 import { useRef } from 'react'
 import type { Itinerary } from '@/types'
 import { PawPrint } from '../paw-print'
+import { formatMoney, guessCurrency } from '@/lib/trips/currency'
 
 interface PDFExportProps {
   itinerary: Itinerary
@@ -52,6 +53,7 @@ export function PDFExport({ itinerary }: PDFExportProps) {
     }, 1000)
   }
 
+  const currency = itinerary.currency || guessCurrency(itinerary.destination).code
   const totalCost = itinerary.days.reduce((sum, day) => {
     const cost = parseFloat(day.estimatedCost.replace(/[^0-9.]/g, '')) || 0
     return sum + cost
@@ -79,7 +81,9 @@ export function PDFExport({ itinerary }: PDFExportProps) {
             <div className="text-xl space-y-2">
               <p>{itinerary.checkIn} - {itinerary.checkOut || itinerary.checkIn}</p>
               <p>{itinerary.days.length} Days</p>
-              <p className="mt-6 text-2xl font-semibold">Total Estimated Cost: ${totalCost.toFixed(0)}</p>
+              <p className="mt-6 text-2xl font-semibold">
+                Total Estimated Cost: {formatMoney(totalCost, currency, itinerary.destination)}
+              </p>
             </div>
           </div>
         </div>

@@ -73,6 +73,7 @@ export function PlanPane({ itinerary, lastChange, onEdit, onHistory }: PlanPaneP
           {t('planDays', { count: itinerary.days.length })}
           {itinerary.checkIn ? ` • ${itinerary.checkIn}` : ''}
           {itinerary.checkOut ? ` – ${itinerary.checkOut}` : ''}
+          {itinerary.currency ? ` • ${itinerary.currency}` : ''}
         </p>
         {itinerary.notes && (
           <p className="mt-2 rounded-2xl bg-white/80 px-3 py-2 text-sm text-gray-700">{itinerary.notes}</p>
@@ -93,11 +94,11 @@ export function PlanPane({ itinerary, lastChange, onEdit, onHistory }: PlanPaneP
         )}
       </header>
 
-      {itinerary.selectedAttractions.length > 0 && itinerary.route?.polyline && (
+      {itinerary.selectedAttractions.length > 0 && (
         <div className="mb-6 overflow-hidden rounded-2xl shadow">
           <MapComponent
             attractions={itinerary.selectedAttractions}
-            routePolyline={itinerary.route.polyline}
+            routePolyline={itinerary.route.polyline || '[]'}
           />
         </div>
       )}
@@ -134,6 +135,11 @@ export function PlanPane({ itinerary, lastChange, onEdit, onHistory }: PlanPaneP
                 </li>
               ))}
             </ol>
+            {day.estimatedCost && (
+              <p className="mt-3 text-sm font-semibold text-[#FF9A76]">
+                {t('costEstimate')}: {day.estimatedCost}
+              </p>
+            )}
             {day.restaurants.length > 0 && (
               <p className="mt-3 text-sm text-gray-600">
                 {t('planEat')}: {day.restaurants.map((restaurant) => restaurant.name).join(', ')}

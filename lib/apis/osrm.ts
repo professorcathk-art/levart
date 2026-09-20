@@ -3,7 +3,8 @@ import type { RouteData, RoutePoint } from '@/types'
 const OSRM_BASE_URL = 'https://router.project-osrm.org'
 
 export async function optimizeRoute(
-  points: RoutePoint[]
+  points: RoutePoint[],
+  profile: 'driving' | 'walking' = 'walking'
 ): Promise<RouteData> {
   if (points.length < 2) {
     throw new Error('At least 2 points are required for routing')
@@ -13,12 +14,14 @@ export async function optimizeRoute(
   const coordinates = points.map((p) => `${p.lon},${p.lat}`).join(';')
 
   try {
-    // Use OSRM route service
     const response = await fetch(
-      `${OSRM_BASE_URL}/route/v1/driving/${coordinates}?overview=full&geometries=geojson`
+      `${OSRM_BASE_URL}/route/v1/${profile}/${coordinates}?overview=full&geometries=geojson`
     )
 
     if (!response.ok) {
+      if (profile === 'walking') {
+        return optimizeRoute(points, 'driving')
+      }
       throw new Error(`OSRM API error: ${response.statusText}`)
     }
 
@@ -34,6 +37,9 @@ export async function optimizeRoute(
     }
 
     if (data.code !== 'Ok') {
+      if (profile === 'walking') {
+        return optimizeRoute(points, 'driving')
+      }
       throw new Error(`OSRM routing failed: ${data.code}`)
     }
 

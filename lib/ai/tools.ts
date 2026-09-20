@@ -7,7 +7,9 @@ import { getWeatherForecast } from '@/lib/apis/weather'
 import { optimizeRoute } from '@/lib/apis/osrm'
 import { addDays, emptyItinerary, isTripFocus } from '@/lib/trips/itinerary'
 import { addVersion, formatItineraryForPrompt, preserveUserEdits, summarizeDiff } from '@/lib/trips/versions'
-import type { Attraction, Itinerary, TripFocus } from '@/types'
+import { searchTravelKnowledge } from '@/lib/trips/knowledge'
+import { guessCurrency } from '@/lib/trips/currency'
+import type { Attraction, DayItinerary, Itinerary, TripFocus } from '@/types'
 
 const activitySchema = z.object({
   time: z.enum(['morning', 'afternoon', 'evening']),
@@ -15,6 +17,7 @@ const activitySchema = z.object({
   location: z.string(),
   duration: z.string().optional(),
   cost: z.string().optional(),
+  photoReference: z.string().optional(),
   distance: z.string().optional(),
   type: z.enum(['attraction', 'restaurant', 'shopping', 'nightlife', 'nature', 'culture']).optional(),
   address: z.string().optional(),
@@ -71,6 +74,57 @@ async function findAttractions(
     console.warn('Google Places failed, using Geoapify:', googleError)
     return searchGeoapify(destination, focus)
   }
+}
+
+async function pinPlacesOnPlan(
+  destination: string,
+  focus: TripFocus[],
+  days: DayItinerary[],
+  existing: Attraction[]
+): Promise<Attraction[]> {
+  let attractions = existing
+  if (attractions.length === 0) {
+    try {
+      attractions = await findAttractions(destination, focus, 20)
+    } catch (error) {
+      console.warn('Could not pin map places:', error)
+      return existing
+    }
+  }
+
+  const haystack = days
+    .flatMap((day) => day.activities.map((activity) => `${activity.activity} ${activity.location}`.toLowerCase()))
+    .join(' | ')
+
+  const matched = attractions.filter((item) => {
+    const name = item.name.toLowerCase()
+    if (!name) return false
+    if (haystack.includes(name)) return true
+    return name
+      .split(/[\s,/]+/)
+      .filter((word) => word.length > 3)
+      .some((word) => haystack.includes(word))
+  })
+
+  return (matched.length > 0 ? matched : attractions).slice(0, 16)
+}
+
+function attachPlacePhotos(days: DayItinerary[], attractions: Attraction[]): DayItinerary[] {
+  return days.map((day) => ({
+    ...day,
+    activities: day.activities.map((activity) => {
+      if (activity.photo || activity.photoReference) return activity
+      const match = attractions.find((place) => {
+        const name = place.name.toLowerCase()
+        return (
+          activity.location.toLowerCase().includes(name) ||
+          activity.activity.toLowerCase().includes(name) ||
+          name.includes(activity.location.toLowerCase())
+        )
+      })
+      return match?.photoReference ? { ...activity, photoReference: match.photoReference } : activity
+    }),
+  }))
 }
 
 export function createPlannerTools(ctx: PlannerContext) {
@@ -149,7 +203,8 @@ export function createPlannerTools(ctx: PlannerContext) {
       },
     }),
     optimize_route: tool({
-      description: 'Optimize a walking/driving route between selected attractions.',
+      description:
+        'Estimate walking or driving time between selected attractions. Use walking for city sightseeing clusters. This is travel time, not a bus/train timetable.',
       inputSchema: z.object({
         points: z.array(
           z.object({
@@ -158,22 +213,48 @@ export function createPlannerTools(ctx: PlannerContext) {
             attractionId: z.string().optional(),
           })
         ),
+        profile: z.enum(['walking', 'driving']).optional(),
       }),
-      execute: async ({ points }) => {
+      execute: async ({ points, profile }) => {
         if (points.length < 2) {
           return { error: 'Need at least two points' }
         }
         try {
-          const route = await optimizeRoute(points)
+          const route = await optimizeRoute(points, profile ?? 'walking')
           ctx.itinerary.route = route
           ctx.dirty = true
           return {
+            profile: profile ?? 'walking',
             totalDistanceKm: Number((route.totalDistance / 1000).toFixed(1)),
             totalDurationMin: Math.round(route.totalDuration / 60),
+            note: 'Use this duration as a walking/driving estimate. Do not invent exact bus or train departure times.',
           }
         } catch (error) {
           console.error('Route tool failed:', error)
           return { error: 'Could not optimize route' }
+        }
+      },
+    }),
+    search_community_guides: tool({
+      description:
+        'Retrieve real traveler notes from published Levart trips and curated destination guides. Call this before writing a first itinerary.',
+      inputSchema: z.object({
+        destination: z.string(),
+      }),
+      execute: async ({ destination }) => {
+        try {
+          const snippets = await searchTravelKnowledge(destination)
+          return {
+            count: snippets.length,
+            notes: snippets,
+            hint:
+              snippets.length === 0
+                ? 'No community notes yet. Build a realistic plan from attractions, weather, and typical local transit patterns.'
+                : 'Reuse workable sequencing and transit ideas. Do not copy a plan word for word.',
+          }
+        } catch (error) {
+          console.error('Community guide search failed:', error)
+          return { count: 0, notes: [], error: 'Could not load community notes' }
         }
       },
     }),
@@ -194,6 +275,10 @@ export function createPlannerTools(ctx: PlannerContext) {
         tripFocus: z.array(z.string()),
         checkIn: z.string().optional(),
         checkOut: z.string().optional(),
+        currency: z
+          .string()
+          .optional()
+          .describe('ISO 4217 currency code for this destination, e.g. TWD, JPY, HKD, USD'),
         days: z.array(daySchema),
         changeSummary: z
           .string()
@@ -206,15 +291,23 @@ export function createPlannerTools(ctx: PlannerContext) {
         tripFocus,
         checkIn,
         checkOut,
+        currency,
         days,
         changeSummary,
         selectedAttractionIds,
       }) => {
         const previous = ctx.itinerary
         const focus = tripFocus.filter(isTripFocus) as TripFocus[]
-        const selected = selectedAttractionIds
-          ? ctx.itinerary.selectedAttractions.filter((item) => selectedAttractionIds.includes(item.id))
-          : ctx.itinerary.selectedAttractions
+        const selected = await pinPlacesOnPlan(
+          destination,
+          focus,
+          days,
+          selectedAttractionIds
+            ? ctx.itinerary.selectedAttractions.filter((item) => selectedAttractionIds.includes(item.id))
+            : ctx.itinerary.selectedAttractions
+        )
+        const daysWithPhotos = attachPlacePhotos(days, selected)
+        const money = (currency || previous.currency || guessCurrency(destination).code).toUpperCase()
 
         const drafted = emptyItinerary({
           ...ctx.itinerary,
@@ -222,7 +315,8 @@ export function createPlannerTools(ctx: PlannerContext) {
           tripFocus: focus,
           checkIn,
           checkOut,
-          days,
+          currency: money,
+          days: daysWithPhotos,
           selectedAttractions: selected,
         })
         const merged = preserveUserEdits(previous, drafted)
@@ -234,7 +328,9 @@ export function createPlannerTools(ctx: PlannerContext) {
         return {
           ok: true,
           destination,
+          currency: money,
           dayCount: merged.days.length,
+          mapPins: selected.length,
           checkIn,
           checkOut,
           changeSummary: summary,

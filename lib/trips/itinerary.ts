@@ -18,6 +18,7 @@ export function emptyItinerary(partial?: Partial<Itinerary>): Itinerary {
     checkIn: partial?.checkIn,
     checkOut: partial?.checkOut,
     notes: partial?.notes,
+    currency: partial?.currency,
     versions: partial?.versions,
     lastChange: partial?.lastChange,
   }
@@ -101,6 +102,7 @@ export function parseItinerary(value: unknown): Itinerary {
     checkIn: raw.checkIn,
     checkOut: raw.checkOut,
     notes: typeof raw.notes === 'string' ? raw.notes : undefined,
+    currency: typeof raw.currency === 'string' ? raw.currency : undefined,
     versions: parseVersionList(raw.versions).map((version) => ({
       ...version,
       itinerary: parseItinerary({ ...version.itinerary, versions: [] }),

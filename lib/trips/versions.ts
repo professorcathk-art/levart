@@ -125,6 +125,7 @@ export function formatItineraryForPrompt(itinerary: Itinerary): string {
     `Destination: ${itinerary.destination}`,
     `Focus: ${itinerary.tripFocus.join(', ') || 'none'}`,
     `Dates: ${itinerary.checkIn || '?'} to ${itinerary.checkOut || '?'}`,
+    `Currency: ${itinerary.currency || 'guess from destination'}`,
   ]
   if (itinerary.notes) lines.push(`Traveler notes (do not delete): ${itinerary.notes}`)
 

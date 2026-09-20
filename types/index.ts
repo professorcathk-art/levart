@@ -50,6 +50,7 @@ export interface DayActivity {
   distance?: string
   type?: 'attraction' | 'restaurant' | 'shopping' | 'nightlife' | 'nature' | 'culture'
   photo?: string
+  photoReference?: string
   address?: string
   openingHours?: string
   difficulty?: 'easy' | 'moderate' | 'hard'
@@ -107,6 +108,7 @@ export interface Itinerary {
   checkIn?: string
   checkOut?: string
   notes?: string
+  currency?: string
   versions?: PlanVersion[]
   lastChange?: string
 }

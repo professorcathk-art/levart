@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { MapComponent } from '@/components/map-component'
-import { EnhancedDayCard } from '@/components/itinerary/enhanced-day-card'
+import { ItineraryBoard } from '@/components/itinerary/itinerary-board'
 import { PDFExport } from '@/components/itinerary/pdf-export'
 import type { Attraction, TripFocus, Itinerary, TripPreferences } from '@/types'
 
@@ -201,16 +201,7 @@ export function ItineraryStep({
       </div>
 
       {/* Enhanced Itinerary Display */}
-      <div className="space-y-8">
-        {itinerary.days.map((day, index) => (
-          <EnhancedDayCard
-            key={day.day}
-            day={day}
-            destination={destination}
-            dayIndex={index}
-          />
-        ))}
-      </div>
+      <ItineraryBoard itinerary={itinerary} destination={destination} />
 
       {/* PDF Export Component */}
       <PDFExport itinerary={itinerary} />

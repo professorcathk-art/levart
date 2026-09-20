@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { EnhancedDayCard } from '@/components/itinerary/enhanced-day-card'
 import { MapComponent } from '@/components/map-component'
 import { PDFExport } from '@/components/itinerary/pdf-export'
+import { ItineraryBoard } from '@/components/itinerary/itinerary-board'
 import { BookingLinks } from '@/components/plan/booking-links'
 import { ReopenButton } from '@/components/plan/reopen-button'
 import { ShareSheet } from '@/components/plan/share-sheet'
@@ -22,7 +22,7 @@ type TripTab = 'overview' | 'itinerary' | 'tips' | 'map'
 
 export function TripView({ trip, isOwner = false, showShare = false }: TripViewProps) {
   const { t } = useLocale()
-  const [tab, setTab] = useState<TripTab>('overview')
+  const [tab, setTab] = useState<TripTab>('itinerary')
   const tips = useMemo(() => collectTravelTips(trip.itinerary), [trip.itinerary])
   const tabs: Array<{ id: TripTab; label: string }> = [
     { id: 'overview', label: t('tabOverview') },
@@ -42,6 +42,13 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
           {t('planDays', { count: trip.itinerary.days.length })}
           {trip.checkIn ? ` • ${trip.checkIn}` : ''}
           {trip.checkOut ? ` – ${trip.checkOut}` : ''}
+        </p>
+        <p className="mt-2 inline-flex rounded-full bg-white/20 px-3 py-1 text-sm">
+          {trip.visibility === 'public'
+            ? t('visibilityBadgePublic')
+            : trip.visibility === 'unlisted'
+              ? t('visibilityBadgeUnlisted')
+              : t('visibilityBadgePrivate')}
         </p>
         {trip.owner && (
           <Link href={`/u/${trip.owner.username}`} className="mt-3 inline-block text-sm text-white/90 underline">
@@ -78,14 +85,14 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
         </div>
       </header>
 
-      <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
-        <div className="flex min-w-max gap-2 rounded-full bg-white p-1 shadow">
+      <div className="sticky top-14 z-30 -mx-4 bg-[#FFF8F3]/95 px-4 py-2 backdrop-blur md:top-16 md:mx-0 md:px-0">
+        <div className="flex gap-2 overflow-x-auto rounded-full bg-white p-1 shadow">
           {tabs.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setTab(item.id)}
-              className={`rounded-full px-4 py-2 text-sm font-semibold ${
+              className={`min-h-11 min-w-[5.5rem] rounded-full px-4 text-sm font-semibold ${
                 tab === item.id ? 'bg-[#FF9A76] text-white' : 'text-gray-600'
               }`}
             >
@@ -109,7 +116,7 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
                 key={day.day}
                 type="button"
                 onClick={() => setTab('itinerary')}
-                className="rounded-3xl bg-white p-5 text-left shadow transition hover:shadow-lg"
+                className="min-h-11 rounded-3xl bg-white p-5 text-left shadow transition hover:shadow-lg"
               >
                 <p className="text-sm font-semibold text-[#7ECCC4]">{t('planDay', { day: day.day })}</p>
                 <p className="mt-2 font-bold">{day.activities[0]?.activity || day.date}</p>
@@ -124,18 +131,7 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
       )}
 
       {tab === 'itinerary' && (
-        <section>
-          {trip.itinerary.days.map((day, index) => (
-            <div key={day.day}>
-              {day.notes && (
-                <p className="mb-3 rounded-2xl bg-white px-4 py-3 text-sm text-gray-700 shadow">
-                  {day.notes}
-                </p>
-              )}
-              <EnhancedDayCard day={day} destination={trip.destination} dayIndex={index} />
-            </div>
-          ))}
-        </section>
+        <ItineraryBoard itinerary={trip.itinerary} destination={trip.destination} trip={trip} />
       )}
 
       {tab === 'tips' && (
@@ -164,6 +160,9 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
 
       {tab === 'map' && (
         <section className="space-y-6">
+          <p className="rounded-3xl bg-white p-5 text-sm text-gray-600 shadow md:text-base">
+            {t('mapTabIntro')}
+          </p>
           {(trip.selectedAttractions ?? []).length > 0 ? (
             <div className="overflow-hidden rounded-3xl shadow-lg">
               <MapComponent

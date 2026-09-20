@@ -4,11 +4,13 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import type { DayItinerary, DayActivity } from '@/types'
 import { PawPrint } from '../paw-print'
+import { displayCost, formatMoney, guessCurrency } from '@/lib/trips/currency'
 
 interface EnhancedDayCardProps {
   day: DayItinerary
   destination: string
   dayIndex: number
+  currency?: string
 }
 
 const activityIcons: Record<string, string> = {
@@ -51,34 +53,20 @@ const typeColors: Record<string, string> = {
   rest: 'bg-teal-100 text-teal-800 border-teal-300',
 }
 
-export function EnhancedDayCard({ day, destination, dayIndex }: EnhancedDayCardProps) {
-  const [destinationPhoto, setDestinationPhoto] = useState<string | null>(null)
-  const [loadingPhotos, setLoadingPhotos] = useState(true)
+export function EnhancedDayCard({ day, destination, dayIndex, currency }: EnhancedDayCardProps) {
+  const [destinationPhoto, setDestinationPhoto] = useState<string | null>(day.destinationPhoto ?? null)
+  const money = currency || guessCurrency(destination).code
 
   useEffect(() => {
-    // Fetch destination photo using Google Places Photos
-    fetch(`/api/photos/search?q=${encodeURIComponent(destination)}`)
+    fetch(`/api/photos/search?q=${encodeURIComponent(`${destination} landmark`)}`)
       .then((res) => res.json())
-      .then((data) => {
+      .then((data: { photo?: string | null }) => {
         if (data.photo) {
           setDestinationPhoto(data.photo)
-        } else if (data.placeholder) {
-          setDestinationPhoto(data.placeholder)
         }
-        setLoadingPhotos(false)
       })
-      .catch(() => setLoadingPhotos(false))
+      .catch(() => undefined)
   }, [destination])
-
-  const getActivityPhoto = async (activityName: string) => {
-    try {
-      const res = await fetch(`/api/photos/search?q=${encodeURIComponent(activityName)}`)
-      const data = await res.json()
-      return data.photo || data.placeholder || null
-    } catch {
-      return null
-    }
-  }
 
   const totalCost = day.activities.reduce((sum, act) => {
     const cost = act.cost ? parseFloat(act.cost.replace(/[^0-9.]/g, '')) : 0
@@ -136,7 +124,7 @@ export function EnhancedDayCard({ day, destination, dayIndex }: EnhancedDayCardP
             <div className="text-2xl mb-1">💰</div>
             <div className="text-sm text-gray-600">Total Cost</div>
             <div className="text-lg font-bold text-[#FF9A76]">
-              ${totalCost.toFixed(0)}
+              {formatMoney(totalCost, money, destination)}
             </div>
           </div>
           <div className="text-center">
@@ -168,7 +156,13 @@ export function EnhancedDayCard({ day, destination, dayIndex }: EnhancedDayCardP
       {/* Activities */}
       <div className="p-6 space-y-6">
         {day.activities.map((activity, index) => (
-          <ActivityCard key={index} activity={activity} index={index} />
+          <ActivityCard
+            key={index}
+            activity={activity}
+            index={index}
+            destination={destination}
+            currency={money}
+          />
         ))}
 
         {/* Restaurants Section */}
@@ -180,7 +174,12 @@ export function EnhancedDayCard({ day, destination, dayIndex }: EnhancedDayCardP
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
               {day.restaurants.map((restaurant, index) => (
-                <RestaurantCard key={index} restaurant={restaurant} />
+                <RestaurantCard
+                  key={index}
+                  restaurant={restaurant}
+                  destination={destination}
+                  currency={money}
+                />
               ))}
             </div>
           </div>
@@ -210,23 +209,31 @@ export function EnhancedDayCard({ day, destination, dayIndex }: EnhancedDayCardP
   )
 }
 
-function ActivityCard({ activity, index }: { activity: DayActivity; index: number }) {
-  const [photo, setPhoto] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+function ActivityCard({
+  activity,
+  destination,
+  currency,
+}: {
+  activity: DayActivity
+  index: number
+  destination: string
+  currency: string
+}) {
+  const [photo, setPhoto] = useState<string | null>(activity.photo ?? null)
 
   useEffect(() => {
-    fetch(`/api/photos/search?q=${encodeURIComponent(activity.activity)}`)
+    const params = activity.photoReference
+      ? `photo_reference=${encodeURIComponent(activity.photoReference)}`
+      : `q=${encodeURIComponent(`${activity.activity} ${destination}`)}`
+    fetch(`/api/photos/search?${params}`)
       .then((res) => res.json())
-      .then((data) => {
+      .then((data: { photo?: string | null }) => {
         if (data.photo) {
           setPhoto(data.photo)
-        } else if (data.placeholder) {
-          setPhoto(data.placeholder)
         }
-        setLoading(false)
       })
-      .catch(() => setLoading(false))
-  }, [activity.activity])
+      .catch(() => undefined)
+  }, [activity.activity, activity.photoReference, destination])
 
   const timeLabels = {
     morning: '6 AM - 12 PM',
@@ -309,7 +316,7 @@ function ActivityCard({ activity, index }: { activity: DayActivity; index: numbe
           {activity.cost && (
             <div className="flex items-center gap-1 text-[#FF9A76]">
               <span>💰</span>
-              <span className="font-bold">{activity.cost}</span>
+              <span className="font-bold">{displayCost(activity.cost, currency, destination)}</span>
             </div>
           )}
           {activity.distance && (
@@ -376,21 +383,27 @@ function ActivityCard({ activity, index }: { activity: DayActivity; index: numbe
   )
 }
 
-function RestaurantCard({ restaurant }: { restaurant: { name: string; cuisine?: string; cost?: string; photo?: string; address?: string } }) {
-  const [photo, setPhoto] = useState<string | null>(null)
+function RestaurantCard({
+  restaurant,
+  destination,
+  currency,
+}: {
+  restaurant: { name: string; cuisine?: string; cost?: string; photo?: string; address?: string }
+  destination: string
+  currency: string
+}) {
+  const [photo, setPhoto] = useState<string | null>(restaurant.photo ?? null)
 
   useEffect(() => {
-    fetch(`/api/photos/search?q=${encodeURIComponent(restaurant.name + ' restaurant')}`)
+    fetch(`/api/photos/search?q=${encodeURIComponent(`${restaurant.name} restaurant ${destination}`)}`)
       .then((res) => res.json())
-      .then((data) => {
+      .then((data: { photo?: string | null }) => {
         if (data.photo) {
           setPhoto(data.photo)
-        } else if (data.placeholder) {
-          setPhoto(data.placeholder)
         }
       })
       .catch(() => {})
-  }, [restaurant.name])
+  }, [restaurant.name, destination])
 
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow border-2 border-[#FF9A76]/20">
@@ -411,7 +424,9 @@ function RestaurantCard({ restaurant }: { restaurant: { name: string; cuisine?: 
           <p className="text-sm text-gray-600 mb-2">{restaurant.cuisine}</p>
         )}
         {restaurant.cost && (
-          <p className="text-sm font-semibold text-[#FF9A76]">{restaurant.cost}</p>
+          <p className="text-sm font-semibold text-[#FF9A76]">
+            {displayCost(restaurant.cost, currency, destination)}
+          </p>
         )}
         {restaurant.address && (
           <p className="text-xs text-gray-500 mt-2">📍 {restaurant.address}</p>

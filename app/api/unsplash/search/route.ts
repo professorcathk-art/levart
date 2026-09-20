@@ -16,12 +16,15 @@ export async function GET(request: NextRequest) {
     }
 
     const photo = await searchPhoto(query)
-    
+
     if (!photo) {
       return NextResponse.json({ photo: null })
     }
 
-    return NextResponse.json({ photo })
+    return NextResponse.json({
+      photo: photo.urls.regular,
+      credit: photo.user?.name,
+    })
   } catch (error) {
     console.error('Error in Unsplash search:', error)
     return NextResponse.json(

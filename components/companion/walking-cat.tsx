@@ -1,9 +1,15 @@
 'use client'
 
+import { usePathname } from 'next/navigation'
 import { useLocale } from '@/components/i18n/locale-provider'
 
 export function WalkingCat() {
   const { t } = useLocale()
+  const pathname = usePathname()
+  const hideOnTrip =
+    pathname.startsWith('/trips/') || pathname.startsWith('/p/') || pathname.startsWith('/s/')
+
+  if (hideOnTrip) return null
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-3 z-30 overflow-hidden" aria-hidden>
