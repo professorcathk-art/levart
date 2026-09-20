@@ -1,11 +1,12 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { searchDestinations } from '@/lib/apis/destinations'
+import { geocodePlace, hasGeoapifyKey, hasGooglePlacesKey, isValidCoord } from '@/lib/apis/geocode'
 import { searchAttractions as searchGooglePlaces } from '@/lib/apis/google-places'
 import { searchAttractions as searchGeoapify } from '@/lib/apis/geoapify'
 import { getWeatherForecast } from '@/lib/apis/weather'
 import { optimizeRoute } from '@/lib/apis/osrm'
-import { addDays, emptyItinerary, isTripFocus } from '@/lib/trips/itinerary'
+import { emptyItinerary, isTripFocus } from '@/lib/trips/itinerary'
 import { addVersion, formatItineraryForPrompt, preserveUserEdits, summarizeDiff } from '@/lib/trips/versions'
 import { searchTravelKnowledge } from '@/lib/trips/knowledge'
 import { guessCurrency } from '@/lib/trips/currency'
@@ -63,16 +64,40 @@ export interface PlannerContext {
   lastChange?: string
 }
 
+const attractionLookups = new Map<string, Promise<Attraction[]>>()
+
 async function findAttractions(
   destination: string,
   focus: string[],
   radiusKm: number
 ): Promise<Attraction[]> {
+  const key = `${destination.toLowerCase()}|${[...focus].sort().join(',')}|${radiusKm}`
+  const inflight = attractionLookups.get(key)
+  if (inflight) return inflight
+
+  const pending = (async () => {
+    if (hasGooglePlacesKey()) {
+      try {
+        return await searchGooglePlaces(destination, focus, radiusKm)
+      } catch (googleError) {
+        console.warn('Google Places failed, using Geoapify:', googleError)
+      }
+    }
+    if (hasGeoapifyKey()) {
+      try {
+        return await searchGeoapify(destination, focus)
+      } catch (geoError) {
+        console.warn('Geoapify attraction search failed:', geoError)
+      }
+    }
+    return [] as Attraction[]
+  })()
+
+  attractionLookups.set(key, pending)
   try {
-    return await searchGooglePlaces(destination, focus, radiusKm)
-  } catch (googleError) {
-    console.warn('Google Places failed, using Geoapify:', googleError)
-    return searchGeoapify(destination, focus)
+    return await pending
+  } finally {
+    attractionLookups.delete(key)
   }
 }
 
@@ -83,7 +108,7 @@ async function pinPlacesOnPlan(
   existing: Attraction[]
 ): Promise<Attraction[]> {
   let attractions = existing
-  if (attractions.length === 0) {
+  if (attractions.length === 0 && (hasGooglePlacesKey() || hasGeoapifyKey())) {
     try {
       attractions = await findAttractions(destination, focus, 20)
     } catch (error) {
@@ -166,6 +191,10 @@ export function createPlannerTools(ctx: PlannerContext) {
         }
         return {
           count: attractions.length,
+          hint:
+            attractions.length === 0
+              ? 'No live place search is configured. Draft a realistic itinerary from your own knowledge and community notes.'
+              : undefined,
           attractions: attractions.slice(0, 16).map((item) => ({
             id: item.id,
             name: item.name,
@@ -179,25 +208,32 @@ export function createPlannerTools(ctx: PlannerContext) {
       },
     }),
     get_weather: tool({
-      description: 'Get a daily weather forecast for a destination using coordinates.',
+      description: 'Get a daily weather forecast. Prefer a destination name; coordinates are optional.',
       inputSchema: z.object({
-        lat: z.number(),
-        lon: z.number(),
+        destination: z.string().optional(),
+        lat: z.number().optional(),
+        lon: z.number().optional(),
         startDate: z.string().describe('YYYY-MM-DD'),
         days: z.number().min(1).max(14),
       }),
-      execute: async ({ lat, lon, startDate, days }) => {
+      execute: async ({ destination, lat, lon, startDate, days }) => {
+        let coords = isValidCoord(lat, lon) ? { lat: lat as number, lon: lon as number } : null
+        if (!coords) {
+          coords = await geocodePlace(destination || ctx.itinerary.destination)
+        }
+        if (!coords) {
+          return {
+            forecasts: [],
+            error: 'Could not locate that destination for weather. Continue without a forecast.',
+          }
+        }
         try {
-          return { forecasts: await getWeatherForecast(lat, lon, startDate, days) }
+          return { forecasts: await getWeatherForecast(coords.lat, coords.lon, startDate, days) }
         } catch (error) {
           console.error('Weather tool failed:', error)
           return {
-            forecasts: Array.from({ length: days }, (_, index) => ({
-              date: addDays(startDate, index),
-              temperature: 22,
-              condition: 'clear',
-              description: 'Forecast unavailable',
-            })),
+            forecasts: [],
+            error: 'Weather unavailable. Continue the plan without a forecast.',
           }
         }
       },

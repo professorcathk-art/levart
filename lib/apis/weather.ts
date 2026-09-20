@@ -2,26 +2,39 @@ import type { WeatherForecast } from '@/types'
 
 const OPEN_METEO_BASE_URL = 'https://api.open-meteo.com/v1/forecast'
 
+function todayIso() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+function clampForecastWindow(startDate: string, days: number) {
+  const today = todayIso()
+  const start = /^\d{4}-\d{2}-\d{2}$/.test(startDate) && startDate >= today ? startDate : today
+  const count = Math.min(Math.max(Math.round(days) || 1, 1), 14)
+  const end = new Date(`${start}T00:00:00Z`)
+  end.setUTCDate(end.getUTCDate() + count - 1)
+  return { startDate: start, endDate: end.toISOString().slice(0, 10), days: count }
+}
+
 export async function getWeatherForecast(
   lat: number,
   lon: number,
   startDate: string,
   days: number
 ): Promise<WeatherForecast[]> {
-  try {
-    const endDate = new Date(startDate)
-    endDate.setDate(endDate.getDate() + days - 1)
+  const window = clampForecastWindow(startDate, days)
 
+  try {
     const response = await fetch(
       `${OPEN_METEO_BASE_URL}?` +
         new URLSearchParams({
-          latitude: lat.toString(),
-          longitude: lon.toString(),
+          latitude: lat.toFixed(4),
+          longitude: lon.toFixed(4),
           daily: 'temperature_2m_max,temperature_2m_min,weathercode',
-          start_date: startDate,
-          end_date: endDate.toISOString().split('T')[0],
+          start_date: window.startDate,
+          end_date: window.endDate,
           timezone: 'auto',
-        })
+        }),
+      { signal: AbortSignal.timeout(5000) }
     )
 
     if (!response.ok) {
@@ -30,9 +43,12 @@ export async function getWeatherForecast(
 
     const data = await response.json()
     const daily = data.daily
+    if (!daily?.time) {
+      throw new Error('Open-Meteo API error: missing daily forecast')
+    }
 
     const forecasts: WeatherForecast[] = []
-    for (let i = 0; i < days; i++) {
+    for (let i = 0; i < window.days; i++) {
       const date = daily.time[i]
       const tempMax = daily.temperature_2m_max[i]
       const tempMin = daily.temperature_2m_min[i]

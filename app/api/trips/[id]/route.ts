@@ -57,3 +57,25 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
   return NextResponse.json({ ok: true })
 }
+
+export async function DELETE(_request: NextRequest, { params }: RouteContext) {
+  const user = await getAuthUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Sign in required' }, { status: 401 })
+  }
+
+  const trip = await getOwnedTrip(params.id, user.id)
+  if (!trip) {
+    return NextResponse.json({ error: 'Trip not found' }, { status: 404 })
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.from('trips').delete().eq('id', params.id).eq('owner_id', user.id)
+
+  if (error) {
+    console.error('Failed to delete trip:', error)
+    return NextResponse.json({ error: 'Failed to delete trip' }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
+}

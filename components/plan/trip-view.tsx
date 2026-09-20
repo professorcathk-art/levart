@@ -8,6 +8,7 @@ import { ItineraryBoard } from '@/components/itinerary/itinerary-board'
 import { BookingLinks } from '@/components/plan/booking-links'
 import { ReopenButton } from '@/components/plan/reopen-button'
 import { ShareSheet } from '@/components/plan/share-sheet'
+import { DeleteTripButton } from '@/components/trips/delete-trip-button'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { collectTravelTips } from '@/lib/trips/versions'
 import type { Trip } from '@/types'
@@ -74,6 +75,7 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
               {t('keepEditing')}
             </Link>
           )}
+          {isOwner && <DeleteTripButton tripId={trip.id} redirectTo="/trips" />}
           {showShare && isOwner && trip.status === 'confirmed' && (
             <ShareSheet
               tripId={trip.id}

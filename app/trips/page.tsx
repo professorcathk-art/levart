@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { getAuthUser } from '@/lib/supabase/auth'
 import { getMyTrips } from '@/lib/trips/queries'
 import { TripDays, TripStatusLabel, TripsEmpty, TripsHeader, UntitledTrip } from '@/components/trips/trips-copy'
+import { DeleteTripButton } from '@/components/trips/delete-trip-button'
 
 export default async function TripsPage() {
   const user = await getAuthUser()
@@ -21,10 +22,10 @@ export default async function TripsPage() {
       ) : (
         <ul className="space-y-4">
           {trips.map((trip) => (
-            <li key={trip.id}>
+            <li key={trip.id} className="flex items-stretch gap-3">
               <Link
                 href={trip.status === 'confirmed' ? `/trips/${trip.id}` : `/plan/${trip.id}`}
-                className="block rounded-3xl bg-white p-6 shadow transition hover:shadow-lg"
+                className="block min-w-0 flex-1 rounded-3xl bg-white p-6 shadow transition hover:shadow-lg"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -41,6 +42,9 @@ export default async function TripsPage() {
                   </span>
                 </div>
               </Link>
+              <div className="flex items-center">
+                <DeleteTripButton tripId={trip.id} />
+              </div>
             </li>
           ))}
         </ul>

@@ -183,6 +183,10 @@ const en = {
   newPlan: 'New plan',
   tripsEmpty: 'No trips yet. Chat one into existence.',
   untitledTrip: 'Untitled trip',
+  deleteTrip: 'Delete',
+  deleteTripConfirm: 'Delete this trip? This cannot be undone.',
+  deletingTrip: 'Deleting…',
+  deleteTripFailed: 'Could not delete this trip.',
   statusDraft: 'draft',
   statusConfirmed: 'confirmed',
 
@@ -460,6 +464,10 @@ const zhHant: typeof en = {
   newPlan: '新行程',
   tripsEmpty: '還沒有行程。先聊一份出來吧。',
   untitledTrip: '未命名行程',
+  deleteTrip: '刪除',
+  deleteTripConfirm: '確定刪除這份行程？刪了就回不來。',
+  deletingTrip: '刪除中…',
+  deleteTripFailed: '刪除失敗，請再試一次。',
   statusDraft: '草稿',
   statusConfirmed: '已確認',
 

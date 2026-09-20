@@ -143,7 +143,7 @@ function PlannerWorkspaceReady({
         setTripId(nextId)
         tripIdRef.current = nextId
         if (window.location.pathname === '/plan') {
-          router.replace(`/plan/${nextId}`)
+          window.history.replaceState(window.history.state, '', `/plan/${nextId}`)
         }
       }
     },

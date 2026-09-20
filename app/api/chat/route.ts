@@ -17,7 +17,7 @@ import { emptyItinerary, itineraryHasPlan, parseItinerary } from '@/lib/trips/it
 import { formatItineraryForPrompt } from '@/lib/trips/versions'
 import type { PlannerMessage } from '@/lib/ai/types'
 
-export const maxDuration = 60
+export const maxDuration = 120
 
 interface ChatRequestBody {
   messages?: UIMessage[]
@@ -195,6 +195,10 @@ export async function POST(request: Request) {
       }
     }
 
+    if (user && conversationId && supabase) {
+      await persistMessages(supabase, conversationId, incoming)
+    }
+
     const modelMessages = await convertToModelMessages(incoming)
     const instructions = `${getPlannerPrompt(body.locale)}
 
@@ -216,7 +220,7 @@ ${formatItineraryForPrompt(ctx.itinerary)}`
           instructions,
           messages: modelMessages,
           tools: createPlannerTools(ctx),
-          stopWhen: isStepCount(8),
+          stopWhen: isStepCount(5),
           onStepFinish: async () => {
             if (!ctx.dirty) return
             ctx.dirty = false
