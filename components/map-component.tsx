@@ -8,19 +8,17 @@ import type { Attraction } from '@/types'
 interface MapComponentProps {
   attractions: Attraction[]
   routePolyline: string
+  className?: string
 }
 
-export function MapComponent({
-  attractions,
-  routePolyline,
-}: MapComponentProps) {
+export function MapComponent({ attractions, routePolyline, className }: MapComponentProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
+  const markers = useRef<mapboxgl.Marker[]>([])
   const [mapLoaded, setMapLoaded] = useState(false)
   const [mapboxToken, setMapboxToken] = useState<string | null>(null)
 
   useEffect(() => {
-    // Fetch Mapbox token from API
     fetch('/api/mapbox/config')
       .then((res) => res.json())
       .then((data) => {
@@ -36,20 +34,11 @@ export function MapComponent({
 
     mapboxgl.accessToken = mapboxToken
 
-    const centerLat =
-      attractions.length > 0
-        ? attractions.reduce((sum, a) => sum + a.lat, 0) / attractions.length
-        : 0
-    const centerLon =
-      attractions.length > 0
-        ? attractions.reduce((sum, a) => sum + a.lon, 0) / attractions.length
-        : 0
-
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      center: [centerLon, centerLat],
-      zoom: 12,
+      center: [0, 0],
+      zoom: 1,
     })
 
     map.current.on('load', () => {
@@ -57,12 +46,37 @@ export function MapComponent({
     })
 
     return () => {
+      markers.current.forEach((marker) => marker.remove())
+      markers.current = []
       map.current?.remove()
+      map.current = null
+      setMapLoaded(false)
     }
-  }, [attractions, mapboxToken])
+  }, [mapboxToken])
 
   useEffect(() => {
-    if (!map.current || !mapLoaded || !routePolyline) return
+    if (!map.current || !mapLoaded) return
+
+    markers.current.forEach((marker) => marker.remove())
+    markers.current = attractions.map((attraction) =>
+      new mapboxgl.Marker({ color: '#E07A5F' })
+        .setLngLat([attraction.lon, attraction.lat])
+        .setPopup(new mapboxgl.Popup().setHTML(`<strong>${attraction.name}</strong>`))
+        .addTo(map.current!)
+    )
+
+    if (attractions.length === 1) {
+      map.current.easeTo({
+        center: [attractions[0].lon, attractions[0].lat],
+        zoom: 13,
+      })
+    } else if (attractions.length > 1) {
+      const bounds = new mapboxgl.LngLatBounds()
+      attractions.forEach((attraction) => bounds.extend([attraction.lon, attraction.lat]))
+      map.current.fitBounds(bounds, { padding: 48, maxZoom: 14, duration: 400 })
+    }
+
+    if (!routePolyline) return
 
     try {
       const coordinates = JSON.parse(routePolyline) as number[]
@@ -71,7 +85,8 @@ export function MapComponent({
         routePoints.push([coordinates[i + 1], coordinates[i]])
       }
 
-      // Add route line
+      if (routePoints.length < 2) return
+
       if (map.current.getSource('route')) {
         ;(map.current.getSource('route') as mapboxgl.GeoJSONSource).setData({
           type: 'Feature',
@@ -101,21 +116,11 @@ export function MapComponent({
             'line-cap': 'round',
           },
           paint: {
-            'line-color': '#3b82f6',
+            'line-color': '#7ECCC4',
             'line-width': 4,
           },
         })
       }
-
-      // Add markers for attractions
-      attractions.forEach((attraction) => {
-        const marker = new mapboxgl.Marker({ color: '#ef4444' })
-          .setLngLat([attraction.lon, attraction.lat])
-          .setPopup(
-            new mapboxgl.Popup().setHTML(`<strong>${attraction.name}</strong>`)
-          )
-          .addTo(map.current!)
-      })
     } catch (error) {
       console.error('Error rendering map:', error)
     }
@@ -123,16 +128,11 @@ export function MapComponent({
 
   if (!mapboxToken) {
     return (
-      <div className="h-64 bg-gray-200 rounded-lg flex items-center justify-center">
-        <p className="text-gray-500">Loading map...</p>
+      <div className={`flex items-center justify-center bg-slate-100 ${className ?? 'h-64 rounded-lg'}`}>
+        <p className="text-sm text-slate-500">Loading map...</p>
       </div>
     )
   }
 
-  return (
-    <div
-      ref={mapContainer}
-      className="w-full h-64 md:h-96 rounded-lg overflow-hidden"
-    />
-  )
+  return <div ref={mapContainer} className={className ?? 'h-64 w-full overflow-hidden rounded-lg md:h-96'} />
 }

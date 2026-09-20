@@ -32,7 +32,7 @@ export default async function PublicTripPage({ params }: { params: { slug: strin
   }
 
   return (
-    <main className="mx-auto max-w-5xl space-y-8 px-4 py-6 md:py-10">
+    <main className="mx-auto max-w-7xl space-y-8 px-4 py-6 md:py-10">
       <TripView trip={trip} />
       <RatingControl
         tripId={trip.id}

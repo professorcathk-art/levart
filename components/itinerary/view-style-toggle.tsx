@@ -19,7 +19,7 @@ export function ViewStyleToggle() {
     <div
       role="radiogroup"
       aria-label={t('styleSwitcher')}
-      className="inline-flex rounded-full bg-white/90 p-1 shadow-sm ring-1 ring-black/5"
+      className="inline-flex rounded-lg bg-slate-100/90 p-0.5 ring-1 ring-slate-200/80"
     >
       {STYLES.map((style) => {
         const selected = viewStyle === style.id
@@ -30,8 +30,8 @@ export function ViewStyleToggle() {
             role="radio"
             aria-checked={selected}
             onClick={() => setViewStyle(style.id)}
-            className={`min-h-11 rounded-full px-3.5 text-sm font-semibold transition ${
-              selected ? 'bg-[#FF9A76] text-white shadow' : 'text-gray-600 hover:text-[#1A1A1A]'
+            className={`min-h-9 rounded-md px-3 text-xs font-semibold transition ${
+              selected ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'
             }`}
           >
             {t(style.label)}

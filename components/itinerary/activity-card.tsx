@@ -3,11 +3,13 @@
 import { useEffect, useId, useState } from 'react'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { PlaceThumb } from '@/components/itinerary/place-thumb'
+import { StayBookLink } from '@/components/plan/booking-links'
 import { useTripView } from '@/components/itinerary/trip-view-provider'
 import { displayCost } from '@/lib/trips/currency'
-import { mapsRideUrl, mapsSearchUrl } from '@/lib/trips/transit'
+import { mapsSearchUrl } from '@/lib/trips/transit'
 import type { TimelineItem } from '@/lib/trips/timeline'
 import type { MessageKey } from '@/lib/i18n/dictionaries'
+import type { Trip } from '@/types'
 
 const TIME_KEYS: Record<TimelineItem['time'], MessageKey> = {
   morning: 'timeMorning',
@@ -19,9 +21,10 @@ interface ActivityCardProps {
   item: TimelineItem
   destination: string
   currency?: string
+  trip?: Trip
 }
 
-export function ActivityCard({ item, destination, currency }: ActivityCardProps) {
+export function ActivityCard({ item, destination, currency, trip }: ActivityCardProps) {
   const { t } = useLocale()
   const { viewStyle } = useTripView()
   const [open, setOpen] = useState(viewStyle !== 'concise')
@@ -30,6 +33,7 @@ export function ActivityCard({ item, destination, currency }: ActivityCardProps)
   useEffect(() => {
     setOpen(viewStyle !== 'concise')
   }, [viewStyle])
+
   const activity = item.activity
   const query = `${activity.location || activity.activity} ${destination}`
   const hasDetails = Boolean(
@@ -40,30 +44,31 @@ export function ActivityCard({ item, destination, currency }: ActivityCardProps)
       activity.nearbyAlternatives?.length
   )
   const cost = displayCost(activity.cost, currency, destination)
+  const meta = [cost, activity.duration].filter(Boolean).join(' · ')
 
   const actions = (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap items-center justify-end gap-2">
       <a
         href={mapsSearchUrl(query)}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#FF9A76] px-3 text-xs font-semibold text-white"
+        className="inline-flex min-h-9 items-center rounded-full px-2.5 text-xs font-semibold text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
       >
-        {t('openMaps')}
+        📍 {t('openMaps')}
       </a>
-      <a
-        href={mapsRideUrl(query)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex min-h-11 items-center justify-center rounded-full bg-white px-3 text-xs font-semibold text-[#1A1A1A] ring-1 ring-black/10"
-      >
-        {t('getRide')}
-      </a>
+      {item.kind === 'stay' && (
+        <StayBookLink
+          destination={activity.location || destination}
+          checkIn={trip?.checkIn}
+          checkOut={trip?.checkOut}
+          tripId={trip?.id}
+        />
+      )}
     </div>
   )
 
   const details = hasDetails && (
-    <div id={panelId} hidden={!open} className="space-y-2 text-sm text-gray-600">
+    <div id={panelId} hidden={!open} className="space-y-2 text-sm text-slate-600">
       {activity.address && <p>📍 {activity.address}</p>}
       {activity.openingHours && <p>🕐 {activity.openingHours}</p>}
       {activity.notes && <p>{activity.notes}</p>}
@@ -84,33 +89,28 @@ export function ActivityCard({ item, destination, currency }: ActivityCardProps)
 
   if (viewStyle === 'concise') {
     return (
-      <article className="rounded-r-xl border-l-4 border-[#FF9A76] bg-white/90 px-3 py-2.5 shadow-sm">
-        <div className="flex items-start gap-3">
-          <p className="w-16 shrink-0 text-xs font-bold uppercase tracking-wide text-[#7ECCC4]">
-            {t(TIME_KEYS[item.time])}
-          </p>
-          <div className="min-w-0 flex-1">
-            <h4 className="font-semibold leading-snug">{item.title}</h4>
-            <p className="truncate text-sm text-gray-500">{item.location}</p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
-              {cost && <span className="text-xs font-semibold text-[#FF9A76]">{cost}</span>}
-              {activity.duration && <span className="text-xs text-gray-500">{activity.duration}</span>}
-              {actions}
-            </div>
-            {hasDetails && (
-              <button
-                type="button"
-                className="mt-1 min-h-11 text-xs font-semibold text-[#FF9A76]"
-                aria-expanded={open}
-                aria-controls={panelId}
-                onClick={() => setOpen((value) => !value)}
-              >
-                {open ? t('hideDetails') : t('showDetails')}
-              </button>
-            )}
-            {open ? details : null}
-          </div>
+      <article className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+        <p className="inline-flex rounded bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600">
+          {t(TIME_KEYS[item.time])}
+        </p>
+        <h4 className="mt-1 text-base font-bold text-slate-800">{item.title}</h4>
+        <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">{item.location}</p>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-slate-500">{meta || '—'}</p>
+          {actions}
         </div>
+        {hasDetails && (
+          <button
+            type="button"
+            className="mt-2 min-h-9 text-xs font-semibold text-[#E07A5F]"
+            aria-expanded={open}
+            aria-controls={panelId}
+            onClick={() => setOpen((value) => !value)}
+          >
+            {open ? t('hideDetails') : t('showDetails')}
+          </button>
+        )}
+        {open ? <div className="mt-2">{details}</div> : null}
       </article>
     )
   }
@@ -129,57 +129,49 @@ export function ActivityCard({ item, destination, currency }: ActivityCardProps)
             />
           </figure>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[#C4A574]">
+            <p className="inline-flex rounded bg-[#F6E6C8] px-2 py-0.5 text-xs font-semibold text-[#C4A574]">
               {t(TIME_KEYS[item.time])}
             </p>
             <h4 className="mt-1 font-serif text-xl leading-snug text-[#3F3428]">{item.title}</h4>
-            <p className="text-sm text-[#7A6A58]">{item.location}</p>
-            <div className="mt-2 flex flex-wrap gap-2 text-xs text-[#7A6A58]">
-              {cost && <span className="rounded-full bg-[#F6E6C8] px-2 py-1">{cost}</span>}
-              {activity.duration && (
-                <span className="rounded-full bg-[#E8F3F1] px-2 py-1">{activity.duration}</span>
-              )}
+            <p className="flex items-center gap-1 text-xs text-[#7A6A58]">{item.location}</p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs text-[#7A6A58]">{meta}</p>
+              {actions}
             </div>
-            <div className="mt-3">{actions}</div>
           </div>
         </div>
-        {hasDetails && (
-          <div className="mt-3 border-t border-dashed border-[#E8DFD1] pt-3">
-            {details}
-          </div>
-        )}
+        {hasDetails && <div className="mt-3 border-t border-dashed border-[#E8DFD1] pt-3">{details}</div>}
       </article>
     )
   }
 
   return (
-    <article className="rounded-2xl border border-slate-100 bg-white p-3 shadow-sm transition hover:shadow-md">
-      <div className="flex gap-3">
+    <article className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+      <div className="flex gap-4">
         <PlaceThumb
           title={item.title}
           photo={activity.photo}
           type={activity.type}
           kind={item.kind}
-          className="h-16 w-16 shrink-0 rounded-2xl"
+          className="h-16 w-16 shrink-0 rounded-xl"
         />
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#7ECCC4]">
+          <p className="inline-flex rounded bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-600">
             {t(TIME_KEYS[item.time])}
           </p>
-          <h4 className="font-semibold leading-snug">{item.title}</h4>
-          <p className="text-sm text-gray-500">{item.location}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            {cost && <span className="text-xs font-semibold text-[#FF9A76]">{cost}</span>}
-            {activity.duration && <span className="text-xs text-gray-500">{activity.duration}</span>}
-            {actions}
-          </div>
+          <h4 className="mt-1 text-base font-bold text-slate-800">{item.title}</h4>
+          <p className="flex items-center gap-1 text-xs text-slate-500">{item.location}</p>
         </div>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-slate-500">{meta || '—'}</p>
+        {actions}
       </div>
       {hasDetails && (
         <div className="mt-3">
           <button
             type="button"
-            className="min-h-11 text-xs font-semibold text-[#FF9A76]"
+            className="min-h-9 text-xs font-semibold text-[#E07A5F]"
             aria-expanded={open}
             aria-controls={panelId}
             onClick={() => setOpen((value) => !value)}

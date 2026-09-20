@@ -2,13 +2,12 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { MapComponent } from '@/components/map-component'
 import { PDFExport } from '@/components/itinerary/pdf-export'
 import { ItineraryBoard } from '@/components/itinerary/itinerary-board'
-import { BookingLinks } from '@/components/plan/booking-links'
 import { ReopenButton } from '@/components/plan/reopen-button'
 import { ShareSheet } from '@/components/plan/share-sheet'
 import { DeleteTripButton } from '@/components/trips/delete-trip-button'
+import { TripViewProvider, useTripView } from '@/components/itinerary/trip-view-provider'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { collectTravelTips } from '@/lib/trips/versions'
 import type { Trip } from '@/types'
@@ -19,21 +18,21 @@ interface TripViewProps {
   showShare?: boolean
 }
 
-type TripTab = 'overview' | 'itinerary' | 'tips' | 'map'
+type TripTab = 'overview' | 'itinerary' | 'tips'
 
-export function TripView({ trip, isOwner = false, showShare = false }: TripViewProps) {
+function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewProps) {
   const { t } = useLocale()
+  const { setSelectedDay, setMobilePane } = useTripView()
   const [tab, setTab] = useState<TripTab>('itinerary')
   const tips = useMemo(() => collectTravelTips(trip.itinerary), [trip.itinerary])
   const tabs: Array<{ id: TripTab; label: string }> = [
     { id: 'overview', label: t('tabOverview') },
     { id: 'itinerary', label: t('tabItinerary') },
     { id: 'tips', label: t('tabTips') },
-    { id: 'map', label: t('tabMap') },
   ]
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-6 pb-20 lg:pb-10">
       <header className="overflow-hidden rounded-3xl bg-gradient-to-br from-[#FF9A76] to-[#7ECCC4] p-6 text-white shadow-xl md:p-8">
         <p className="text-sm uppercase tracking-wide text-white/80">
           {trip.status === 'confirmed' ? t('statusConfirmed') : t('statusDraft')}
@@ -87,15 +86,19 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
         </div>
       </header>
 
-      <div className="sticky top-14 z-30 -mx-4 bg-[#FFF8F3]/95 px-4 py-2 backdrop-blur md:top-16 md:mx-0 md:px-0">
-        <div className="flex gap-2 overflow-x-auto rounded-full bg-white p-1 shadow">
+      <div className="-mx-4 border-b border-slate-200/80 px-4 md:mx-0 md:px-0">
+        <div className="flex gap-1" role="tablist" aria-label={t('tabItinerary')}>
           {tabs.map((item) => (
             <button
               key={item.id}
               type="button"
+              role="tab"
+              aria-selected={tab === item.id}
               onClick={() => setTab(item.id)}
-              className={`min-h-11 min-w-[5.5rem] rounded-full px-4 text-sm font-semibold ${
-                tab === item.id ? 'bg-[#FF9A76] text-white' : 'text-gray-600'
+              className={`min-h-11 px-4 text-sm font-semibold ${
+                tab === item.id
+                  ? 'border-b-2 border-[#E07A5F] text-[#E07A5F]'
+                  : 'text-slate-500 hover:text-slate-800'
               }`}
             >
               {item.label}
@@ -107,9 +110,9 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
       {tab === 'overview' && (
         <section className="space-y-6">
           {trip.itinerary.notes && (
-            <div className="rounded-3xl bg-white p-6 shadow">
-              <h2 className="text-xl font-bold text-[#FF9A76]">{t('tripNotes')}</h2>
-              <p className="mt-2 whitespace-pre-wrap text-gray-700">{trip.itinerary.notes}</p>
+            <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-[#E07A5F]">{t('tripNotes')}</h2>
+              <p className="mt-2 whitespace-pre-wrap text-slate-700">{trip.itinerary.notes}</p>
             </div>
           )}
           <div className="grid gap-4 sm:grid-cols-3">
@@ -117,12 +120,16 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
               <button
                 key={day.day}
                 type="button"
-                onClick={() => setTab('itinerary')}
-                className="min-h-11 rounded-3xl bg-white p-5 text-left shadow transition hover:shadow-lg"
+                onClick={() => {
+                  setSelectedDay(day.day)
+                  setMobilePane('list')
+                  setTab('itinerary')
+                }}
+                className="min-h-11 rounded-xl border border-slate-100 bg-white p-5 text-left shadow-sm transition hover:shadow-md"
               >
                 <p className="text-sm font-semibold text-[#7ECCC4]">{t('planDay', { day: day.day })}</p>
                 <p className="mt-2 font-bold">{day.activities[0]?.activity || day.date}</p>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-slate-500">
                   {day.activities.length} {t('stops')}
                 </p>
               </button>
@@ -139,15 +146,15 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
       {tab === 'tips' && (
         <section className="space-y-4">
           {tips.map((section) => (
-            <article key={section.id} className="rounded-3xl bg-white p-6 shadow">
-              <h2 className="text-xl font-bold text-[#FF9A76]">
+            <article key={section.id} className="rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-[#E07A5F]">
                 {section.id === 'fromPlan'
                   ? t('tipsFromPlan')
                   : section.id === 'style'
                     ? t('tipsStyle')
                     : t('tipsPractical')}
               </h2>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-gray-700">
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-700">
                 {section.items.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
@@ -155,34 +162,22 @@ export function TripView({ trip, isOwner = false, showShare = false }: TripViewP
             </article>
           ))}
           {tips.length === 0 && (
-            <p className="rounded-3xl bg-white p-6 text-gray-600 shadow">{t('noTips')}</p>
+            <p className="rounded-xl border border-slate-100 bg-white p-6 text-slate-600 shadow-sm">
+              {t('noTips')}
+            </p>
           )}
-        </section>
-      )}
-
-      {tab === 'map' && (
-        <section className="space-y-6">
-          <p className="rounded-3xl bg-white p-5 text-sm text-gray-600 shadow md:text-base">
-            {t('mapTabIntro')}
-          </p>
-          {(trip.selectedAttractions ?? []).length > 0 ? (
-            <div className="overflow-hidden rounded-3xl shadow-lg">
-              <MapComponent
-                attractions={trip.selectedAttractions ?? []}
-                routePolyline={trip.route?.polyline || '[]'}
-              />
-            </div>
-          ) : (
-            <p className="rounded-3xl bg-white p-6 text-gray-600 shadow">{t('noMap')}</p>
-          )}
-          <BookingLinks
-            destination={trip.destination}
-            checkIn={trip.checkIn}
-            checkOut={trip.checkOut}
-            tripId={trip.id}
-          />
         </section>
       )}
     </div>
+  )
+}
+
+export function TripView({ trip, isOwner = false, showShare = false }: TripViewProps) {
+  const dayNumbers = useMemo(() => trip.itinerary.days.map((day) => day.day), [trip.itinerary.days])
+
+  return (
+    <TripViewProvider dayNumbers={dayNumbers}>
+      <TripViewInner trip={trip} isOwner={isOwner} showShare={showShare} />
+    </TripViewProvider>
   )
 }

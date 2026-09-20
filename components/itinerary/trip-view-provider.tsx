@@ -21,6 +21,10 @@ interface TripViewContextValue {
   setViewStyle: (style: ViewStyle) => void
   filter: DayFilter
   setFilter: (filter: DayFilter) => void
+  selectedDay: number | null
+  setSelectedDay: (dayNumber: number) => void
+  mobilePane: 'list' | 'map'
+  setMobilePane: (pane: 'list' | 'map') => void
   collapsedDays: Record<number, boolean>
   toggleDay: (dayNumber: number) => void
   isOffline: boolean
@@ -37,6 +41,8 @@ export function TripViewProvider({
 }) {
   const [viewStyle, setViewStyleState] = useState<ViewStyle>('clean')
   const [filter, setFilter] = useState<DayFilter>('all')
+  const [selectedDay, setSelectedDay] = useState<number | null>(dayNumbers[0] ?? null)
+  const [mobilePane, setMobilePane] = useState<'list' | 'map'>('list')
   const [collapsedDays, setCollapsedDays] = useState<Record<number, boolean>>({})
   const [isOffline, setIsOffline] = useState(false)
 
@@ -55,6 +61,7 @@ export function TripViewProvider({
 
   useEffect(() => {
     if (dayNumbers.length === 0) return
+    setSelectedDay((current) => (current && dayNumbers.includes(current) ? current : dayNumbers[0]))
     setCollapsedDays((current) => {
       const next = { ...current }
       for (const day of dayNumbers) {
@@ -82,14 +89,22 @@ export function TripViewProvider({
       setViewStyle,
       filter,
       setFilter,
+      selectedDay,
+      setSelectedDay,
+      mobilePane,
+      setMobilePane,
       collapsedDays,
       toggleDay,
       isOffline,
     }),
-    [viewStyle, setViewStyle, filter, collapsedDays, toggleDay, isOffline]
+    [viewStyle, setViewStyle, filter, selectedDay, mobilePane, collapsedDays, toggleDay, isOffline]
   )
 
   return <TripViewContext.Provider value={value}>{children}</TripViewContext.Provider>
+}
+
+export function useOptionalTripView() {
+  return useContext(TripViewContext)
 }
 
 export function useTripView() {

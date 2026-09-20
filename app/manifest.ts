@@ -2,18 +2,18 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Levart',
-    short_name: 'Levart',
+    name: 'Levart 貓爪印',
+    short_name: '貓爪印',
     description: 'Chat your trip into a beautiful plan, then take it with you offline.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#FFF8F3',
-    theme_color: '#FF9A76',
+    background_color: '#FAF6F0',
+    theme_color: '#E07A5F',
     icons: [
       {
-        src: '/icon',
+        src: '/icon.svg',
         sizes: '32x32',
-        type: 'image/png',
+        type: 'image/svg+xml',
       },
       {
         src: '/apple-icon',

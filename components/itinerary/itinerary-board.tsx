@@ -2,20 +2,16 @@
 
 import { useMemo } from 'react'
 import { useLocale } from '@/components/i18n/locale-provider'
+import { DayMapPanel } from '@/components/itinerary/day-map-panel'
 import { DaySection } from '@/components/itinerary/day-section'
 import { OfflineBadge } from '@/components/itinerary/offline-badge'
-import { TripViewProvider, useTripView } from '@/components/itinerary/trip-view-provider'
+import {
+  TripViewProvider,
+  useOptionalTripView,
+  useTripView,
+} from '@/components/itinerary/trip-view-provider'
 import { ViewStyleToggle } from '@/components/itinerary/view-style-toggle'
-import type { DayFilter } from '@/lib/trips/view-style'
-import type { MessageKey } from '@/lib/i18n/dictionaries'
 import type { Itinerary, Trip } from '@/types'
-
-const FILTERS: Array<{ id: DayFilter; label: MessageKey }> = [
-  { id: 'all', label: 'filterAll' },
-  { id: 'attractions', label: 'filterAttractions' },
-  { id: 'food', label: 'filterFood' },
-  { id: 'stay', label: 'filterStay' },
-]
 
 interface ItineraryBoardProps {
   itinerary: Itinerary
@@ -25,7 +21,8 @@ interface ItineraryBoardProps {
 
 function BoardChrome({ itinerary, destination, trip }: ItineraryBoardProps) {
   const { t } = useLocale()
-  const { viewStyle, filter, setFilter } = useTripView()
+  const { viewStyle, selectedDay, setSelectedDay, mobilePane, setMobilePane } = useTripView()
+  const day = itinerary.days.find((item) => item.day === selectedDay) ?? itinerary.days[0]
 
   return (
     <div
@@ -34,63 +31,73 @@ function BoardChrome({ itinerary, destination, trip }: ItineraryBoardProps) {
       }`}
     >
       <div
-        className={`sticky top-[7.75rem] z-20 -mx-1 mb-4 space-y-3 px-1 py-3 backdrop-blur md:top-[8.25rem] ${
+        className={`sticky top-14 z-20 -mx-1 mb-4 flex flex-col gap-3 px-1 py-3 backdrop-blur md:top-16 lg:flex-row lg:items-center lg:justify-between ${
           viewStyle === 'handbook' ? 'bg-[#FAF7F2]/95' : 'bg-[#FFF8F3]/95'
         }`}
       >
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div
+          className="flex gap-2 overflow-x-auto pb-1"
+          role="tablist"
+          aria-label={t('planDays', { count: itinerary.days.length })}
+        >
+          {itinerary.days.map((item) => {
+            const selected = day?.day === item.day
+            return (
+              <button
+                key={item.day}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => setSelectedDay(item.day)}
+                className={`inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-semibold ${
+                  selected
+                    ? 'bg-[#2B2D42] text-white'
+                    : 'bg-white text-slate-600 shadow-sm ring-1 ring-black/5'
+                }`}
+              >
+                {t('planDay', { day: item.day })}
+              </button>
+            )
+          })}
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
           <ViewStyleToggle />
           {trip && <OfflineBadge trip={trip} />}
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {itinerary.days.map((day) => (
-            <a
-              key={day.day}
-              href={`#day-${day.day}`}
-              className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-white px-4 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-black/5"
-            >
-              {t('planDay', { day: day.day })}
-            </a>
-          ))}
-        </div>
-        <div className="flex gap-2 overflow-x-auto" role="tablist" aria-label={t('filterLabel')}>
-          {FILTERS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              role="tab"
-              aria-selected={filter === item.id}
-              onClick={() => setFilter(item.id)}
-              className={`min-h-11 shrink-0 rounded-full px-4 text-sm font-semibold ${
-                filter === item.id ? 'bg-[#1A1A1A] text-white' : 'bg-white text-gray-600 ring-1 ring-black/5'
-              }`}
-            >
-              {t(item.label)}
-            </button>
-          ))}
-        </div>
       </div>
 
-      <div className="space-y-4">
-        {itinerary.days.map((day) => (
-          <DaySection
-            key={day.day}
-            day={day}
-            destination={destination}
-            currency={itinerary.currency}
-          />
-        ))}
+      <div className="lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(17rem,2fr)] lg:items-start lg:gap-6">
+        <div className={mobilePane === 'map' ? 'hidden lg:block' : 'block'}>
+          {day ? (
+            <DaySection day={day} destination={destination} currency={itinerary.currency} trip={trip} />
+          ) : (
+            <p className="rounded-xl bg-white p-6 text-sm text-slate-500 shadow-sm">{t('filterEmpty')}</p>
+          )}
+        </div>
+        <aside className={mobilePane === 'list' ? 'hidden lg:block' : 'block'}>
+          <div className="lg:sticky lg:top-36 lg:h-[calc(100vh-10rem)]">
+            <DayMapPanel destination={destination} trip={trip} dayNumber={day?.day} />
+          </div>
+        </aside>
       </div>
+
+      <button
+        type="button"
+        onClick={() => setMobilePane(mobilePane === 'list' ? 'map' : 'list')}
+        className="fixed bottom-6 left-1/2 z-30 inline-flex min-h-11 -translate-x-1/2 items-center gap-2 rounded-full bg-[#2B2D42] px-5 text-sm font-semibold text-white shadow-lg lg:hidden"
+      >
+        {mobilePane === 'list' ? `🗺️ ${t('mapView')}` : `📋 ${t('listView')}`}
+      </button>
     </div>
   )
 }
 
 export function ItineraryBoard({ itinerary, destination, trip }: ItineraryBoardProps) {
   const dayNumbers = useMemo(() => itinerary.days.map((day) => day.day), [itinerary.days])
+  const existing = useOptionalTripView()
+  const chrome = <BoardChrome itinerary={itinerary} destination={destination} trip={trip} />
 
-  return (
-    <TripViewProvider dayNumbers={dayNumbers}>
-      <BoardChrome itinerary={itinerary} destination={destination} trip={trip} />
-    </TripViewProvider>
-  )
+  if (existing) return chrome
+
+  return <TripViewProvider dayNumbers={dayNumbers}>{chrome}</TripViewProvider>
 }

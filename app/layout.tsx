@@ -15,13 +15,13 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Levart - Chat with AI to plan your trip',
+  title: 'Levart 貓爪印 - Chat with AI to plan your trip',
   description:
-    'Chat with Levart to refine your itinerary, confirm when it feels right, then share or publish it for others to view, rate, and comment.',
-  applicationName: 'Levart',
+    'Chat with Levart 貓爪印 to refine your itinerary, confirm when it feels right, then share or publish it for others to view, rate, and comment.',
+  applicationName: 'Levart 貓爪印',
   appleWebApp: {
     capable: true,
-    title: 'Levart',
+    title: '貓爪印',
     statusBarStyle: 'default',
   },
   icons: {
