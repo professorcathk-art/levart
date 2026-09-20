@@ -15,7 +15,7 @@ export function WhyLevart() {
   const { t } = useLocale()
 
   return (
-    <section className="bg-gradient-to-br from-[#7ECCC4]/10 via-[#FF9A76]/10 to-[#FFB86C]/10 py-20">
+    <section className="bg-[#FAF6F0] py-20">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-4xl">
           <div className="mb-12 text-center">
@@ -27,7 +27,7 @@ export function WhyLevart() {
           </div>
           <div className="mb-12 grid gap-6 md:grid-cols-2">
             {values.map((value) => (
-              <div key={value.title} className="rounded-2xl bg-white/80 p-6 shadow-lg">
+              <div key={value.title} className="rounded-2xl border border-white/80 bg-white/80 p-6 shadow-sm backdrop-blur-sm">
                 <div className="flex items-start gap-4">
                   <div className="text-4xl">{value.emoji}</div>
                   <div>
@@ -38,7 +38,7 @@ export function WhyLevart() {
               </div>
             ))}
           </div>
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#FF9A76] to-[#FFB86C] p-8 text-center text-white shadow-2xl md:p-12">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#E07A5F] to-[#FFB86C] p-8 text-center text-white shadow-xl md:p-12">
             <div className="absolute left-4 top-4 opacity-20">
               <PawPrint size={40} color="#FFFFFF" opacity={0.3} />
             </div>

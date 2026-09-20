@@ -17,7 +17,7 @@ export function Footer() {
       <div className="container relative z-10 mx-auto px-4">
         <div className="mb-8 grid gap-8 md:grid-cols-3">
           <div>
-            <h3 className="mb-4 text-2xl font-bold text-[#FF9A76]">Levart</h3>
+            <h3 className="mb-4 text-2xl font-bold text-[#E07A5F]">Levart</h3>
             <p className="text-sm text-gray-400">{t('footerTagline')}</p>
           </div>
           <div>

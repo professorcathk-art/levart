@@ -1,50 +1,36 @@
 'use client'
 
-import { PawTrail, PawPrint } from '../paw-print'
-import { WalkingPawPrints } from './walking-paw-prints'
-import Link from 'next/link'
+import { motion } from 'framer-motion'
 import { useLocale } from '@/components/i18n/locale-provider'
+import { PromptBar } from '@/components/landing/prompt-bar'
+import { SkyBackdrop } from '@/components/landing/sky-backdrop'
 
 export function Hero() {
   const { t } = useLocale()
 
   return (
-    <section className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden bg-gradient-to-br from-[#FFF8F3] via-[#FFE8E0] to-[#FFD4C4]">
-      <WalkingPawPrints />
-      <PawTrail count={8} startDelay={500} duration={4000} />
-
-      <div className="container relative z-10 mx-auto px-4 py-20">
-        <div className="mx-auto max-w-4xl text-center">
-          <h1 className="mb-6 animate-fade-in-up text-5xl font-bold md:text-7xl">
-            <span className="text-[#FF9A76]">{t('heroTitle1')}</span>
-            <br />
-            <span className="text-[#7ECCC4]">{t('heroTitle2')}</span>
-          </h1>
-          <p className="mb-8 animate-fade-in-up text-xl text-gray-700 animation-delay-200">
-            {t('heroBody')}
+    <section className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center overflow-hidden bg-[#FAF6F0] px-4 py-16 md:py-24">
+      <SkyBackdrop />
+      <div className="container relative z-10 mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mx-auto max-w-3xl text-center"
+        >
+          <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#E07A5F]/15 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-[#E07A5F] backdrop-blur">
+            <span aria-hidden>🐾</span>
+            {t('heroEyebrow')}
           </p>
-          <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              href="/plan"
-              className="rounded-full bg-gradient-to-r from-[#FF9A76] to-[#FFB86C] px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:scale-105"
-            >
-              {t('startPlanning')}
-            </Link>
-            <Link
-              href="/community"
-              className="rounded-full border-2 border-[#FF9A76]/30 bg-white/80 px-8 py-4 text-lg font-semibold text-[#FF9A76]"
-            >
-              {t('seeCommunityTrips')}
-            </Link>
+          <h1 className="text-4xl font-bold leading-tight text-[#2B2D42] md:text-6xl">
+            {t('heroTitle1')}
+            <span className="mt-2 block text-[#E07A5F]">{t('heroTitle2')}</span>
+          </h1>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-[#2B2D42]/70 md:text-xl">{t('heroBody')}</p>
+          <div className="mt-10">
+            <PromptBar />
           </div>
-        </div>
-      </div>
-
-      <div className="absolute left-10 top-20 animate-float opacity-20">
-        <PawPrint size={60} color="#FF9A76" />
-      </div>
-      <div className="absolute bottom-20 right-10 animate-float opacity-20 animation-delay-1000">
-        <PawPrint size={50} color="#7ECCC4" />
+        </motion.div>
       </div>
     </section>
   )

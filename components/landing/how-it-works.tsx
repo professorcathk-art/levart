@@ -14,7 +14,7 @@ export function HowItWorks() {
   const { t } = useLocale()
 
   return (
-    <section className="bg-white py-20">
+    <section className="bg-[#FAF6F0] py-20">
       <div className="container mx-auto px-4">
         <div className="mb-16 text-center">
           <h2 className="mb-4 text-4xl font-bold md:text-5xl">
@@ -27,7 +27,7 @@ export function HowItWorks() {
         <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
           {steps.map((step) => (
             <div key={step.number} className="group relative">
-              <div className="relative rounded-3xl border-2 border-transparent bg-gradient-to-br from-white to-gray-50 p-8 shadow-lg transition hover:-translate-y-2 hover:border-[#FF9A76]/20 hover:shadow-2xl">
+              <div className="relative rounded-3xl border border-white/80 bg-white/80 p-8 shadow-[0_12px_40px_rgba(43,45,66,0.05)] backdrop-blur-sm transition hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(224,122,95,0.12)]">
                 <div className="absolute right-4 top-4 opacity-0 transition group-hover:opacity-100">
                   <PawPrint size={30} color={step.color} opacity={0.3} bounce />
                 </div>

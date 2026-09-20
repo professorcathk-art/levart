@@ -13,6 +13,7 @@ import { VersionHistory } from '@/components/chat/version-history'
 import { ThinkingCat } from '@/components/companion/thinking-cat'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { itineraryHasPlan, parseItinerary } from '@/lib/trips/itinerary'
+import { consumeHeroPrompt } from '@/lib/landing/hero-prompt'
 import { clearGuestDraft, readGuestDraft, writeGuestDraft } from '@/lib/trips/guest-draft'
 import { addVersion, markUserEdits, restoreVersion, summarizeDiff } from '@/lib/trips/versions'
 import type { PlannerMessage } from '@/lib/ai/types'
@@ -147,6 +148,13 @@ function PlannerWorkspaceReady({
       }
     },
   })
+
+  useEffect(() => {
+    if (initialMessages.length > 0) return
+    const text = consumeHeroPrompt()
+    if (!text) return
+    sendMessage({ text })
+  }, [initialMessages.length, sendMessage])
 
   useEffect(() => {
     if (signedIn || initialTripId) return

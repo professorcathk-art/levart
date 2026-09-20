@@ -7,7 +7,10 @@ export function WalkingCat() {
   const { t } = useLocale()
   const pathname = usePathname()
   const hideOnTrip =
-    pathname.startsWith('/trips/') || pathname.startsWith('/p/') || pathname.startsWith('/s/')
+    pathname === '/' ||
+    pathname.startsWith('/trips/') ||
+    pathname.startsWith('/p/') ||
+    pathname.startsWith('/s/')
 
   if (hideOnTrip) return null
 

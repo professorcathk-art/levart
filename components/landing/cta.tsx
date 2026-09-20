@@ -8,7 +8,7 @@ export function CTA() {
   const { t } = useLocale()
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-[#FF9A76] via-[#FFB86C] to-[#7ECCC4] py-20">
+    <section className="relative overflow-hidden bg-gradient-to-br from-[#E07A5F] via-[#FFB86C] to-[#7ECCC4] py-20">
       <div className="container relative z-10 mx-auto px-4">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="mb-6 text-4xl font-bold text-white md:text-5xl">
@@ -19,8 +19,8 @@ export function CTA() {
           <p className="mb-8 text-xl text-white/90">{t('ctaBody')}</p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
-              href="/plan"
-              className="rounded-full bg-white px-10 py-5 text-xl font-bold text-[#FF9A76] shadow-2xl transition hover:scale-105"
+              href="#hero-prompt"
+              className="rounded-full bg-white px-10 py-5 text-xl font-bold text-[#E07A5F] shadow-2xl transition hover:scale-105"
             >
               {t('startPlanning')}
             </Link>

@@ -17,7 +17,7 @@ export function Features() {
   const { t } = useLocale()
 
   return (
-    <section className="bg-gradient-to-b from-[#FFF8F3] to-white py-20">
+    <section className="bg-white py-20">
       <div className="container mx-auto px-4">
         <div className="mb-16 text-center">
           <h2 className="mb-4 text-4xl font-bold md:text-5xl">
@@ -30,7 +30,7 @@ export function Features() {
           {features.map((feature) => (
             <div
               key={feature.title}
-              className="group relative rounded-2xl border-2 border-transparent bg-white p-6 shadow-md transition hover:-translate-y-1 hover:border-[#FF9A76]/20 hover:shadow-xl"
+              className="group relative rounded-2xl border border-[#E07A5F]/10 bg-[#FFF1E6]/40 p-6 shadow-sm transition hover:-translate-y-1 hover:bg-white hover:shadow-lg"
             >
               <div className="absolute right-2 top-2 opacity-0 transition group-hover:opacity-100">
                 <PawPrint size={25} color={feature.color} opacity={0.3} bounce />
