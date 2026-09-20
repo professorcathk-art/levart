@@ -11,6 +11,7 @@ import { TicketMark } from '@/components/ui/ticket-mark'
 import { useTripView } from '@/components/itinerary/trip-view-provider'
 import { displayCost } from '@/lib/trips/currency'
 import { mapsSearchUrl } from '@/lib/trips/transit'
+import { mapsPlaceQuery } from '@/lib/trips/place-query'
 import type { TimelineItem } from '@/lib/trips/timeline'
 import type { MessageKey } from '@/lib/i18n/dictionaries'
 import type { Trip } from '@/types'
@@ -39,7 +40,7 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
   }, [viewStyle])
 
   const activity = item.activity
-  const query = `${activity.location || activity.activity} ${destination}`
+  const query = mapsPlaceQuery(item.location || activity.location || activity.activity, destination)
   const hasDetails = Boolean(
     activity.tips?.length ||
       activity.notes ||

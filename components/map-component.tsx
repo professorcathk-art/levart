@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { mapsSearchUrl } from '@/lib/trips/transit'
 import type { Attraction } from '@/types'
 
 interface MapComponentProps {
@@ -18,15 +19,20 @@ export function MapComponent({ attractions, routePolyline, className }: MapCompo
   const [mapLoaded, setMapLoaded] = useState(false)
   const [mapboxToken, setMapboxToken] = useState<string | null>(null)
 
+  const [tokenState, setTokenState] = useState<'loading' | 'ready' | 'missing'>('loading')
+
   useEffect(() => {
     fetch('/api/mapbox/config')
       .then((res) => res.json())
       .then((data) => {
         if (data.mapboxToken) {
           setMapboxToken(data.mapboxToken)
+          setTokenState('ready')
+        } else {
+          setTokenState('missing')
         }
       })
-      .catch(() => {})
+      .catch(() => setTokenState('missing'))
   }, [])
 
   useEffect(() => {
@@ -127,9 +133,23 @@ export function MapComponent({ attractions, routePolyline, className }: MapCompo
   }, [mapLoaded, routePolyline, attractions])
 
   if (!mapboxToken) {
+    const fallback = attractions[0]
     return (
-      <div className={`flex items-center justify-center bg-slate-100 ${className ?? 'h-64 rounded-lg'}`}>
-        <p className="text-sm text-slate-500">Loading map...</p>
+      <div className={`flex items-center justify-center bg-[#FAF6F0] px-4 text-center ${className ?? 'h-64 rounded-lg'}`}>
+        <p className="text-sm text-[#2B2D42]/70">
+          {tokenState === 'missing' && fallback ? (
+            <a
+              href={mapsSearchUrl(fallback.name)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#E07A5F]"
+            >
+              Open {fallback.name} in Maps
+            </a>
+          ) : (
+            'Finding the map…'
+          )}
+        </p>
       </div>
     )
   }

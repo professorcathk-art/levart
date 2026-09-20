@@ -10,20 +10,31 @@ import { DeleteTripButton } from '@/components/trips/delete-trip-button'
 import { TripViewProvider, useTripView } from '@/components/itinerary/trip-view-provider'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { collectTravelTips } from '@/lib/trips/versions'
+import { PreviewUnlock } from '@/components/plan/preview-unlock'
+import { saveHeroPrompt } from '@/lib/landing/hero-prompt'
+import { useRouter } from 'next/navigation'
 import type { Trip } from '@/types'
 
 interface TripViewProps {
   trip: Trip
   isOwner?: boolean
+  preview?: boolean
 }
 
 type TripTab = 'overview' | 'itinerary' | 'tips'
 
-function TripViewInner({ trip, isOwner = false }: TripViewProps) {
+function TripViewInner({ trip, isOwner = false, preview = false }: TripViewProps) {
   const { t } = useLocale()
+  const router = useRouter()
   const { setSelectedDay, setMobilePane } = useTripView()
-  const [tab, setTab] = useState<TripTab>('itinerary')
-  const tips = useMemo(() => collectTravelTips(trip.itinerary), [trip.itinerary])
+  const [tab, setTab] = useState<TripTab>(preview ? 'overview' : 'itinerary')
+  const tips = useMemo(() => collectTravelTips(trip.itinerary, t), [trip.itinerary, t])
+  const firstDay = trip.itinerary.days[0]?.day
+  const previewPath = trip.slug ? `/p/${trip.slug}` : `/trips/${trip.id}`
+  const remixPrompt = t('remixPrompt', {
+    destination: trip.destination,
+    days: trip.itinerary.days.length,
+  })
   const tabs: Array<{ id: TripTab; label: string }> = [
     { id: 'overview', label: t('tabOverview') },
     { id: 'itinerary', label: t('tabItinerary') },
@@ -66,12 +77,12 @@ function TripViewInner({ trip, isOwner = false }: TripViewProps) {
             ))}
           </div>
         )}
-        <div className="mt-5 flex flex-wrap gap-2 sm:mt-6 sm:gap-3">
+        <div className="mt-5 flex flex-wrap gap-2 text-[#2B2D42] sm:mt-6 sm:gap-3">
           {isOwner && trip.status === 'confirmed' && <ReopenButton tripId={trip.id} />}
           {isOwner && trip.status === 'draft' && (
             <Link
               href={`/plan/${trip.id}`}
-              className="inline-flex min-h-11 items-center rounded-full bg-white px-5 py-2 font-semibold text-[#FF9A76]"
+              className="inline-flex min-h-11 items-center rounded-full bg-white px-5 py-2 font-semibold text-[#E07A5F]"
             >
               {t('keepEditing')}
             </Link>
@@ -85,7 +96,32 @@ function TripViewInner({ trip, isOwner = false }: TripViewProps) {
               slug={trip.slug}
             />
           )}
+          {preview && (
+            <>
+              <Link
+                href={`/login?next=${encodeURIComponent(previewPath)}`}
+                className="inline-flex min-h-11 items-center rounded-full bg-white px-5 py-2 font-semibold text-[#E07A5F]"
+              >
+                {t('previewSignIn')}
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  saveHeroPrompt(remixPrompt)
+                  router.push('/plan')
+                }}
+                className="inline-flex min-h-11 items-center rounded-full bg-[#2B2D42] px-5 py-2 font-semibold text-white"
+              >
+                {t('previewRemix')}
+              </button>
+            </>
+          )}
         </div>
+        {isOwner && trip.visibility === 'public' && trip.itinerary.publishedCopy && trip.status === 'draft' && (
+          <p className="mt-4 rounded-2xl bg-white/90 px-4 py-3 text-sm font-medium text-[#2B2D42]">
+            {t('publicSnapshotBanner')}
+          </p>
+        )}
       </header>
 
       <div className="-mx-3 border-b border-slate-200/80 px-3 sm:-mx-4 sm:px-4 md:mx-0 md:px-0">
@@ -123,50 +159,88 @@ function TripViewInner({ trip, isOwner = false }: TripViewProps) {
                 key={day.day}
                 type="button"
                 onClick={() => {
+                  if (preview && firstDay !== undefined && day.day !== firstDay) {
+                    setTab('itinerary')
+                    setSelectedDay(day.day)
+                    return
+                  }
                   setSelectedDay(day.day)
                   setMobilePane('list')
                   setTab('itinerary')
                 }}
-                className="min-h-11 rounded-xl border border-orange-100/80 bg-white/90 p-5 text-left shadow-sm transition-all hover:shadow-md"
+                className={`min-h-11 rounded-xl p-5 text-left shadow-sm transition-all hover:shadow-md ${
+                  preview && firstDay !== undefined && day.day !== firstDay
+                    ? 'border border-dashed border-orange-200 bg-white/70'
+                    : 'border border-orange-100/80 bg-white/90'
+                }`}
               >
                 <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7ECCC4]">{t('planDay', { day: day.day })}</p>
-                <p className="mt-2 font-extrabold">{day.activities[0]?.activity || day.date}</p>
+                <p className="mt-2 font-extrabold">
+                  {preview && firstDay !== undefined && day.day !== firstDay
+                    ? t('previewLockedDay')
+                    : day.activities[0]?.activity || day.date}
+                </p>
                 <p className="mt-1 text-sm text-slate-500">
                   {day.activities.length} {t('stops')}
                 </p>
               </button>
             ))}
           </div>
-          <PDFExport itinerary={trip.itinerary} />
+          {preview ? <PreviewUnlock nextPath={previewPath} remixPrompt={remixPrompt} compact /> : <PDFExport itinerary={trip.itinerary} />}
         </section>
       )}
 
       {tab === 'itinerary' && (
-        <ItineraryBoard itinerary={trip.itinerary} destination={trip.destination} trip={trip} />
+        <ItineraryBoard
+          itinerary={trip.itinerary}
+          destination={trip.destination}
+          trip={trip}
+          preview={preview}
+          previewNextPath={previewPath}
+          remixPrompt={remixPrompt}
+        />
       )}
 
       {tab === 'tips' && (
         <section className="space-y-4">
-          {tips.map((section) => (
-            <article key={section.id} className="rounded-xl border border-orange-100/80 bg-white/90 p-6 shadow-sm transition-all hover:shadow-md">
-              <h2 className="text-xl font-extrabold text-[#E07A5F]">
-                {section.id === 'fromPlan'
-                  ? t('tipsFromPlan')
-                  : section.id === 'style'
-                    ? t('tipsStyle')
-                    : t('tipsPractical')}
-              </h2>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-700">
-                {section.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-          {tips.length === 0 && (
-            <p className="rounded-xl border border-slate-100 bg-white p-6 text-slate-600 shadow-sm">
-              {t('noTips')}
-            </p>
+          {preview ? (
+            <>
+              {tips[0] && (
+                <article className="rounded-xl border border-orange-100/80 bg-white/90 p-6 shadow-sm">
+                  <h2 className="text-xl font-extrabold text-[#E07A5F]">{t('tipsFromPlan')}</h2>
+                  <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-700">
+                    {tips[0].items.slice(0, 2).map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+              )}
+              <PreviewUnlock nextPath={previewPath} remixPrompt={remixPrompt} />
+            </>
+          ) : (
+            <>
+              {tips.map((section) => (
+                <article key={section.id} className="rounded-xl border border-orange-100/80 bg-white/90 p-6 shadow-sm transition-all hover:shadow-md">
+                  <h2 className="text-xl font-extrabold text-[#E07A5F]">
+                    {section.id === 'fromPlan'
+                      ? t('tipsFromPlan')
+                      : section.id === 'style'
+                        ? t('tipsStyle')
+                        : t('tipsPractical')}
+                  </h2>
+                  <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-700">
+                    {section.items.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+              {tips.length === 0 && (
+                <p className="rounded-xl border border-slate-100 bg-white p-6 text-slate-600 shadow-sm">
+                  {t('noTips')}
+                </p>
+              )}
+            </>
           )}
         </section>
       )}
@@ -174,12 +248,12 @@ function TripViewInner({ trip, isOwner = false }: TripViewProps) {
   )
 }
 
-export function TripView({ trip, isOwner = false }: TripViewProps) {
+export function TripView({ trip, isOwner = false, preview = false }: TripViewProps) {
   const dayNumbers = useMemo(() => trip.itinerary.days.map((day) => day.day), [trip.itinerary.days])
 
   return (
     <TripViewProvider dayNumbers={dayNumbers}>
-      <TripViewInner trip={trip} isOwner={isOwner} />
+      <TripViewInner trip={trip} isOwner={isOwner} preview={preview} />
     </TripViewProvider>
   )
 }

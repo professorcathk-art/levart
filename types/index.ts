@@ -111,6 +111,7 @@ export interface Itinerary {
   currency?: string
   versions?: PlanVersion[]
   lastChange?: string
+  publishedCopy?: Itinerary
 }
 
 export interface AffiliateClick {

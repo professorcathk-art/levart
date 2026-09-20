@@ -50,14 +50,21 @@ export function DaySection({ day, destination, currency, trip }: DaySectionProps
         <h3 className={`text-xl font-extrabold ${handbook ? 'font-serif text-[#3F3428]' : 'text-slate-800'}`}>
           {t('planDay', { day: day.day })}
         </h3>
-        <p className="mt-1 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+        <p className="mt-1 text-sm text-slate-500">
           {day.date ? `${day.date} · ` : ''}
           {t(timeline.length === 1 ? 'daySummaryOne' : 'daySummary', {
             stops: timeline.length,
             cost: formatMoney(numericCost, money, destination),
           })}
-          {day.weather ? ` · ${day.weather.temperature}°C ${day.weather.description}` : ''}
         </p>
+        {day.weather && (
+          <p className="mt-1 text-sm text-slate-500">
+            {t('dayWeather', {
+              temp: day.weather.temperature,
+              description: day.weather.description,
+            })}
+          </p>
+        )}
         {day.notes && (
           <p className="mt-3 rounded-2xl bg-white/70 px-3 py-2 text-sm text-slate-600">{day.notes}</p>
         )}
@@ -67,9 +74,9 @@ export function DaySection({ day, destination, currency, trip }: DaySectionProps
         {timeline.length === 0 && <p className="text-sm text-slate-500">{t('filterEmpty')}</p>}
         {timeline.map((item, index) => {
           const next = timeline[index + 1]
-          const fromQuery = `${item.location} ${destination}`
-          const toQuery = next ? `${next.location} ${destination}` : ''
-          const leg = next ? inferTransitLeg(item.activity, next.activity, day.transport, index) : null
+          const fromEnd = item.endLocation || item.location
+          const toStart = next?.startLocation || next?.location || ''
+          const leg = next ? inferTransitLeg(fromEnd, toStart, next.activity, day.transport) : null
           return (
             <div key={item.id} className="space-y-4">
               <TimelineNode kind={item.kind}>
@@ -77,7 +84,7 @@ export function DaySection({ day, destination, currency, trip }: DaySectionProps
               </TimelineNode>
               {next && leg && (
                 <TimelineNode kind="transit">
-                  <TransitConnector fromQuery={fromQuery} toQuery={toQuery} leg={leg} />
+                  <TransitConnector fromQuery={fromEnd} toQuery={toStart} destination={destination} leg={leg} />
                 </TimelineNode>
               )}
             </div>

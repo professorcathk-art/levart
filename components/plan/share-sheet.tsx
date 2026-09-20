@@ -105,7 +105,7 @@ export function ShareSheet({ tripId, destination, visibility, slug }: ShareSheet
 
   return (
     <div>
-      <IconBadge icon={Share2} onClick={() => setOpen(true)} className="min-h-11 bg-white px-4 text-sm text-[#E07A5F]">
+      <IconBadge icon={Share2} onClick={() => setOpen(true)} className="min-h-11 px-4 text-sm">
         {t('share')}
       </IconBadge>
 

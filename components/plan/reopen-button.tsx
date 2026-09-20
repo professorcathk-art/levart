@@ -25,7 +25,7 @@ export function ReopenButton({ tripId }: { tripId: string }) {
       type="button"
       onClick={() => void reopen()}
       disabled={loading}
-      className="rounded-full bg-white px-5 py-2 font-semibold text-[#FF9A76] disabled:opacity-60"
+      className="inline-flex min-h-11 items-center rounded-full bg-white px-5 py-2 font-semibold text-[#E07A5F] disabled:opacity-60"
     >
       {loading ? t('pleaseWait') : t('returnToEdit')}
     </button>

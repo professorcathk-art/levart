@@ -19,7 +19,6 @@ export async function POST(_request: NextRequest, { params }: { params: { id: st
     .from('trips')
     .update({
       status: 'draft',
-      visibility: trip.visibility === 'public' ? 'unlisted' : trip.visibility,
     })
     .eq('id', params.id)
     .eq('owner_id', user.id)

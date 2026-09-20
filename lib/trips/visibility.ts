@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { slugifyDestination } from '@/lib/trips/slug'
+import { freezePublishedCopy } from '@/lib/trips/itinerary'
 import type { Trip, TripVisibility } from '@/types'
 
 export async function setTripVisibility(
@@ -8,10 +9,11 @@ export async function setTripVisibility(
   userId: string,
   visibility: TripVisibility
 ) {
-  const updates: Record<string, string> = { visibility }
+  const updates: Record<string, unknown> = { visibility }
 
   if (visibility === 'public') {
     updates.slug = trip.slug || slugifyDestination(trip.destination)
+    updates.itinerary = freezePublishedCopy(trip.itinerary)
   }
 
   const { error } = await supabase

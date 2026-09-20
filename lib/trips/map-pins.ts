@@ -1,4 +1,5 @@
 import type { Attraction, DayItinerary, Trip } from '@/types'
+import { cleanPlaceName } from '@/lib/trips/place-query'
 
 function matchesPlace(attraction: Attraction, day: DayItinerary) {
   const haystack = [
@@ -32,7 +33,7 @@ export function dayStopQueries(trip: Trip, dayNumber?: number): string[] {
     ...day.activities.map((activity) => activity.location || activity.activity),
     ...day.restaurants.map((restaurant) => restaurant.name),
   ]
-    .map((name) => name.trim())
+    .map((name) => cleanPlaceName(name))
     .filter((name) => name.length >= 2)
   return [...new Set(names)].slice(0, 8)
 }

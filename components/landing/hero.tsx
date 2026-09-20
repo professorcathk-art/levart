@@ -19,7 +19,7 @@ export function Hero() {
           transition={{ duration: 0.5 }}
           className="mx-auto max-w-3xl text-center"
         >
-          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/75 px-5 py-2 font-mono text-sm font-semibold uppercase tracking-[0.22em] text-[#E07A5F] shadow-[0_8px_24px_rgba(224,122,95,0.12)] backdrop-blur-md">
+          <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/60 bg-white/75 px-5 py-2 font-mono text-sm font-semibold tracking-[0.18em] text-[#E07A5F] shadow-[0_8px_24px_rgba(224,122,95,0.12)] backdrop-blur-md">
             <PawMark size={16} />
             {t('heroEyebrow')}
           </p>

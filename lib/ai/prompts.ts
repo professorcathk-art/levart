@@ -20,6 +20,10 @@ Workable-plan rules:
 - Cluster nearby neighborhoods in the same half-day. Do not bounce across the city without a reason.
 - Put 2–4 stops in a half-day, with 15–25 minutes of buffer between them.
 - Transport notes must name a realistic mode: walk, metro/subway line, tram, local bus, taxi, or intercity train. Example: "Walk 12 min" or "Take the MRT Red Line, about 20 min".
+- One activity is one spot only. Never chain airport arrival, hotel check-in, and dinner in the same activity title with arrows.
+- Arrival at the airport is its own stop. Hotel check-in is the next stop. A restaurant is a later stop.
+- activity.distance is ONLY how to get from the previous stop to THIS stop. Never attach the airport-to-hotel hop to a restaurant.
+- activity.location is THIS stop’s place name only. Do not write "Airport → Hotel → Restaurant" in one location field.
 - Never invent exact bus or train departure times, platform numbers, or "the 14:17 train". Live timetables are not available. Say typical travel time and first/last-train caution when it matters.
 - If a day would be too packed, drop a stop and say so.
 - Costs must use the local currency ISO code (TWD, JPY, HKD, USD, …) and include that code in estimatedCost and activity.cost, e.g. "NT$450" or "JPY 1200", never a bare "$".

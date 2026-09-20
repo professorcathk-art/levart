@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/supabase/auth'
+import { freezePublishedCopy } from '@/lib/trips/itinerary'
 import { slugifyDestination } from '@/lib/trips/slug'
 import { getOwnedTrip } from '@/lib/trips/queries'
 
@@ -25,6 +26,7 @@ export async function POST(_request: NextRequest, { params }: { params: { id: st
     .update({
       visibility: 'public',
       slug,
+      itinerary: freezePublishedCopy(trip.itinerary),
     })
     .eq('id', params.id)
     .eq('owner_id', user.id)

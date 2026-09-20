@@ -1,5 +1,6 @@
-import type { Attraction, DayActivity, DayItinerary, Itinerary, RouteData, TripFocus } from '@/types'
-import { parseVersionList } from '@/lib/trips/versions'
+import type { Attraction, DayActivity, DayItinerary, Itinerary, RouteData, Trip, TripFocus } from '@/types'
+import { expandDayActivities } from '@/lib/trips/atomic-stops'
+import { parseVersionList, stripVersions } from '@/lib/trips/versions'
 
 export const EMPTY_ROUTE: RouteData = {
   points: [],
@@ -21,6 +22,39 @@ export function emptyItinerary(partial?: Partial<Itinerary>): Itinerary {
     currency: partial?.currency,
     versions: partial?.versions,
     lastChange: partial?.lastChange,
+    publishedCopy: partial?.publishedCopy,
+  }
+}
+
+export function freezePublishedCopy(itinerary: Itinerary): Itinerary {
+  return {
+    ...itinerary,
+    publishedCopy: stripVersions({
+      ...itinerary,
+      publishedCopy: undefined,
+      versions: undefined,
+      lastChange: undefined,
+    }),
+  }
+}
+
+export function publicFacingItinerary(itinerary: Itinerary): Itinerary {
+  return itinerary.publishedCopy && itinerary.publishedCopy.days.length > 0
+    ? itinerary.publishedCopy
+    : itinerary
+}
+
+export function publicFacingTrip(trip: Trip): Trip {
+  const itinerary = publicFacingItinerary(trip.itinerary)
+  if (itinerary === trip.itinerary) return trip
+  return {
+    ...trip,
+    destination: itinerary.destination || trip.destination,
+    tripFocus: itinerary.tripFocus.length > 0 ? itinerary.tripFocus : trip.tripFocus,
+    itinerary,
+    selectedAttractions:
+      itinerary.selectedAttractions.length > 0 ? itinerary.selectedAttractions : trip.selectedAttractions,
+    route: itinerary.route ?? trip.route,
   }
 }
 
@@ -51,9 +85,11 @@ function parseActivity(value: unknown): DayActivity | null {
 function parseDay(value: unknown): DayItinerary | null {
   if (!value || typeof value !== 'object') return null
   const raw = value as Partial<DayItinerary>
-  const activities = Array.isArray(raw.activities)
-    ? raw.activities.map(parseActivity).filter((item): item is DayActivity => Boolean(item))
-    : []
+  const activities = expandDayActivities(
+    Array.isArray(raw.activities)
+      ? raw.activities.map(parseActivity).filter((item): item is DayActivity => Boolean(item))
+      : []
+  )
   return {
     day: typeof raw.day === 'number' ? raw.day : 1,
     date: typeof raw.date === 'string' ? raw.date : '',
@@ -108,6 +144,9 @@ export function parseItinerary(value: unknown): Itinerary {
       itinerary: parseItinerary({ ...version.itinerary, versions: [] }),
     })),
     lastChange: typeof raw.lastChange === 'string' ? raw.lastChange : undefined,
+    publishedCopy: raw.publishedCopy
+      ? parseItinerary({ ...raw.publishedCopy, publishedCopy: undefined, versions: [] })
+      : undefined,
   })
 }
 

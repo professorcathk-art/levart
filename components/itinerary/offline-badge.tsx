@@ -53,7 +53,8 @@ export function OfflineBadge({ trip }: { trip: Trip }) {
           icon={Smartphone}
           onClick={() => void save()}
           disabled={busy}
-          className={saved ? 'border-[#7ECCC4]/50 bg-[#E8F3F1] min-h-11 px-4 text-sm' : 'min-h-11 bg-[#1A1A1A] px-4 text-sm text-white'}
+          tone={saved ? 'default' : 'dark'}
+          className="min-h-11 px-4 text-sm"
         >
           {busy ? t('offlineSaving') : saved ? t('offlineReady') : t('saveOffline')}
         </IconBadge>

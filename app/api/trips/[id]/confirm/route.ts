@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/supabase/auth'
-import { itineraryHasPlan } from '@/lib/trips/itinerary'
+import { itineraryHasPlan, freezePublishedCopy } from '@/lib/trips/itinerary'
 import { getOwnedTrip } from '@/lib/trips/queries'
 import { resolvePlacePhoto } from '@/lib/photos/search'
 
@@ -31,12 +31,18 @@ export async function POST(_request: NextRequest, { params }: { params: { id: st
     }
   }
 
+  const nextItinerary =
+    trip.visibility === 'public' || trip.itinerary.publishedCopy
+      ? freezePublishedCopy(trip.itinerary)
+      : trip.itinerary
+
   const { error } = await supabase
     .from('trips')
     .update({
       status: 'confirmed',
       confirmed_at: new Date().toISOString(),
       cover_photo: coverPhoto ?? null,
+      itinerary: nextItinerary,
     })
     .eq('id', params.id)
     .eq('owner_id', user.id)

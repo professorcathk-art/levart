@@ -7,6 +7,7 @@ import { searchAttractions as searchGeoapify } from '@/lib/apis/geoapify'
 import { getWeatherForecast } from '@/lib/apis/weather'
 import { optimizeRoute } from '@/lib/apis/osrm'
 import { emptyItinerary, isTripFocus } from '@/lib/trips/itinerary'
+import { expandDayActivities } from '@/lib/trips/atomic-stops'
 import { addVersion, formatItineraryForPrompt, preserveUserEdits, summarizeDiff } from '@/lib/trips/versions'
 import { searchTravelKnowledge } from '@/lib/trips/knowledge'
 import { guessCurrency } from '@/lib/trips/currency'
@@ -14,12 +15,19 @@ import type { Attraction, DayItinerary, Itinerary, TripFocus } from '@/types'
 
 const activitySchema = z.object({
   time: z.enum(['morning', 'afternoon', 'evening']),
-  activity: z.string(),
-  location: z.string(),
+  activity: z
+    .string()
+    .describe('One stop only, e.g. "Arrive Narita T2" or "Check in at Mitsui Garden Hotel". Do not chain multiple places with arrows.'),
+  location: z
+    .string()
+    .describe('This stop’s place name only. No "A → B → C" routes.'),
   duration: z.string().optional(),
   cost: z.string().optional(),
   photoReference: z.string().optional(),
-  distance: z.string().optional(),
+  distance: z
+    .string()
+    .optional()
+    .describe('How to get from the previous stop to this stop only. Never describe an earlier hop.'),
   type: z.enum(['attraction', 'restaurant', 'shopping', 'nightlife', 'nature', 'culture']).optional(),
   address: z.string().optional(),
   openingHours: z.string().optional(),
@@ -342,7 +350,10 @@ export function createPlannerTools(ctx: PlannerContext) {
             ? ctx.itinerary.selectedAttractions.filter((item) => selectedAttractionIds.includes(item.id))
             : ctx.itinerary.selectedAttractions
         )
-        const daysWithPhotos = attachPlacePhotos(days, selected)
+        const daysWithPhotos = attachPlacePhotos(days, selected).map((day) => ({
+          ...day,
+          activities: expandDayActivities(day.activities),
+        }))
         const money = (currency || previous.currency || guessCurrency(destination).code).toUpperCase()
 
         const drafted = emptyItinerary({

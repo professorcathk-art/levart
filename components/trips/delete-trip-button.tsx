@@ -43,7 +43,8 @@ export function DeleteTripButton({ tripId, redirectTo }: DeleteTripButtonProps) 
       icon={Trash2}
       onClick={() => void onDelete()}
       disabled={busy}
-      className="min-h-11 border-red-200 px-4 text-sm text-red-600"
+      tone="danger"
+      className="min-h-11 px-4 text-sm"
     >
       {busy ? t('deletingTrip') : t('deleteTrip')}
     </IconBadge>

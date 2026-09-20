@@ -1,4 +1,5 @@
 import type { DayActivity, DayItinerary } from '@/types'
+import { cardEndLocation, cardStartLocation, expandDayActivities } from '@/lib/trips/atomic-stops'
 
 export type TimelineKind = 'place' | 'food' | 'stay'
 
@@ -8,6 +9,8 @@ export interface TimelineItem {
   time: DayActivity['time']
   title: string
   location: string
+  startLocation: string
+  endLocation: string
   activity: DayActivity
 }
 
@@ -23,37 +26,46 @@ export function classifyActivity(activity: DayActivity): TimelineKind {
   return 'place'
 }
 
-export function buildTimeline(day: DayItinerary): TimelineItem[] {
-  const items: TimelineItem[] = day.activities.map((activity, index) => ({
-    id: `a-${day.day}-${index}`,
-    kind: classifyActivity(activity),
+function toTimelineItem(activity: DayActivity, id: string): TimelineItem {
+  const startLocation = cardStartLocation(activity)
+  const endLocation = cardEndLocation(activity)
+  const kind = classifyActivity(activity)
+  return {
+    id,
+    kind,
     time: activity.time,
     title: activity.activity,
-    location: activity.location,
+    location: kind === 'stay' ? endLocation || activity.location : startLocation || activity.location,
+    startLocation,
+    endLocation,
     activity,
-  }))
+  }
+}
+
+export function buildTimeline(day: DayItinerary): TimelineItem[] {
+  const items: TimelineItem[] = expandDayActivities(day.activities).map((activity, index) =>
+    toTimelineItem(activity, `a-${day.day}-${index}`)
+  )
 
   day.restaurants.forEach((restaurant, index) => {
     const alreadyListed = items.some(
       (item) => item.title.toLowerCase() === restaurant.name.toLowerCase()
     )
     if (alreadyListed) return
-    items.push({
-      id: `r-${day.day}-${index}`,
-      kind: 'food',
-      time: 'afternoon',
-      title: restaurant.name,
-      location: restaurant.address || restaurant.name,
-      activity: {
-        time: 'afternoon',
-        activity: restaurant.name,
-        location: restaurant.address || restaurant.name,
-        type: 'restaurant',
-        cost: restaurant.cost,
-        address: restaurant.address,
-        photo: restaurant.photo || restaurant.photoUrl,
-      },
-    })
+    items.push(
+      toTimelineItem(
+        {
+          time: 'afternoon',
+          activity: restaurant.name,
+          location: restaurant.address || restaurant.name,
+          type: 'restaurant',
+          cost: restaurant.cost,
+          address: restaurant.address,
+          photo: restaurant.photo || restaurant.photoUrl,
+        },
+        `r-${day.day}-${index}`
+      )
+    )
   })
 
   const order: Record<DayActivity['time'], number> = {

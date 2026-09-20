@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { geocodePlace } from '@/lib/apis/geocode'
+import { cleanPlaceName } from '@/lib/trips/place-query'
 import type { Attraction } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -15,7 +16,7 @@ function isNearDuplicate(pins: Attraction[], lat: number, lon: number) {
 function isCloseToAnchor(anchor: { lat: number; lon: number }, lat: number, lon: number) {
   const dlat = anchor.lat - lat
   const dlon = anchor.lon - lon
-  return dlat * dlat + dlon * dlon < 64
+  return dlat * dlat + dlon * dlon < 16
 }
 
 export async function GET(request: NextRequest) {
@@ -35,8 +36,9 @@ export async function GET(request: NextRequest) {
 
     for (const city of cities.slice(0, 3)) {
       let hit = await geocodePlace(city, {
-        types: 'place,region,locality,poi',
+        types: 'place,region,locality,district,poi',
         proximity,
+        language: /[\u4e00-\u9fff]/.test(city) ? 'zh' : 'en',
       })
       if (hit && proximity && !isCloseToAnchor({ lat: proximity.lat, lon: proximity.lon }, hit.lat, hit.lon)) {
         hit = null
@@ -64,15 +66,16 @@ export async function GET(request: NextRequest) {
 
     const stops = stopsRaw
       .split('|')
-      .map((stop) => stop.trim())
+      .map((stop) => cleanPlaceName(stop))
       .filter((stop) => stop.length >= 2)
-      .slice(0, 5)
+      .slice(0, 6)
 
     const stopHits = await Promise.all(
       stops.map((stop) =>
         geocodePlace(stop, {
-          types: 'poi,address,place',
+          types: 'poi,address,place,neighborhood,locality',
           proximity,
+          language: /[\u4e00-\u9fff]/.test(stop) ? 'zh' : 'en',
         })
       )
     )

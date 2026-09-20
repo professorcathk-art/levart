@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createPublicClient } from '@/lib/supabase/public'
 import { mapComment, mapProfile, mapTrip } from '@/lib/trips/mappers'
+import { searchCommunityTrips } from '@/lib/trips/community-search'
+import { itineraryHasPlan, publicFacingTrip } from '@/lib/trips/itinerary'
 import type { Profile, Trip, TripComment } from '@/types'
 
 const TRIP_SELECT = `
@@ -140,14 +142,13 @@ export async function getMyTrips(userId: string): Promise<Trip[]> {
 }
 
 export async function getPublicTripBySlug(slug: string): Promise<Trip | null> {
-  const supabase = await getQueryClient()
+  const supabase = createPublicClient() ?? (await getQueryClient())
   if (!supabase) return null
   const { data, error } = await supabase
     .from('trips')
     .select(TRIP_SELECT)
     .eq('slug', slug)
     .eq('visibility', 'public')
-    .eq('status', 'confirmed')
     .maybeSingle()
 
   if (error) {
@@ -157,7 +158,8 @@ export async function getPublicTripBySlug(slug: string): Promise<Trip | null> {
 
   if (!data) return null
   const [trip] = await attachOwners(await attachStats([mapTrip(data)]))
-  return trip
+  if (!itineraryHasPlan(trip.itinerary) && !trip.itinerary.publishedCopy) return null
+  return publicFacingTrip(trip)
 }
 
 export async function getCommunityTrips(options?: {
@@ -168,37 +170,28 @@ export async function getCommunityTrips(options?: {
     const supabase = createPublicClient()
     if (!supabase) return []
 
-    let query = supabase
+    const query = supabase
       .from('trips')
       .select(TRIP_SELECT)
       .eq('visibility', 'public')
-      .eq('status', 'confirmed')
+      .order('confirmed_at', { ascending: false })
 
-    if (options?.destination) {
-      query = query.ilike('destination', `%${options.destination}%`)
-    }
-
-    if (options?.sort === 'rating') {
-      query = query.order('created_at', { ascending: false })
-    } else {
-      query = query.order('confirmed_at', { ascending: false })
-    }
-
-    const { data, error } = await query.limit(48)
+    const { data, error } = await query.limit(80)
 
     if (error) {
       console.error('Failed to load community trips:', error)
       return []
     }
 
-    const trips = await attachOwners(
-      await attachStats((data ?? []).map(mapTrip), supabase),
-      supabase
+    const trips = (
+      await attachOwners(await attachStats((data ?? []).map(mapTrip), supabase), supabase)
     )
-    if (options?.sort === 'rating') {
-      return trips.sort((a, b) => (b.avgRating ?? 0) - (a.avgRating ?? 0))
-    }
-    return trips
+      .filter((trip) => itineraryHasPlan(publicFacingTrip(trip).itinerary))
+      .map(publicFacingTrip)
+    return searchCommunityTrips(trips, {
+      query: options?.destination,
+      sort: options?.sort === 'rating' ? 'rating' : options?.destination ? 'relevance' : 'recent',
+    })
   } catch (error) {
     console.error('Failed to load community trips:', error)
     return []
@@ -263,7 +256,6 @@ export async function getPublishedTripsForUser(userId: string): Promise<Trip[]> 
     .select(TRIP_SELECT)
     .eq('owner_id', userId)
     .eq('visibility', 'public')
-    .eq('status', 'confirmed')
     .order('confirmed_at', { ascending: false })
 
   if (error) {
@@ -271,11 +263,13 @@ export async function getPublishedTripsForUser(userId: string): Promise<Trip[]> 
     return []
   }
 
-  return attachOwners(await attachStats((data ?? []).map(mapTrip)))
+  return (await attachOwners(await attachStats((data ?? []).map(mapTrip))))
+    .filter((trip) => itineraryHasPlan(publicFacingTrip(trip).itinerary))
+    .map(publicFacingTrip)
 }
 
 export async function getTripComments(tripId: string): Promise<TripComment[]> {
-  const supabase = await getQueryClient()
+  const supabase = createPublicClient() ?? (await getQueryClient())
   if (!supabase) return []
   const { data, error } = await supabase
     .from('comments')

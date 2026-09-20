@@ -1,4 +1,5 @@
 import type { DayActivity, DayItinerary, Itinerary, PlanVersion } from '@/types'
+import type { MessageKey } from '@/lib/i18n/dictionaries'
 
 function hasPlan(itinerary: Itinerary | null | undefined) {
   return Boolean(itinerary && itinerary.destination && itinerary.days.length > 0)
@@ -202,7 +203,8 @@ export function formatItineraryForPrompt(itinerary: Itinerary): string {
 }
 
 export function collectTravelTips(
-  itinerary: Itinerary
+  itinerary: Itinerary,
+  t: (key: MessageKey, vars?: Record<string, string | number>) => string
 ): { id: 'fromPlan' | 'style' | 'practical'; items: string[] }[] {
   const fromActivities = itinerary.days.flatMap((day) =>
     day.activities.flatMap((activity) => activity.tips ?? [])
@@ -215,33 +217,31 @@ export function collectTravelTips(
 
   const focusTips: string[] = []
   if (itinerary.tripFocus.includes('food')) {
-    focusTips.push('Book popular restaurants a few days ahead, especially weekend dinners.')
-    focusTips.push('Keep one flexible meal slot each day for a local stall or bakery find.')
+    focusTips.push(t('tipFoodBook'), t('tipFoodFlex'))
   }
   if (itinerary.tripFocus.includes('culture')) {
-    focusTips.push('Check temple, museum, and gallery closed days before you go.')
-    focusTips.push('Carry a light layer for air-conditioned indoor sites.')
+    focusTips.push(t('tipCultureClosed'), t('tipCultureLayer'))
   }
   if (itinerary.tripFocus.includes('beach')) {
-    focusTips.push('Pack reef-safe sunscreen, a dry bag, and extra water for beach days.')
+    focusTips.push(t('tipBeachPack'))
   }
   if (itinerary.tripFocus.includes('family')) {
-    focusTips.push('Plan a slower midday break and keep walking stretches under 20 minutes when possible.')
+    focusTips.push(t('tipFamilyPace'))
   }
   if (itinerary.tripFocus.includes('nightlife')) {
-    focusTips.push('Save one quieter morning after a late night so the next day still works.')
+    focusTips.push(t('tipNightlifeRest'))
   }
   if (itinerary.tripFocus.includes('shopping')) {
-    focusTips.push('Leave extra bag space on the last day and confirm shop opening hours.')
+    focusTips.push(t('tipShoppingSpace'))
   }
   if (itinerary.tripFocus.includes('climbing')) {
-    focusTips.push('Check weather and trail closures the night before outdoor days.')
+    focusTips.push(t('tipClimbWeather'))
   }
 
   const general = [
-    `Carry a screenshot of each day in ${itinerary.destination || 'your destination'} in case data is slow.`,
-    'Keep tickets and hotel addresses offline, and note the nearest station for every stop.',
-    'Build 15–20 minutes of buffer between neighborhoods.',
+    t('tipScreenshot', { destination: itinerary.destination || t('untitledTrip') }),
+    t('tipOfflineTickets'),
+    t('tipBuffer'),
   ]
 
   return [
