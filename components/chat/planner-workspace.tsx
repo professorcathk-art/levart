@@ -93,7 +93,9 @@ function PlannerWorkspaceReady({
     initialItinerary ? ensureOriginal(initialItinerary) : null
   )
   const [status, setStatus] = useState<TripStatus>(initialStatus)
-  const [mobileTab, setMobileTab] = useState<'chat' | 'plan'>('chat')
+  const [mobileTab, setMobileTab] = useState<'chat' | 'plan'>(
+    itineraryHasPlan(initialItinerary) ? 'plan' : 'chat'
+  )
   const [authOpen, setAuthOpen] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -331,27 +333,27 @@ function PlannerWorkspaceReady({
 
   return (
     <div className="flex h-[calc(100dvh-4rem)] flex-col bg-gradient-to-br from-[#FFF8F3] via-[#FFE8E0] to-[#FFD4C4]">
-      <div className="flex items-center justify-between border-b border-[#FF9A76]/10 bg-white/70 px-4 py-2 md:hidden">
-        <div className="flex rounded-full bg-[#FFF8F3] p-1">
+      <div className="flex shrink-0 items-center justify-between border-b border-[#FF9A76]/10 bg-white/80 px-3 py-2 md:hidden">
+        <div className="grid w-full grid-cols-2 rounded-full bg-[#FFF8F3] p-1">
           <button
             type="button"
             onClick={() => setMobileTab('chat')}
-            className={`rounded-full px-4 py-1.5 text-sm font-semibold ${mobileTab === 'chat' ? 'bg-[#FF9A76] text-white' : 'text-gray-600'}`}
+            className={`min-h-11 rounded-full text-sm font-semibold ${mobileTab === 'chat' ? 'bg-[#E07A5F] text-white shadow-sm' : 'text-gray-600'}`}
           >
             {t('tabChat')}
           </button>
           <button
             type="button"
             onClick={() => setMobileTab('plan')}
-            className={`rounded-full px-4 py-1.5 text-sm font-semibold ${mobileTab === 'plan' ? 'bg-[#FF9A76] text-white' : 'text-gray-600'}`}
+            className={`min-h-11 rounded-full text-sm font-semibold ${mobileTab === 'plan' ? 'bg-[#E07A5F] text-white shadow-sm' : 'text-gray-600'}`}
           >
             {t('tabPlan')}
           </button>
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 md:grid-cols-2">
-        <section className={`min-h-0 border-r border-[#FF9A76]/10 ${mobileTab === 'chat' ? 'block' : 'hidden'} md:block`}>
+      <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-2">
+        <section className={`min-h-0 overflow-hidden border-r border-[#FF9A76]/10 ${mobileTab === 'chat' ? 'block' : 'hidden'} md:block`}>
           <ChatPane
             messages={messages}
             status={chatStatus}
@@ -360,7 +362,7 @@ function PlannerWorkspaceReady({
             onSend={(text, files) => sendMessage({ text, files })}
           />
         </section>
-        <section className={`min-h-0 ${mobileTab === 'plan' ? 'block' : 'hidden'} md:block`}>
+        <section className={`min-h-0 overflow-hidden ${mobileTab === 'plan' ? 'block' : 'hidden'} md:block`}>
           <PlanPane
             itinerary={itinerary}
             lastChange={shareCopied ? t('shareLinkCopied') : lastChange}

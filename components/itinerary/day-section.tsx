@@ -36,8 +36,8 @@ export function DaySection({ day, destination, currency, trip }: DaySectionProps
       id={`day-${day.day}`}
       className={
         handbook
-          ? 'relative overflow-hidden rounded-[28px] border border-[#E8DFD1] bg-[#FAF7F2] p-4 shadow-sm md:p-5'
-          : 'rounded-xl border border-orange-100/80 bg-white/90 p-4 shadow-sm transition-all hover:shadow-md md:p-5'
+          ? 'relative overflow-hidden rounded-[28px] border border-[#E8DFD1] bg-[#FAF7F2] p-3 shadow-sm sm:p-4 md:p-5'
+          : 'rounded-xl border border-orange-100/80 bg-white/90 p-3 shadow-sm transition-all hover:shadow-md sm:p-4 md:p-5'
       }
     >
       {handbook && (

@@ -4,12 +4,14 @@ import { useRef } from 'react'
 import type { Itinerary } from '@/types'
 import { PawPrint } from '../paw-print'
 import { formatMoney, guessCurrency } from '@/lib/trips/currency'
+import { useLocale } from '@/components/i18n/locale-provider'
 
 interface PDFExportProps {
   itinerary: Itinerary
 }
 
 export function PDFExport({ itinerary }: PDFExportProps) {
+  const { t } = useLocale()
   const printRef = useRef<HTMLDivElement>(null)
 
   const handleDownloadPDF = () => {
@@ -62,11 +64,12 @@ export function PDFExport({ itinerary }: PDFExportProps) {
   return (
     <>
       <button
+        type="button"
         onClick={handleDownloadPDF}
-        className="no-print fixed bottom-8 right-8 z-50 px-6 py-3 bg-gradient-to-r from-[#FF9A76] to-[#FFB86C] text-white rounded-full shadow-2xl hover:shadow-3xl transform hover:scale-110 transition-all duration-300 flex items-center gap-2 font-semibold"
+        className="no-print inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#E07A5F] to-[#FFB86C] px-6 text-sm font-semibold text-white shadow-md sm:w-auto"
       >
-        <span>📄</span>
-        <span>Download PDF</span>
+        <span aria-hidden>📄</span>
+        <span>{t('downloadPdf')}</span>
       </button>
 
       <div ref={printRef} className="print-area hidden print:block">

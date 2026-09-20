@@ -51,7 +51,7 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
   const meta = [cost, activity.duration].filter(Boolean).join(' · ')
 
   const actions = (
-    <div className="flex flex-wrap items-center justify-end gap-2">
+    <div className="flex w-full flex-wrap items-center justify-start gap-2 sm:w-auto sm:justify-end">
       <PlaceHint
         title={item.title}
         location={item.location}
@@ -96,11 +96,11 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
 
   if (viewStyle === 'concise') {
     return (
-      <article className="rounded-xl border border-orange-100/80 bg-white/90 p-4 shadow-sm transition-all hover:shadow-md">
+      <article className="rounded-xl border border-orange-100/80 bg-white/90 p-3 shadow-sm transition-all hover:shadow-md sm:p-4">
         <TicketMark>{t(TIME_KEYS[item.time])}</TicketMark>
-        <h4 className="mt-1 text-base font-extrabold text-slate-800">{item.title}</h4>
-        <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">{item.location}</p>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <h4 className="mt-1 break-words text-base font-extrabold text-slate-800">{item.title}</h4>
+        <p className="mt-0.5 break-words text-xs text-slate-500">{item.location}</p>
+        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <p className="font-mono text-[11px] font-semibold uppercase tracking-wide text-slate-500">{meta || '—'}</p>
           {actions}
         </div>
@@ -122,22 +122,22 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
 
   if (viewStyle === 'handbook') {
     return (
-      <article className="relative rounded-[28px] border border-[#E8DFD1] bg-[#FFFDF9] p-4 shadow-[2px_4px_0_rgba(90,70,40,0.08)]">
-        <div className="flex gap-4">
-          <figure className="w-24 shrink-0 bg-white p-1.5 pb-5 shadow-md">
+      <article className="relative rounded-[28px] border border-[#E8DFD1] bg-[#FFFDF9] p-3 shadow-[2px_4px_0_rgba(90,70,40,0.08)] sm:p-4">
+        <div className="flex gap-3 sm:gap-4">
+          <figure className="w-16 shrink-0 bg-white p-1 pb-3 shadow-md sm:w-24 sm:p-1.5 sm:pb-5">
             <PlaceThumb
               title={item.title}
               photo={activity.photo}
               type={activity.type}
               kind={item.kind}
-              className="h-20 w-full"
+              className="h-16 w-full sm:h-20"
             />
           </figure>
           <div className="min-w-0 flex-1">
             <TicketMark className="bg-[#F6E6C8] text-[#C4A574]">{t(TIME_KEYS[item.time])}</TicketMark>
-            <h4 className="mt-1 font-serif text-xl leading-snug text-[#3F3428]">{item.title}</h4>
-            <p className="flex items-center gap-1 text-xs text-[#7A6A58]">{item.location}</p>
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <h4 className="mt-1 break-words font-serif text-lg leading-snug text-[#3F3428] sm:text-xl">{item.title}</h4>
+            <p className="break-words text-xs text-[#7A6A58]">{item.location}</p>
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
               <p className="font-mono text-[11px] font-semibold uppercase tracking-wide text-[#7A6A58]">{meta}</p>
               {actions}
             </div>
@@ -149,22 +149,22 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
   }
 
   return (
-    <article className="rounded-xl border border-orange-100/80 bg-white/90 p-4 shadow-sm transition-all hover:shadow-md">
-      <div className="flex gap-4">
+    <article className="rounded-xl border border-orange-100/80 bg-white/90 p-3 shadow-sm transition-all hover:shadow-md sm:p-4">
+      <div className="flex gap-3 sm:gap-4">
         <PlaceThumb
           title={item.title}
           photo={activity.photo}
           type={activity.type}
           kind={item.kind}
-          className="h-16 w-16 shrink-0 rounded-xl"
+          className="h-14 w-14 shrink-0 rounded-xl sm:h-16 sm:w-16"
         />
         <div className="min-w-0 flex-1">
           <TicketMark>{t(TIME_KEYS[item.time])}</TicketMark>
-          <h4 className="mt-1 text-base font-extrabold text-slate-800">{item.title}</h4>
-          <p className="flex items-center gap-1 text-xs text-slate-500">{item.location}</p>
+          <h4 className="mt-1 break-words text-base font-extrabold text-slate-800">{item.title}</h4>
+          <p className="break-words text-xs text-slate-500">{item.location}</p>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <p className="font-mono text-[11px] font-semibold uppercase tracking-wide text-slate-500">{meta || '—'}</p>
         {actions}
       </div>

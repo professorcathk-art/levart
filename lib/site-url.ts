@@ -9,9 +9,15 @@ export function getBrowserSiteUrl() {
   return ''
 }
 
+export function safeNextPath(value: string | null | undefined) {
+  if (!value) return '/'
+  if (!value.startsWith('/') || value.startsWith('//') || value.includes('\\')) return '/'
+  return value
+}
+
 export function getAuthCallbackUrl(nextPath: string) {
   const origin =
     typeof window !== 'undefined' ? window.location.origin : getConfiguredSiteUrl() || ''
-  const next = nextPath.startsWith('/') ? nextPath : `/${nextPath}`
+  const next = safeNextPath(nextPath)
   return `${origin}/auth/callback?next=${encodeURIComponent(next)}`
 }

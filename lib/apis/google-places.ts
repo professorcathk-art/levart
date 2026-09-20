@@ -1,21 +1,106 @@
 import type { Attraction } from '@/types'
+import { geocodePlace } from '@/lib/apis/geocode'
 
-const GOOGLE_PLACES_BASE_URL = 'https://maps.googleapis.com/maps/api/place'
+const PLACES_SEARCH_URL = 'https://places.googleapis.com/v1/places:searchText'
+const PLACES_NEARBY_URL = 'https://places.googleapis.com/v1/places:searchNearby'
 
-// Map trip focus to Google Places types
-const FOCUS_TO_TYPES: Record<string, string[]> = {
-  shopping: ['shopping_mall', 'store', 'clothing_store', 'jewelry_store'],
-  food: ['restaurant', 'cafe', 'food', 'meal_takeaway'],
-  climbing: ['gym', 'park', 'natural_feature'],
-  culture: ['museum', 'art_gallery', 'library', 'church', 'temple', 'tourist_attraction'],
-  nightlife: ['night_club', 'bar', 'casino'],
-  beach: ['beach'],
-  family: ['amusement_park', 'zoo', 'aquarium', 'park', 'tourist_attraction'],
+const FOCUS_QUERIES: Record<string, string> = {
+  shopping: 'shopping',
+  food: 'restaurants and cafes',
+  climbing: 'hiking and parks',
+  culture: 'museums and cultural sites',
+  nightlife: 'nightlife and bars',
+  beach: 'beaches',
+  family: 'family attractions',
 }
 
-// Helper function to calculate distance between two coordinates (Haversine formula)
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371 // Earth's radius in km
+const FOCUS_TYPES: Record<string, string> = {
+  shopping: 'shopping_mall',
+  food: 'restaurant',
+  climbing: 'park',
+  culture: 'museum',
+  nightlife: 'night_club',
+  beach: 'beach',
+  family: 'amusement_park',
+}
+
+const FIELD_MASK = [
+  'places.id',
+  'places.displayName',
+  'places.formattedAddress',
+  'places.location',
+  'places.types',
+  'places.rating',
+  'places.userRatingCount',
+  'places.priceLevel',
+  'places.photos',
+  'places.nationalPhoneNumber',
+  'places.websiteUri',
+  'places.regularOpeningHours',
+].join(',')
+
+interface PlacesNewPlace {
+  id?: string
+  displayName?: { text?: string }
+  formattedAddress?: string
+  location?: { latitude?: number; longitude?: number }
+  types?: string[]
+  rating?: number
+  userRatingCount?: number
+  priceLevel?: string
+  photos?: Array<{ name?: string }>
+  nationalPhoneNumber?: string
+  websiteUri?: string
+  regularOpeningHours?: { weekdayDescriptions?: string[] }
+}
+
+function placesApiKey() {
+  return process.env.GOOGLE_PLACES_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY || ''
+}
+
+function priceLevelToNumber(level?: string) {
+  switch (level) {
+    case 'PRICE_LEVEL_FREE':
+      return 0
+    case 'PRICE_LEVEL_INEXPENSIVE':
+      return 1
+    case 'PRICE_LEVEL_MODERATE':
+      return 2
+    case 'PRICE_LEVEL_EXPENSIVE':
+      return 3
+    case 'PRICE_LEVEL_VERY_EXPENSIVE':
+      return 4
+    default:
+      return undefined
+  }
+}
+
+function toAttraction(place: PlacesNewPlace): Attraction | null {
+  const lat = place.location?.latitude
+  const lon = place.location?.longitude
+  const name = place.displayName?.text
+  const id = place.id
+  if (!id || !name || typeof lat !== 'number' || typeof lon !== 'number') return null
+  return {
+    id,
+    placeId: id,
+    name,
+    category: place.types?.[0] || 'tourist_attraction',
+    lat,
+    lon,
+    address: place.formattedAddress,
+    photoReference: place.photos?.[0]?.name,
+    rating: place.rating,
+    userRatingsTotal: place.userRatingCount,
+    priceLevel: priceLevelToNumber(place.priceLevel),
+    openingHours: place.regularOpeningHours?.weekdayDescriptions,
+    phoneNumber: place.nationalPhoneNumber,
+    website: place.websiteUri,
+  }
+}
+
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371
   const dLat = ((lat2 - lat1) * Math.PI) / 180
   const dLon = ((lon2 - lon1) * Math.PI) / 180
   const a =
@@ -24,54 +109,42 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLon / 2) *
       Math.sin(dLon / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return R * c
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-// Deduplicate attractions by grouping similar names and locations
 function deduplicateAttractions(attractions: Attraction[]): Attraction[] {
   const seen = new Map<string, Attraction>()
-  
   for (const attraction of attractions) {
     const key = attraction.placeId || attraction.id
-    const normalizedName = attraction.name.toLowerCase().trim()
-    
-    // Check if we've seen a similar attraction
-    let found = false
-    for (const [existingKey, existing] of seen.entries()) {
-      const existingName = existing.name.toLowerCase().trim()
-      const distance = calculateDistance(
-        attraction.lat,
-        attraction.lon,
-        existing.lat,
-        existing.lon
-      )
-      
-      // If names are very similar and locations are close (< 500m), consider them duplicates
-      if (
-        (normalizedName === existingName ||
-          normalizedName.includes(existingName) ||
-          existingName.includes(normalizedName)) &&
-        distance < 0.5
-      ) {
-        // Keep the one with better rating or more reviews
-        if (
-          (attraction.rating || 0) > (existing.rating || 0) ||
-          (attraction.userRatingsTotal || 0) > (existing.userRatingsTotal || 0)
-        ) {
-          seen.set(existingKey, attraction)
-        }
-        found = true
-        break
-      }
-    }
-    
-    if (!found) {
+    const existing = seen.get(key)
+    if (!existing) {
       seen.set(key, attraction)
+      continue
     }
+    const better =
+      (attraction.rating || 0) * (attraction.userRatingsTotal || 0) >
+      (existing.rating || 0) * (existing.userRatingsTotal || 0)
+    if (better) seen.set(key, attraction)
   }
-  
   return Array.from(seen.values())
+}
+
+async function placesPost(url: string, body: Record<string, unknown>, apiKey: string) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': apiKey,
+      'X-Goog-FieldMask': FIELD_MASK,
+    },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(8000),
+  })
+  if (!response.ok) {
+    const detail = await response.text()
+    throw new Error(`Places API failed (${response.status}): ${detail.slice(0, 280)}`)
+  }
+  return (await response.json()) as { places?: PlacesNewPlace[] }
 }
 
 export async function searchAttractions(
@@ -79,289 +152,97 @@ export async function searchAttractions(
   focus: string[],
   radiusKm: number = 20
 ): Promise<Attraction[]> {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+  const apiKey = placesApiKey()
   if (!apiKey) {
     throw new Error('Google Places API key is not configured')
   }
 
-  // Collect all types from selected focus
-  const types = new Set<string>()
-  focus.forEach((f) => {
-    const typeList = FOCUS_TO_TYPES[f] || []
-    typeList.forEach((type) => types.add(type))
+  const center = await geocodePlace(destination)
+  if (!center) {
+    throw new Error('Destination not found')
+  }
+
+  const circle = {
+    circle: {
+      center: { latitude: center.lat, longitude: center.lon },
+      radius: Math.min(Math.max(radiusKm, 1), 50) * 1000,
+    },
+  }
+
+  const queries = [
+    `top attractions in ${destination}`,
+    ...focus.slice(0, 3).map((item) => `${FOCUS_QUERIES[item] || item} in ${destination}`),
+  ]
+
+  const searchResults = await Promise.all(
+    queries.map((textQuery) =>
+      placesPost(
+        PLACES_SEARCH_URL,
+        {
+          textQuery,
+          languageCode: /[\u4e00-\u9fff]/.test(destination) ? 'zh' : 'en',
+          maxResultCount: 20,
+          locationBias: circle,
+        },
+        apiKey
+      ).catch((error: unknown) => {
+        console.warn('Places text search failed:', error)
+        return { places: [] as PlacesNewPlace[] }
+      })
+    )
+  )
+
+  let attractions = searchResults
+    .flatMap((result) => result.places ?? [])
+    .map(toAttraction)
+    .filter((item): item is Attraction => item !== null)
+    .filter((item) => calculateDistance(center.lat, center.lon, item.lat, item.lon) <= radiusKm + 8)
+
+  if (attractions.length < 8) {
+    const includedType = FOCUS_TYPES[focus[0] || ''] || 'tourist_attraction'
+    try {
+      const nearby = await placesPost(
+        PLACES_NEARBY_URL,
+        {
+          includedTypes: [includedType],
+          maxResultCount: 20,
+          locationRestriction: circle,
+        },
+        apiKey
+      )
+      attractions = [
+        ...attractions,
+        ...(nearby.places ?? []).map(toAttraction).filter((item): item is Attraction => item !== null),
+      ]
+    } catch (error) {
+      console.warn('Places nearby search failed:', error)
+    }
+  }
+
+  const sorted = deduplicateAttractions(attractions).sort((a, b) => {
+    const aScore = (a.rating || 0) * (a.userRatingsTotal || 1)
+    const bScore = (b.rating || 0) * (b.userRatingsTotal || 1)
+    return bScore - aScore
   })
 
-  try {
-    // Step 1: Geocode destination to get coordinates
-    const geocodeResponse = await fetch(
-      `https://maps.googleapis.com/maps/api/geocode/json?` +
-        new URLSearchParams({
-          address: destination,
-          key: apiKey,
-        })
-    )
-
-    if (!geocodeResponse.ok) {
-      throw new Error('Failed to geocode destination')
-    }
-
-    const geocodeData = (await geocodeResponse.json()) as {
-      results?: Array<{
-        geometry: {
-          location: {
-            lat: number
-            lng: number
-          }
-        }
-      }>
-      status: string
-    }
-
-    if (geocodeData.status !== 'OK' || !geocodeData.results || geocodeData.results.length === 0) {
-      throw new Error('Destination not found')
-    }
-
-    const location = geocodeData.results[0].geometry.location
-    const lat = location.lat
-    const lng = location.lng
-
-    console.log(`Geocoded ${destination} to: ${lat}, ${lng}`)
-
-    // Step 2: Search for places nearby using Text Search (more comprehensive)
-    // Google Places Text Search is better for finding attractions by name/location
-    const textSearchResponse = await fetch(
-      `${GOOGLE_PLACES_BASE_URL}/textsearch/json?` +
-        new URLSearchParams({
-          query: `${types.size > 0 ? Array.from(types).slice(0, 3).join(' ') + ' ' : ''}in ${destination}`,
-          location: `${lat},${lng}`,
-          radius: (radiusKm * 1000).toString(), // Convert km to meters
-          key: apiKey,
-        })
-    )
-
-    if (!textSearchResponse.ok) {
-      throw new Error('Failed to search places')
-    }
-
-    const textSearchData = (await textSearchResponse.json()) as {
-      results?: Array<{
-        place_id: string
-        name: string
-        types: string[]
-        geometry: {
-          location: {
-            lat: number
-            lng: number
-          }
-        }
-        formatted_address?: string
-        rating?: number
-        user_ratings_total?: number
-        price_level?: number
-        opening_hours?: {
-          weekday_text?: string[]
-        }
-        photos?: Array<{
-          photo_reference: string
-        }>
-        international_phone_number?: string
-        website?: string
-      }>
-      status: string
-    }
-
-    let attractions: Attraction[] = []
-
-    if (textSearchData.status === 'OK' && textSearchData.results) {
-      attractions = textSearchData.results
-        .filter((place) => {
-          // Filter by types if we have focus types
-          if (types.size > 0) {
-            return place.types.some((type) => {
-              // Check if any of the place types match our focus types
-              return Array.from(types).some((focusType) =>
-                type.includes(focusType) || focusType.includes(type)
-              )
-            })
-          }
-          return true
-        })
-        .slice(0, 60) // Get more results before deduplication
-        .map((place) => {
-          // Calculate distance from center to filter by radius
-          const distance = calculateDistance(
-            lat,
-            lng,
-            place.geometry.location.lat,
-            place.geometry.location.lng
-          )
-          
-          // Filter by radius (don't cross city borders)
-          if (distance > radiusKm) {
-            return null
-          }
-          
-          return {
-            id: place.place_id,
-            placeId: place.place_id,
-            name: place.name,
-            category: place.types[0] || 'unknown',
-            lat: place.geometry.location.lat,
-            lon: place.geometry.location.lng,
-            address: place.formatted_address,
-            photoReference: place.photos && place.photos.length > 0 ? place.photos[0].photo_reference : undefined,
-            rating: place.rating,
-            userRatingsTotal: place.user_ratings_total,
-            priceLevel: place.price_level,
-            openingHours: place.opening_hours?.weekday_text,
-            phoneNumber: place.international_phone_number,
-            website: place.website,
-          } as Attraction
-        })
-        .filter((a): a is Attraction => a !== null)
-    }
-
-    // If we didn't get enough results, try Nearby Search as fallback
-    if (attractions.length < 10 && types.size > 0) {
-      const nearbyResponse = await fetch(
-        `${GOOGLE_PLACES_BASE_URL}/nearbysearch/json?` +
-          new URLSearchParams({
-            location: `${lat},${lng}`,
-            radius: (radiusKm * 1000).toString(),
-            type: Array.from(types)[0], // Use first type
-            key: apiKey,
-          })
-      )
-
-      if (nearbyResponse.ok) {
-        const nearbyData = (await nearbyResponse.json()) as {
-          results?: Array<{
-            place_id: string
-            name: string
-            types: string[]
-            geometry: {
-              location: {
-                lat: number
-                lng: number
-              }
-            }
-            vicinity?: string
-            rating?: number
-          }>
-          status: string
-        }
-
-        if (nearbyData.status === 'OK' && nearbyData.results) {
-          const nearbyAttractions = nearbyData.results
-            .slice(0, 60 - attractions.length)
-            .map((place) => {
-              const distance = calculateDistance(
-                lat,
-                lng,
-                place.geometry.location.lat,
-                place.geometry.location.lng
-              )
-              
-              if (distance > radiusKm) {
-                return null
-              }
-              
-              return {
-                id: place.place_id,
-                placeId: place.place_id,
-                name: place.name,
-                category: place.types[0] || 'unknown',
-                lat: place.geometry.location.lat,
-                lon: place.geometry.location.lng,
-                address: place.vicinity,
-                rating: place.rating,
-              } as Attraction
-            })
-            .filter((a): a is Attraction => a !== null)
-
-          // Merge and deduplicate by place_id
-          const existingIds = new Set(attractions.map((a) => a.id))
-          const newAttractions = nearbyAttractions.filter((a) => !existingIds.has(a.id))
-          attractions = [...attractions, ...newAttractions]
-        }
-      }
-    }
-
-    // Deduplicate attractions
-    const deduplicated = deduplicateAttractions(attractions)
-    
-    // Sort by rating and review count (most popular first)
-    const sorted = deduplicated.sort((a, b) => {
-      const aScore = (a.rating || 0) * (a.userRatingsTotal || 0)
-      const bScore = (b.rating || 0) * (b.userRatingsTotal || 0)
-      return bScore - aScore
-    })
-    
-    console.log(`Google Places returned ${sorted.length} unique attractions for ${destination} (from ${attractions.length} total)`)
-    return sorted.slice(0, 50) // Return top 50 after deduplication
-  } catch (error) {
-    console.error('Error fetching attractions from Google Places:', error)
-    throw error
-  }
+  return sorted.slice(0, 50)
 }
 
 export async function getPlacePhoto(photoReference: string, maxWidth = 800): Promise<string | null> {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-  if (!apiKey) {
-    return null
-  }
-
-  try {
-    const photoUrl = `https://maps.googleapis.com/maps/api/place/photo?` +
-      new URLSearchParams({
-        maxwidth: maxWidth.toString(),
-        photo_reference: photoReference,
-        key: apiKey,
-      })
-    return photoUrl
-  } catch (error) {
-    console.error('Error getting place photo:', error)
-    return null
-  }
+  const apiKey = placesApiKey()
+  if (!apiKey || !photoReference) return null
+  const name = photoReference.startsWith('places/') ? photoReference : `places/${photoReference}`
+  return `https://places.googleapis.com/v1/${name}/media?maxHeightPx=${maxWidth}&key=${encodeURIComponent(apiKey)}`
 }
 
 export async function searchPlacePhotos(query: string): Promise<string | null> {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-  if (!apiKey) {
-    return null
-  }
-
+  const apiKey = placesApiKey()
+  if (!apiKey || !query.trim()) return null
   try {
-    // Use Text Search to find place
-    const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/textsearch/json?` +
-        new URLSearchParams({
-          query: query,
-          key: apiKey,
-        })
-    )
-
-    if (!response.ok) {
-      return null
-    }
-
-    const data = (await response.json()) as {
-      results?: Array<{
-        photos?: Array<{
-          photo_reference: string
-        }>
-      }>
-      status: string
-    }
-
-    if (data.status === 'OK' && data.results && data.results.length > 0) {
-      const firstResult = data.results[0]
-      if (firstResult.photos && firstResult.photos.length > 0) {
-        return getPlacePhoto(firstResult.photos[0].photo_reference)
-      }
-    }
-
-    return null
+    const data = await placesPost(PLACES_SEARCH_URL, { textQuery: query, maxResultCount: 1 }, apiKey)
+    const photoName = data.places?.[0]?.photos?.[0]?.name
+    if (!photoName) return null
+    return getPlacePhoto(photoName)
   } catch (error) {
     console.error('Error searching place photos:', error)
     return null

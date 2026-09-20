@@ -5,7 +5,6 @@ import Link from 'next/link'
 import { Compass, Globe2, MapPin } from 'lucide-react'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { ShowcaseCard } from '@/components/landing/showcase-card'
-import { COMMUNITY_PREVIEWS, PreviewTripCard } from '@/components/landing/preview-trip-card'
 import type { Trip } from '@/types'
 import type { LucideIcon } from 'lucide-react'
 
@@ -28,11 +27,6 @@ export function CommunityShowcase({ trips }: { trips: Trip[] }) {
     return trips.filter((trip) => rule.test(trip.destination))
   }, [region, trips])
 
-  const previewCards = useMemo(() => {
-    if (region === 'all') return COMMUNITY_PREVIEWS
-    return COMMUNITY_PREVIEWS.filter((preview) => preview.region === region)
-  }, [region])
-
   const tabs: Array<{ id: Region; label: string; icon: LucideIcon; flag?: string }> = [
     { id: 'all', label: t('regionAll'), icon: Globe2 },
     { id: 'japan', label: t('regionJapan'), icon: MapPin, flag: '🇯🇵' },
@@ -40,10 +34,8 @@ export function CommunityShowcase({ trips }: { trips: Trip[] }) {
     { id: 'asia', label: t('regionAsia'), icon: MapPin, flag: '🌏' },
   ]
 
-  const showPreviews = trips.length === 0
-
   return (
-    <section className="bg-[#FAF6F0] py-24">
+    <section className="bg-[#FAF6F0] py-20 md:py-24">
       <div className="mx-auto max-w-6xl px-4">
         <div className="mb-10 grid gap-4 md:grid-cols-12 md:items-end">
           <div className="md:col-span-8">
@@ -81,16 +73,7 @@ export function CommunityShowcase({ trips }: { trips: Trip[] }) {
           })}
         </div>
 
-        {showPreviews ? (
-          <div>
-            <p className="mb-6 text-sm leading-relaxed text-[#2B2D42]/60">{t('communityPreview')}</p>
-            <div className="grid items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {previewCards.map((preview) => (
-                <PreviewTripCard key={preview.destination} preview={preview} />
-              ))}
-            </div>
-          </div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className="rounded-[28px] border border-orange-100/80 bg-white/90 p-8 text-center shadow-sm">
             <p className="leading-relaxed text-[#2B2D42]/70">{t('popularEmpty')}</p>
             <a
@@ -101,7 +84,7 @@ export function CommunityShowcase({ trips }: { trips: Trip[] }) {
             </a>
           </div>
         ) : (
-          <div className="grid items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.slice(0, 6).map((trip) => (
               <ShowcaseCard key={trip.id} trip={trip} />
             ))}

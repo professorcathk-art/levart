@@ -75,13 +75,13 @@ export function DayMapPanel({ destination, trip, dayNumber }: DayMapPanelProps) 
     : undefined
 
   return (
-    <div className="flex h-full min-h-[22rem] flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-3 sm:gap-4">
       <div className="min-h-0 flex-1 overflow-hidden rounded-xl border border-orange-100/80 bg-white/90 shadow-sm">
         {status === 'ready' && pins.length > 0 ? (
           <MapComponent
             attractions={pins}
             routePolyline={trip?.route?.polyline || '[]'}
-            className="h-full min-h-[22rem] w-full"
+            className="h-full min-h-[16rem] w-full lg:min-h-[22rem]"
           />
         ) : (
           <MapPlaceholder

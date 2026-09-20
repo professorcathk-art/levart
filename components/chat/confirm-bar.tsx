@@ -42,7 +42,7 @@ export function ConfirmBar({
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#FF9A76] to-[#FFB86C] px-4 py-3 text-white shadow-lg">
+    <div className="flex flex-col gap-3 rounded-2xl bg-gradient-to-r from-[#E07A5F] to-[#FFB86C] px-4 py-3 text-white shadow-lg sm:flex-row sm:items-center sm:justify-between">
       <div>
         <p className="font-semibold">{t('confirmHappy')}</p>
         <p className="text-xs text-white/80">{t('confirmHint')}</p>
@@ -51,7 +51,7 @@ export function ConfirmBar({
         type="button"
         disabled={confirming}
         onClick={onConfirm}
-        className="relative overflow-hidden rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#FF9A76] shadow-sm transition-all hover:scale-[1.03] disabled:opacity-60"
+        className="relative min-h-11 overflow-hidden rounded-full bg-white px-5 text-sm font-semibold text-[#E07A5F] shadow-sm transition-all hover:scale-[1.03] disabled:opacity-60"
       >
         {confirming ? t('confirming') : t('confirmPlan')}
       </button>

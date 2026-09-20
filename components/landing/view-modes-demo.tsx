@@ -29,7 +29,7 @@ export function ViewModesDemo() {
           <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-[#2B2D42]/70">{t('modesBody')}</p>
         </div>
         <div className="mx-auto max-w-3xl">
-          <div className="mb-6 flex justify-center gap-2">
+          <div className="mb-6 flex flex-wrap justify-center gap-2">
             {modes.map((mode) => (
               <button
                 key={mode.id}

@@ -30,6 +30,9 @@ export async function GET() {
     ),
     siteUrlConfigured: Boolean(process.env.NEXT_PUBLIC_SITE_URL),
     resendConfigured: Boolean(process.env.RESEND_API_KEY),
+    googlePlacesConfigured: Boolean(
+      process.env.GOOGLE_PLACES_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+    ),
   }
 
   return NextResponse.json({

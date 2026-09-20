@@ -62,38 +62,38 @@ export function PlanPane({
   }
 
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-6">
-      <header className="mb-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7ECCC4]">{t('planLiveDraft')}</p>
-          <div className="flex flex-wrap items-center gap-2">
-            {onShare && (
-              <IconBadge icon={Share2} onClick={onShare}>
-                {t('share')}
-              </IconBadge>
-            )}
-            {onHistory && (
-              <IconBadge icon={History} onClick={onHistory}>
-                {t('versionHistory')}
-              </IconBadge>
-            )}
-            {onEdit && (
-              <IconBadge icon={Pencil} tone="primary" onClick={onEdit}>
-                {t('addRemoveStops')}
-              </IconBadge>
-            )}
-            {saveState === 'saving' && <span className="text-xs text-slate-500">{t('savingEdits')}</span>}
-            {saveState === 'saved' && <span className="text-xs text-[#7ECCC4]">{t('editsSaved')}</span>}
-            {saveState === 'error' && <span className="text-xs text-red-600">{t('editsSaveFailed')}</span>}
-          </div>
-        </div>
-        <h2 className="mt-2 text-2xl font-extrabold text-[#FF9A76] md:text-3xl">{itinerary.destination}</h2>
-        <p className="text-gray-600">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <header className="shrink-0 border-b border-orange-100/70 bg-white/80 px-3 py-3 backdrop-blur sm:px-4 md:px-6">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#7ECCC4]">{t('planLiveDraft')}</p>
+        <h2 className="mt-1 break-words text-xl font-extrabold text-[#E07A5F] sm:text-2xl md:text-3xl">{itinerary.destination}</h2>
+        <p className="mt-1 text-sm text-slate-600">
           {t('planDays', { count: itinerary.days.length })}
           {itinerary.checkIn ? ` • ${itinerary.checkIn}` : ''}
           {itinerary.checkOut ? ` – ${itinerary.checkOut}` : ''}
           {itinerary.currency ? ` • ${itinerary.currency}` : ''}
         </p>
+        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {onShare && (
+            <IconBadge icon={Share2} onClick={onShare} className="min-h-11 shrink-0">
+              {t('share')}
+            </IconBadge>
+          )}
+          {onHistory && (
+            <IconBadge icon={History} onClick={onHistory} className="min-h-11 shrink-0">
+              {t('versionHistory')}
+            </IconBadge>
+          )}
+          {onEdit && (
+            <IconBadge icon={Pencil} tone="primary" onClick={onEdit} className="min-h-11 shrink-0">
+              {t('addRemoveStops')}
+            </IconBadge>
+          )}
+        </div>
+        {(saveState === 'saving' || saveState === 'saved' || saveState === 'error') && (
+          <p className={`mt-2 text-xs ${saveState === 'error' ? 'text-red-600' : 'text-slate-500'}`}>
+            {saveState === 'saving' ? t('savingEdits') : saveState === 'saved' ? t('editsSaved') : t('editsSaveFailed')}
+          </p>
+        )}
         {itinerary.notes && (
           <p className="mt-2 rounded-2xl bg-white/80 px-3 py-2 text-sm text-gray-700">{itinerary.notes}</p>
         )}
@@ -111,21 +111,39 @@ export function PlanPane({
             ))}
           </div>
         )}
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {itinerary.days.map((day) => (
+            <a
+              key={day.day}
+              href={`#draft-day-${day.day}`}
+              className="inline-flex min-h-9 shrink-0 items-center rounded-full border border-orange-100/80 bg-white px-3 font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2B2D42]"
+            >
+              {t('planDay', { day: day.day })}
+            </a>
+          ))}
+        </div>
       </header>
 
+      <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:px-4 md:px-6">
+
       {itinerary.selectedAttractions.length > 0 && (
-        <div className="mb-6 overflow-hidden rounded-2xl shadow">
+        <div className="mb-5 h-36 overflow-hidden rounded-2xl border border-orange-100/80 shadow-sm sm:h-48 md:h-64">
           <MapComponent
             attractions={itinerary.selectedAttractions}
             routePolyline={itinerary.route.polyline || '[]'}
+            className="h-full w-full"
           />
         </div>
       )}
 
       <div className="space-y-4 pb-8">
         {itinerary.days.map((day, dayIndex) => (
-          <section key={day.day} className="rounded-2xl border border-orange-100/80 bg-white/90 p-4 shadow-sm transition-all hover:shadow-md">
-            <div className="mb-3 flex items-baseline justify-between gap-2">
+          <section
+            id={`draft-day-${day.day}`}
+            key={day.day}
+            className="scroll-mt-3 rounded-2xl border border-orange-100/80 bg-white/90 p-3 shadow-sm sm:p-4"
+          >
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
               <h3 className="text-lg font-extrabold text-[#1A1A1A]">
                 {t('planDay', { day: day.day })}
                 <span className="ml-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-gray-500">{day.date}</span>
@@ -147,7 +165,7 @@ export function PlanPane({
                     onCommit={(patch) => onActivityChange(dayIndex, index, patch)}
                   />
                 ) : (
-                  <li key={`${day.day}-${index}`} className="border-l-2 border-[#FF9A76]/40 pl-3">
+                  <li key={`${day.day}-${index}`} className="rounded-xl border-l-4 border-[#E07A5F]/70 bg-[#FFF8F3] px-3 py-2">
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7ECCC4]">
                         {t(TIME_KEYS[activity.time])}
@@ -162,8 +180,8 @@ export function PlanPane({
                         address={activity.address}
                       />
                     </div>
-                    <p className="font-semibold">{activity.activity}</p>
-                    <p className="text-sm text-gray-600">{activity.location}</p>
+                    <p className="break-words font-semibold">{activity.activity}</p>
+                    <p className="break-words text-sm text-gray-600">{activity.location}</p>
                     {activity.notes && <p className="mt-1 text-sm text-[#FF9A76]">{activity.notes}</p>}
                     <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-500">
                       {activity.duration && <span>{activity.duration}</span>}
@@ -186,6 +204,7 @@ export function PlanPane({
           </section>
         ))}
       </div>
+    </div>
     </div>
   )
 }

@@ -15,12 +15,11 @@ import type { Trip } from '@/types'
 interface TripViewProps {
   trip: Trip
   isOwner?: boolean
-  showShare?: boolean
 }
 
 type TripTab = 'overview' | 'itinerary' | 'tips'
 
-function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewProps) {
+function TripViewInner({ trip, isOwner = false }: TripViewProps) {
   const { t } = useLocale()
   const { setSelectedDay, setMobilePane } = useTripView()
   const [tab, setTab] = useState<TripTab>('itinerary')
@@ -32,13 +31,13 @@ function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewPro
   ]
 
   return (
-    <div className="space-y-6 pb-20 lg:pb-10">
-      <header className="overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-[#FF9A76] to-[#7ECCC4] p-6 text-white shadow-xl md:p-8">
+    <div className="space-y-5 pb-24 lg:pb-10">
+      <header className="overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-[#FF9A76] to-[#7ECCC4] p-4 text-white shadow-xl sm:p-6 md:p-8">
         <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80">
           {trip.status === 'confirmed' ? t('statusConfirmed') : t('statusDraft')}
         </p>
-        <h1 className="mt-2 text-3xl font-extrabold md:text-5xl">{trip.destination || t('untitledTrip')}</h1>
-        <p className="mt-2 text-base text-white/90 md:text-lg">
+        <h1 className="mt-2 break-words text-2xl font-extrabold sm:text-3xl md:text-5xl">{trip.destination || t('untitledTrip')}</h1>
+        <p className="mt-2 text-sm text-white/90 sm:text-base md:text-lg">
           {t('planDays', { count: trip.itinerary.days.length })}
           {trip.checkIn ? ` • ${trip.checkIn}` : ''}
           {trip.checkOut ? ` – ${trip.checkOut}` : ''}
@@ -67,18 +66,18 @@ function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewPro
             ))}
           </div>
         )}
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-5 flex flex-wrap gap-2 sm:mt-6 sm:gap-3">
           {isOwner && trip.status === 'confirmed' && <ReopenButton tripId={trip.id} />}
           {isOwner && trip.status === 'draft' && (
             <Link
               href={`/plan/${trip.id}`}
-              className="rounded-full bg-white px-5 py-2 font-semibold text-[#FF9A76]"
+              className="inline-flex min-h-11 items-center rounded-full bg-white px-5 py-2 font-semibold text-[#FF9A76]"
             >
               {t('keepEditing')}
             </Link>
           )}
           {isOwner && <DeleteTripButton tripId={trip.id} redirectTo="/trips" />}
-          {isOwner && (showShare || trip.status === 'draft') && (
+          {isOwner && (
             <ShareSheet
               tripId={trip.id}
               destination={trip.destination}
@@ -89,8 +88,8 @@ function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewPro
         </div>
       </header>
 
-      <div className="-mx-4 border-b border-slate-200/80 px-4 md:mx-0 md:px-0">
-        <div className="flex gap-1" role="tablist" aria-label={t('tabItinerary')}>
+      <div className="-mx-3 border-b border-slate-200/80 px-3 sm:-mx-4 sm:px-4 md:mx-0 md:px-0">
+        <div className="grid grid-cols-3" role="tablist" aria-label={t('tabItinerary')}>
           {tabs.map((item) => (
             <button
               key={item.id}
@@ -98,7 +97,7 @@ function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewPro
               role="tab"
               aria-selected={tab === item.id}
               onClick={() => setTab(item.id)}
-              className={`min-h-11 px-4 text-sm font-semibold ${
+              className={`min-h-11 px-2 text-sm font-semibold sm:px-4 ${
                 tab === item.id
                   ? 'border-b-2 border-[#E07A5F] text-[#E07A5F]'
                   : 'text-slate-500 hover:text-slate-800'
@@ -175,12 +174,12 @@ function TripViewInner({ trip, isOwner = false, showShare = false }: TripViewPro
   )
 }
 
-export function TripView({ trip, isOwner = false, showShare = false }: TripViewProps) {
+export function TripView({ trip, isOwner = false }: TripViewProps) {
   const dayNumbers = useMemo(() => trip.itinerary.days.map((day) => day.day), [trip.itinerary.days])
 
   return (
     <TripViewProvider dayNumbers={dayNumbers}>
-      <TripViewInner trip={trip} isOwner={isOwner} showShare={showShare} />
+      <TripViewInner trip={trip} isOwner={isOwner} />
     </TripViewProvider>
   )
 }

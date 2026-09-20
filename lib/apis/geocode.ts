@@ -41,7 +41,7 @@ export async function geocodePlace(
 }
 
 export function hasGooglePlacesKey() {
-  return Boolean(process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY)
+  return Boolean(process.env.GOOGLE_PLACES_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY)
 }
 
 export function hasGeoapifyKey() {

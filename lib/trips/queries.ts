@@ -336,3 +336,24 @@ export async function getTripMessages(tripId: string, userId: string) {
   void userId
   return data ?? []
 }
+
+export async function recordTripView(tripId: string, viewerId: string) {
+  const payload = {
+    trip_id: tripId,
+    viewer_id: viewerId,
+    viewed_at: new Date().toISOString(),
+  }
+  const supabase = await getQueryClient()
+  if (supabase) {
+    const { error } = await supabase.from('trip_views').upsert(payload, { onConflict: 'trip_id,viewer_id' })
+    if (!error) return
+    console.error('Failed to record trip view:', error)
+  }
+
+  const admin = createAdminClient()
+  if (!admin) return
+  const { error: adminError } = await admin.from('trip_views').upsert(payload, { onConflict: 'trip_id,viewer_id' })
+  if (adminError) {
+    console.error('Failed to record trip view with admin client:', adminError)
+  }
+}

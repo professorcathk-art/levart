@@ -48,7 +48,7 @@ export function PlaceHint({ title, location, destination, tips, notes, address }
       {open && (
         <div
           id={panelId}
-          className="absolute left-0 z-20 mt-2 w-72 rounded-xl border border-orange-100/80 bg-white/95 p-3 text-left text-xs text-slate-600 shadow-md backdrop-blur-sm"
+          className="fixed inset-x-3 bottom-[4.75rem] z-40 max-h-[min(20rem,50dvh)] overflow-y-auto rounded-xl border border-orange-100/80 bg-white/95 p-3 text-left text-xs text-slate-600 shadow-md backdrop-blur-sm sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-0 sm:right-auto sm:z-20 sm:mt-2 sm:max-h-none sm:w-72"
         >
           {address && <p className="mb-2">📍 {address}</p>}
           {notes && <p className="mb-2">{notes}</p>}

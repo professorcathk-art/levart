@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { getAuthCallbackUrl } from '@/lib/site-url'
+import { getAuthCallbackUrl, safeNextPath } from '@/lib/site-url'
 import { useLocale } from '@/components/i18n/locale-provider'
 
 interface AuthFormProps {
@@ -15,7 +15,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { t } = useLocale()
-  const next = searchParams.get('next') ?? '/'
+  const next = safeNextPath(searchParams.get('next'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(searchParams.get('error') === 'auth' ? t('authFailed') : null)

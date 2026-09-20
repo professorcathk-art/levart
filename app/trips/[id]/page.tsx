@@ -15,8 +15,8 @@ export default async function TripDetailPage({ params }: { params: { id: string 
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-6 md:py-10">
-      <TripView trip={trip} isOwner showShare />
+    <main className="mx-auto max-w-7xl px-3 py-4 sm:px-4 md:py-10">
+      <TripView trip={trip} isOwner />
     </main>
   )
 }

@@ -12,6 +12,8 @@ const TIME_KEYS: Record<DayActivity['time'], MessageKey> = {
   evening: 'timeEvening',
 }
 
+const TIMES: Array<DayActivity['time']> = ['morning', 'afternoon', 'evening']
+
 interface EditableStopProps {
   activity: DayActivity
   destination: string
@@ -35,18 +37,31 @@ export function EditableStop({ activity, destination, onCommit }: EditableStopPr
   }
 
   return (
-    <li className="rounded-xl border border-slate-100 bg-[#FFF8F3] p-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <select
-          value={activity.time}
+    <li className="rounded-2xl border border-orange-100/80 bg-[#FFF8F3] p-3">
+      <div className="flex items-start justify-between gap-2">
+        <div
+          role="radiogroup"
           aria-label={t('timeOfDay')}
-          onChange={(event) => commit({ time: event.target.value as DayActivity['time'] })}
-          className="rounded-lg bg-white px-2 py-1 text-xs font-semibold uppercase text-[#7ECCC4]"
+          className="flex min-w-0 flex-1 gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          <option value="morning">{t(TIME_KEYS.morning)}</option>
-          <option value="afternoon">{t(TIME_KEYS.afternoon)}</option>
-          <option value="evening">{t(TIME_KEYS.evening)}</option>
-        </select>
+          {TIMES.map((time) => {
+            const selected = activity.time === time
+            return (
+              <button
+                key={time}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => commit({ time })}
+                className={`min-h-9 shrink-0 rounded-full px-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                  selected ? 'bg-[#2B2D42] text-white' : 'bg-white text-slate-500'
+                }`}
+              >
+                {t(TIME_KEYS[time])}
+              </button>
+            )
+          })}
+        </div>
         <PlaceHint
           title={title || activity.activity}
           location={location || activity.location}
@@ -63,7 +78,7 @@ export function EditableStop({ activity, destination, onCommit }: EditableStopPr
         onBlur={() => {
           if (title.trim() && title.trim() !== activity.activity) commit({ activity: title.trim() })
         }}
-        className="mt-2 w-full bg-transparent text-base font-semibold outline-none focus:rounded-lg focus:bg-white focus:px-2 focus:py-1"
+        className="mt-3 min-h-11 w-full rounded-xl bg-white/80 px-3 text-base font-semibold text-[#2B2D42] outline-none ring-1 ring-transparent focus:ring-[#E07A5F]/40"
       />
       <input
         value={location}
@@ -72,7 +87,7 @@ export function EditableStop({ activity, destination, onCommit }: EditableStopPr
         onBlur={() => {
           if (location.trim() !== activity.location) commit({ location: location.trim() })
         }}
-        className="mt-1 w-full bg-transparent text-sm text-slate-600 outline-none focus:rounded-lg focus:bg-white focus:px-2 focus:py-1"
+        className="mt-2 min-h-11 w-full rounded-xl bg-white/80 px-3 text-sm text-slate-600 outline-none ring-1 ring-transparent focus:ring-[#E07A5F]/40"
       />
       <textarea
         value={notes}
@@ -83,7 +98,7 @@ export function EditableStop({ activity, destination, onCommit }: EditableStopPr
           if ((notes.trim() || undefined) !== activity.notes) commit({ notes: notes.trim() || undefined })
         }}
         rows={2}
-        className="mt-2 w-full resize-none bg-transparent text-sm text-[#E07A5F] outline-none placeholder:text-slate-400 focus:rounded-lg focus:bg-white focus:px-2 focus:py-1"
+        className="mt-2 w-full resize-none rounded-xl bg-white/80 px-3 py-2 text-sm text-[#E07A5F] outline-none placeholder:text-slate-400 ring-1 ring-transparent focus:ring-[#E07A5F]/40"
       />
       {activity.userLocked && <p className="mt-1 text-[11px] font-semibold text-slate-400">{t('locked')}</p>}
     </li>
