@@ -53,9 +53,9 @@ export function TripHeader({ trip, isOwner = false, preview = false }: TripHeade
       )}
       <TripTags
         itinerary={{
+          ...trip.itinerary,
           destination: trip.destination || trip.itinerary.destination,
           tripFocus: trip.itinerary.tripFocus.length > 0 ? trip.itinerary.tripFocus : trip.tripFocus,
-          structuredTags: trip.itinerary.structuredTags,
         }}
       />
       <div className="mt-5 flex flex-wrap gap-2 text-[#2B2D42] sm:mt-6 sm:gap-3">

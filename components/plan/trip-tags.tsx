@@ -6,14 +6,15 @@ import { resolveStructuredTags } from '@/lib/trips/structured-tags'
 import type { MessageKey } from '@/lib/i18n/dictionaries'
 import type { Itinerary, TripBudgetTag, TripCompanionTag, TripVibeTag } from '@/types'
 
-const BUDGET_KEYS: Record<TripBudgetTag, MessageKey> = {
+export const BUDGET_KEYS: Record<TripBudgetTag, MessageKey> = {
   luxury: 'tagBudgetLuxury',
   comfort: 'tagBudgetComfort',
   budget: 'tagBudgetBudget',
   backpacker: 'tagBudgetBackpacker',
 }
 
-const VIBE_KEYS: Record<TripVibeTag, MessageKey> = {
+export const VIBE_KEYS: Record<TripVibeTag, MessageKey> = {
+  experience: 'tagVibeExperience',
   foodie: 'tagVibeFoodie',
   shopping: 'tagVibeShopping',
   photo_spot: 'tagVibePhotoSpot',
@@ -21,21 +22,22 @@ const VIBE_KEYS: Record<TripVibeTag, MessageKey> = {
   relax: 'tagVibeRelax',
 }
 
-const COMPANION_KEYS: Record<TripCompanionTag, MessageKey> = {
+export const COMPANION_KEYS: Record<TripCompanionTag, MessageKey> = {
   family: 'tagCompanionFamily',
   couples: 'tagCompanionCouples',
   solo: 'tagCompanionSolo',
   friends: 'tagCompanionFriends',
 }
 
-const BUDGET_EMOJI: Record<TripBudgetTag, string> = {
+export const BUDGET_EMOJI: Record<TripBudgetTag, string> = {
   luxury: '💎',
   comfort: '⚜️',
   budget: '💰',
   backpacker: '🎒',
 }
 
-const VIBE_EMOJI: Record<TripVibeTag, string> = {
+export const VIBE_EMOJI: Record<TripVibeTag, string> = {
+  experience: '🌄',
   foodie: '😋',
   shopping: '🛍️',
   photo_spot: '📷',
@@ -43,7 +45,7 @@ const VIBE_EMOJI: Record<TripVibeTag, string> = {
   relax: '☕',
 }
 
-const COMPANION_EMOJI: Record<TripCompanionTag, string> = {
+export const COMPANION_EMOJI: Record<TripCompanionTag, string> = {
   family: '👨‍👩‍👧',
   couples: '👩‍❤️‍👨',
   solo: '👤',
@@ -53,16 +55,18 @@ const COMPANION_EMOJI: Record<TripCompanionTag, string> = {
 type TripTagsVariant = 'banner' | 'panel'
 
 interface TripTagsProps {
-  itinerary: Pick<Itinerary, 'destination' | 'tripFocus' | 'structuredTags'>
+  itinerary: Pick<Itinerary, 'destination' | 'tripFocus' | 'structuredTags' | 'days' | 'notes' | 'currency'>
   variant?: TripTagsVariant
 }
 
 function attributeBadges(
-  tags: { budget: TripBudgetTag; vibes: TripVibeTag[]; companion?: TripCompanionTag },
+  tags: { budget?: TripBudgetTag; vibes: TripVibeTag[]; companion?: TripCompanionTag },
   t: (key: MessageKey) => string
 ) {
   const items: Array<{ key: string; emoji: string; label: string }> = []
-  items.push({ key: `budget-${tags.budget}`, emoji: BUDGET_EMOJI[tags.budget], label: t(BUDGET_KEYS[tags.budget]) })
+  if (tags.budget) {
+    items.push({ key: `budget-${tags.budget}`, emoji: BUDGET_EMOJI[tags.budget], label: t(BUDGET_KEYS[tags.budget]) })
+  }
   for (const vibe of tags.vibes) {
     items.push({ key: `vibe-${vibe}`, emoji: VIBE_EMOJI[vibe], label: t(VIBE_KEYS[vibe]) })
   }

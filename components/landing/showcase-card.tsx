@@ -63,9 +63,9 @@ export function ShowcaseCard({ trip }: ShowcaseCardProps) {
           </div>
           <TripTags
             itinerary={{
+              ...trip.itinerary,
               destination: trip.destination,
               tripFocus: trip.itinerary.tripFocus.length > 0 ? trip.itinerary.tripFocus : trip.tripFocus,
-              structuredTags: trip.itinerary.structuredTags,
             }}
             variant="panel"
           />

@@ -1,4 +1,5 @@
-import type { Trip, TripFocus } from '@/types'
+import { resolveStructuredTags, tagSearchHaystack } from '@/lib/trips/structured-tags'
+import type { Trip, TripBudgetTag, TripVibeTag } from '@/types'
 
 export type CommunitySort = 'recent' | 'rating' | 'relevance'
 export type DurationBucket = 'all' | 'short' | 'week' | 'long'
@@ -112,6 +113,14 @@ function expandToken(token: string) {
 }
 
 function haystackFor(trip: Trip) {
+  const tags = resolveStructuredTags(
+    {
+      ...trip.itinerary,
+      destination: trip.destination || trip.itinerary.destination,
+      tripFocus: trip.itinerary.tripFocus.length > 0 ? trip.itinerary.tripFocus : trip.tripFocus,
+    },
+    'zh-Hant'
+  )
   const stops = trip.itinerary.days.flatMap((day) =>
     day.activities.flatMap((activity) => [activity.activity, activity.location, activity.notes ?? '', ...(activity.tips ?? [])])
   )
@@ -122,11 +131,7 @@ function haystackFor(trip: Trip) {
       trip.itinerary.notes ?? '',
       trip.owner?.displayName ?? '',
       trip.owner?.username ?? '',
-      ...(trip.tripFocus ?? []),
-      trip.itinerary.structuredTags?.themeHeadline ?? '',
-      trip.itinerary.structuredTags?.budget ?? '',
-      trip.itinerary.structuredTags?.vibe ?? '',
-      trip.itinerary.structuredTags?.companion ?? '',
+      tagSearchHaystack(tags),
       String(trip.itinerary.days.length),
       `${trip.itinerary.days.length} days`,
       `${trip.itinerary.days.length}天`,
@@ -197,20 +202,33 @@ export function searchCommunityTrips(
     query?: string
     region?: CommunityRegion
     duration?: DurationBucket
-    focus?: TripFocus | 'all'
+    budget?: TripBudgetTag | 'all'
+    vibe?: TripVibeTag | 'all'
     sort?: CommunitySort
   }
 ) {
   const query = options?.query?.trim() ?? ''
   const region = options?.region ?? 'all'
   const duration = options?.duration ?? 'all'
-  const focus = options?.focus ?? 'all'
+  const budget = options?.budget ?? 'all'
+  const vibe = options?.vibe ?? 'all'
   const sort = options?.sort ?? (query ? 'relevance' : 'recent')
 
   const filtered = trips.filter((trip) => {
     if (!tripMatchesRegion(trip, region)) return false
     if (duration !== 'all' && durationBucket(trip.itinerary.days.length) !== duration) return false
-    if (focus !== 'all' && !(trip.tripFocus ?? []).includes(focus)) return false
+    if (budget !== 'all' || vibe !== 'all') {
+      const tags = resolveStructuredTags(
+        {
+          ...trip.itinerary,
+          destination: trip.destination || trip.itinerary.destination,
+          tripFocus: trip.itinerary.tripFocus.length > 0 ? trip.itinerary.tripFocus : trip.tripFocus,
+        },
+        'zh-Hant'
+      )
+      if (budget !== 'all' && tags.budget !== budget) return false
+      if (vibe !== 'all' && !tags.vibes.includes(vibe)) return false
+    }
     if (!query) return true
     return scoreCommunityTrip(trip, query) > 0
   })

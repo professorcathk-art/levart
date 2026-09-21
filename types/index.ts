@@ -100,7 +100,7 @@ export interface PlanVersion {
 }
 
 export type TripBudgetTag = 'luxury' | 'comfort' | 'budget' | 'backpacker'
-export type TripVibeTag = 'foodie' | 'shopping' | 'photo_spot' | 'culture' | 'relax'
+export type TripVibeTag = 'experience' | 'foodie' | 'shopping' | 'photo_spot' | 'culture' | 'relax'
 export type TripCompanionTag = 'family' | 'couples' | 'solo' | 'friends'
 
 export interface StructuredTags {

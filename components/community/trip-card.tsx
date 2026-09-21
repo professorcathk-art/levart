@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { Trip } from '@/types'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { DestinationCover } from '@/components/community/destination-cover'
+import { TripTags } from '@/components/plan/trip-tags'
 
 interface TripCardProps {
   trip: Trip
@@ -26,6 +27,14 @@ export function TripCard({ trip }: TripCardProps) {
         {trip.owner && (
           <p className="mt-2 text-sm text-gray-500">{t('byAuthor', { name: trip.owner.displayName })}</p>
         )}
+        <TripTags
+          itinerary={{
+            ...trip.itinerary,
+            destination: trip.destination,
+            tripFocus: trip.itinerary.tripFocus.length > 0 ? trip.itinerary.tripFocus : trip.tripFocus,
+          }}
+          variant="panel"
+        />
         <div className="mt-3 flex items-center gap-4 text-sm text-gray-600">
           <span>★ {(trip.avgRating ?? 0).toFixed(1)}</span>
           <span>

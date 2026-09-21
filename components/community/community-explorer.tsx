@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { Compass, Globe2, MapPin, Search } from 'lucide-react'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { TripCard } from '@/components/community/trip-card'
+import { BUDGET_EMOJI, BUDGET_KEYS, VIBE_EMOJI, VIBE_KEYS } from '@/components/plan/trip-tags'
+import { TRIP_BUDGET_TAGS, TRIP_VIBE_TAGS } from '@/lib/trips/structured-tags'
 import {
   searchCommunityTrips,
   suggestCommunityQueries,
@@ -11,20 +13,9 @@ import {
   type CommunitySort,
   type DurationBucket,
 } from '@/lib/trips/community-search'
-import type { Trip, TripFocus } from '@/types'
+import type { Trip, TripBudgetTag, TripVibeTag } from '@/types'
 import type { LucideIcon } from 'lucide-react'
 import type { MessageKey } from '@/lib/i18n/dictionaries'
-
-const FOCUS_KEYS: Array<{ id: TripFocus | 'all'; label: MessageKey }> = [
-  { id: 'all', label: 'filterAll' },
-  { id: 'food', label: 'focusFood' },
-  { id: 'culture', label: 'focusCulture' },
-  { id: 'shopping', label: 'focusShopping' },
-  { id: 'beach', label: 'focusBeach' },
-  { id: 'nightlife', label: 'focusNightlife' },
-  { id: 'family', label: 'focusFamily' },
-  { id: 'climbing', label: 'focusClimbing' },
-]
 
 interface CommunityExplorerProps {
   trips: Trip[]
@@ -38,12 +29,13 @@ export function CommunityExplorer({ trips, initialQuery = '', initialSort = 'rec
   const [sort, setSort] = useState<CommunitySort>(initialQuery && initialSort === 'recent' ? 'relevance' : initialSort)
   const [region, setRegion] = useState<CommunityRegion>('all')
   const [duration, setDuration] = useState<DurationBucket>('all')
-  const [focus, setFocus] = useState<TripFocus | 'all'>('all')
+  const [budget, setBudget] = useState<TripBudgetTag | 'all'>('all')
+  const [vibe, setVibe] = useState<TripVibeTag | 'all'>('all')
   const [openSuggestions, setOpenSuggestions] = useState(false)
 
   const results = useMemo(
-    () => searchCommunityTrips(trips, { query, region, duration, focus, sort }),
-    [trips, query, region, duration, focus, sort]
+    () => searchCommunityTrips(trips, { query, region, duration, budget, vibe, sort }),
+    [trips, query, region, duration, budget, vibe, sort]
   )
   const suggestions = useMemo(() => suggestCommunityQueries(trips, query), [trips, query])
 
@@ -179,17 +171,52 @@ export function CommunityExplorer({ trips, initialQuery = '', initialSort = 'rec
         ))}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
-        {FOCUS_KEYS.map((item) => (
+      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t('filterBudget')}>
+        <button
+          type="button"
+          onClick={() => setBudget('all')}
+          className={`min-h-9 rounded-full px-3 text-xs font-semibold ${
+            budget === 'all' ? 'bg-[#2B2D42] text-white' : 'bg-white text-slate-600 ring-1 ring-orange-100'
+          }`}
+        >
+          {t('filterBudgetAll')}
+        </button>
+        {TRIP_BUDGET_TAGS.map((id) => (
           <button
-            key={item.id}
+            key={id}
             type="button"
-            onClick={() => setFocus(item.id)}
-            className={`min-h-9 rounded-full px-3 text-xs font-semibold ${
-              focus === item.id ? 'bg-[#2B2D42] text-white' : 'bg-white text-slate-600 ring-1 ring-orange-100'
+            onClick={() => setBudget(id)}
+            className={`inline-flex min-h-9 items-center gap-1 rounded-full px-3 text-xs font-semibold ${
+              budget === id ? 'bg-[#2B2D42] text-white' : 'bg-white text-slate-600 ring-1 ring-orange-100'
             }`}
           >
-            {t(item.label)}
+            <span aria-hidden>{BUDGET_EMOJI[id]}</span>
+            {t(BUDGET_KEYS[id])}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label={t('filterVibe')}>
+        <button
+          type="button"
+          onClick={() => setVibe('all')}
+          className={`min-h-9 rounded-full px-3 text-xs font-semibold ${
+            vibe === 'all' ? 'bg-[#2B2D42] text-white' : 'bg-white text-slate-600 ring-1 ring-orange-100'
+          }`}
+        >
+          {t('filterVibeAll')}
+        </button>
+        {TRIP_VIBE_TAGS.map((id) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setVibe(id)}
+            className={`inline-flex min-h-9 items-center gap-1 rounded-full px-3 text-xs font-semibold ${
+              vibe === id ? 'bg-[#2B2D42] text-white' : 'bg-white text-slate-600 ring-1 ring-orange-100'
+            }`}
+          >
+            <span aria-hidden>{VIBE_EMOJI[id]}</span>
+            {t(VIBE_KEYS[id])}
           </button>
         ))}
       </div>

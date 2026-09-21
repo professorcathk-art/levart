@@ -337,7 +337,7 @@ export function createPlannerTools(ctx: PlannerContext) {
               .optional()
               .describe('Exactly 4 Traditional Chinese characters, e.g. 東京漫遊 or 京都食旅'),
             budget: z.enum(['luxury', 'comfort', 'budget', 'backpacker']).optional(),
-            vibe: z.enum(['foodie', 'shopping', 'photo_spot', 'culture', 'relax']).optional(),
+            vibe: z.enum(['experience', 'foodie', 'shopping', 'photo_spot', 'culture', 'relax']).optional(),
             companion: z.enum(['family', 'couples', 'solo', 'friends']).optional(),
           })
           .optional(),
@@ -371,7 +371,10 @@ export function createPlannerTools(ctx: PlannerContext) {
         const tags = mergeStructuredTags(
           parseStructuredTags(structuredTags),
           previous.structuredTags,
-          inferStructuredTags({ destination, tripFocus: focus }, 'zh-Hant')
+          inferStructuredTags(
+            { destination, tripFocus: focus, days: daysWithPhotos, currency: money },
+            'zh-Hant'
+          )
         )
 
         const drafted = emptyItinerary({
