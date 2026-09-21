@@ -5,9 +5,54 @@ export async function geocodePlace(
   const text = query.trim()
   if (!text) return null
 
+  const places = await geocodeWithPlaces(text, options?.language)
+  if (places) return places
+
   const mapbox = await geocodeWithMapbox(text, options)
-  if (mapbox) return mapbox
-  return geocodeWithPlaces(text, options?.language)
+  if (mapbox && isPlausibleMapboxMatch(text, mapbox.name)) return mapbox
+  return null
+}
+
+function placesLanguage(text: string, language?: string) {
+  if (language === 'zh' || language === 'zh-TW' || language === 'zh-Hant') return 'zh-TW'
+  if (language === 'zh-CN' || language === 'zh-Hans') return 'zh-CN'
+  if (language) return language
+  return /[\u4e00-\u9fff]/.test(text) ? 'zh-TW' : 'en'
+}
+
+async function geocodeWithPlaces(text: string, language?: string) {
+  const key = process.env.GOOGLE_PLACES_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
+  if (!key) return null
+
+  try {
+    const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': key,
+        'X-Goog-FieldMask': 'places.displayName,places.location',
+      },
+      body: JSON.stringify({
+        textQuery: text,
+        languageCode: placesLanguage(text, language),
+        maxResultCount: 1,
+      }),
+      signal: AbortSignal.timeout(6000),
+    })
+    if (!response.ok) return null
+    const data = (await response.json()) as {
+      places?: Array<{ displayName?: { text?: string }; location?: { latitude?: number; longitude?: number } }>
+    }
+    const place = data.places?.[0]
+    const lat = place?.location?.latitude
+    const lon = place?.location?.longitude
+    if (typeof lat !== 'number' || typeof lon !== 'number') return null
+    if (!isValidCoord(lat, lon)) return null
+    return { lat, lon, name: place?.displayName?.text }
+  } catch (error) {
+    console.warn('Places geocode failed:', error)
+    return null
+  }
 }
 
 async function geocodeWithMapbox(
@@ -42,7 +87,7 @@ async function geocodeWithMapbox(
     const center = feature?.center
     if (!center || center.length < 2) return null
     const [lon, lat] = center
-    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null
+    if (!isValidCoord(lat, lon)) return null
     return { lat, lon, name: feature.text || feature.place_name }
   } catch (error) {
     console.warn('Mapbox geocode failed:', error)
@@ -50,38 +95,13 @@ async function geocodeWithMapbox(
   }
 }
 
-async function geocodeWithPlaces(text: string, language?: string) {
-  const key = process.env.GOOGLE_PLACES_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY
-  if (!key) return null
-
-  try {
-    const response = await fetch('https://places.googleapis.com/v1/places:searchText', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': key,
-        'X-Goog-FieldMask': 'places.displayName,places.location',
-      },
-      body: JSON.stringify({
-        textQuery: text,
-        languageCode: language || (/[\u4e00-\u9fff]/.test(text) ? 'zh-TW' : 'en'),
-        maxResultCount: 1,
-      }),
-      signal: AbortSignal.timeout(6000),
-    })
-    if (!response.ok) return null
-    const data = (await response.json()) as {
-      places?: Array<{ displayName?: { text?: string }; location?: { latitude?: number; longitude?: number } }>
-    }
-    const place = data.places?.[0]
-    const lat = place?.location?.latitude
-    const lon = place?.location?.longitude
-    if (typeof lat !== 'number' || typeof lon !== 'number') return null
-    return { lat, lon, name: place?.displayName?.text }
-  } catch (error) {
-    console.warn('Places geocode failed:', error)
-    return null
+function isPlausibleMapboxMatch(query: string, name?: string) {
+  const result = (name || '').trim()
+  if (!result) return false
+  if (/[\u4e00-\u9fff]/.test(query) && result.length <= 2 && query.replace(/\s+/g, '').length >= 3) {
+    return false
   }
+  return true
 }
 
 export function hasGooglePlacesKey() {

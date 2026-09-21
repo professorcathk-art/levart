@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useLocale } from '@/components/i18n/locale-provider'
+import { bucketFromClock, parseClock } from '@/lib/trips/clock'
 import type { DayActivity, DayItinerary, Itinerary } from '@/types'
 
 interface PlanEditorProps {
@@ -120,20 +121,47 @@ export function PlanEditor({ itinerary, onSave, onClose }: PlanEditorProps) {
                 {day.activities.map((activity, activityIndex) => (
                   <div key={`${day.day}-${activityIndex}`} className="rounded-xl bg-[#FFF8F3] p-3">
                     <div className="grid grid-cols-2 gap-2">
-                      <select
-                        value={activity.time}
-                        onChange={(event) =>
-                          updateActivity(dayIndex, activityIndex, {
-                            time: event.target.value as DayActivity['time'],
-                            userLocked: true,
-                          })
-                        }
-                        className="rounded-lg border px-2 py-2 text-sm"
-                      >
-                        <option value="morning">{t('timeMorning')}</option>
-                        <option value="afternoon">{t('timeAfternoon')}</option>
-                        <option value="evening">{t('timeEvening')}</option>
-                      </select>
+                      <label className="block text-xs font-medium text-slate-500">
+                        {t('startTime')}
+                        <input
+                          type="time"
+                          value={activity.startTime ?? ''}
+                          onChange={(event) => {
+                            const startTime = parseClock(event.target.value)
+                            updateActivity(dayIndex, activityIndex, {
+                              startTime,
+                              time: bucketFromClock(startTime),
+                              userLocked: true,
+                            })
+                          }}
+                          className="mt-1 w-full rounded-lg border px-2 py-2 font-mono text-sm"
+                        />
+                      </label>
+                      <label className="block text-xs font-medium text-slate-500">
+                        {t('endTime')}
+                        <input
+                          type="time"
+                          value={activity.endTime ?? ''}
+                          onChange={(event) =>
+                            updateActivity(dayIndex, activityIndex, {
+                              endTime: parseClock(event.target.value),
+                              userLocked: true,
+                            })
+                          }
+                          className="mt-1 w-full rounded-lg border px-2 py-2 font-mono text-sm"
+                        />
+                      </label>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7ECCC4]">
+                        {t(
+                          activity.time === 'evening'
+                            ? 'timeEvening'
+                            : activity.time === 'afternoon'
+                              ? 'timeAfternoon'
+                              : 'timeMorning'
+                        )}
+                      </p>
                       <label className="flex items-center gap-2 text-xs font-semibold">
                         <input
                           type="checkbox"

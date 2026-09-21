@@ -8,6 +8,7 @@ import { getWeatherForecast } from '@/lib/apis/weather'
 import { optimizeRoute } from '@/lib/apis/osrm'
 import { emptyItinerary, isTripFocus } from '@/lib/trips/itinerary'
 import { expandDayActivities } from '@/lib/trips/atomic-stops'
+import { sanitizeDays } from '@/lib/trips/day-health'
 import { addVersion, formatItineraryForPrompt, preserveUserEdits, summarizeDiff } from '@/lib/trips/versions'
 import { searchTravelKnowledge } from '@/lib/trips/knowledge'
 import { parseStructuredTags, inferStructuredTags, mergeStructuredTags } from '@/lib/trips/structured-tags'
@@ -16,14 +17,22 @@ import type { Attraction, DayItinerary, Itinerary, TripFocus } from '@/types'
 
 const activitySchema = z.object({
   time: z.enum(['morning', 'afternoon', 'evening']),
+  startTime: z
+    .string()
+    .optional()
+    .describe('24-hour start clock HH:mm, e.g. "14:10". Required for a usable plan.'),
+  endTime: z
+    .string()
+    .optional()
+    .describe('24-hour end clock HH:mm, e.g. "15:40". Must be after startTime.'),
   activity: z
     .string()
     .describe('One stop only, e.g. "Arrive Narita T2" or "Check in at Mitsui Garden Hotel". Do not chain multiple places with arrows.'),
   location: z
     .string()
-    .describe('This stop’s place name only. No "A → B → C" routes.'),
-  duration: z.string().optional(),
-  cost: z.string().optional(),
+    .describe('This stop’s place name only. No "A → B → C" routes and no street numbers.'),
+  duration: z.string().optional().describe('Stay length at this stop, e.g. "90 min" or "1.5 小時". Not transit time.'),
+  cost: z.string().optional().describe('Cost at this stop with currency code, e.g. "JPY 1500".'),
   photoReference: z.string().optional(),
   distance: z
     .string()
@@ -59,7 +68,7 @@ const daySchema = z.object({
       cost: z.string().optional(),
       address: z.string().optional(),
     })
-  ),
+  ).describe('Optional backup restaurant names. Do not repeat meals already listed as activities. Max 1 lunch idea and 1 dinner idea.'),
   transport: z.array(z.string()),
   estimatedCost: z.string(),
   totalDistance: z.number().optional(),
@@ -367,12 +376,13 @@ export function createPlannerTools(ctx: PlannerContext) {
           ...day,
           activities: expandDayActivities(day.activities),
         }))
+        const healthyDays = sanitizeDays(daysWithPhotos)
         const money = (currency || previous.currency || guessCurrency(destination).code).toUpperCase()
         const tags = mergeStructuredTags(
           parseStructuredTags(structuredTags),
           previous.structuredTags,
           inferStructuredTags(
-            { destination, tripFocus: focus, days: daysWithPhotos, currency: money },
+            { destination, tripFocus: focus, days: healthyDays, currency: money },
             'zh-Hant'
           )
         )
@@ -384,7 +394,7 @@ export function createPlannerTools(ctx: PlannerContext) {
           checkIn,
           checkOut,
           currency: money,
-          days: daysWithPhotos,
+          days: healthyDays,
           selectedAttractions: selected,
           structuredTags: tags,
         })

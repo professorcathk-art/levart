@@ -188,7 +188,7 @@ export function formatItineraryForPrompt(itinerary: Itinerary): string {
     if (day.weather) lines.push(`  Weather: ${day.weather.temperature}°C ${day.weather.description}`)
     for (const activity of day.activities) {
       const lock = activity.userLocked ? ' [LOCKED by traveler]' : ''
-      lines.push(`  - ${activity.time}: ${activity.activity} @ ${activity.location}${lock}`)
+      lines.push(`  - ${activity.startTime || activity.time}${activity.endTime ? `–${activity.endTime}` : ''}: ${activity.activity} @ ${activity.location}${lock}`)
       if (activity.notes) lines.push(`    traveler note: ${activity.notes}`)
       if (activity.duration || activity.cost) {
         lines.push(`    ${[activity.duration, activity.cost].filter(Boolean).join(' · ')}`)

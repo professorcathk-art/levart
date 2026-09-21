@@ -1,11 +1,16 @@
-const CACHE = 'levart-offline-v1'
+const CACHE = 'levart-offline-v2'
 
 self.addEventListener('install', (event) => {
   event.waitUntil(self.skipWaiting())
 })
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim())
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))
+      .then(() => self.clients.claim())
+  )
 })
 
 self.addEventListener('fetch', (event) => {
@@ -14,7 +19,7 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url)
   if (url.origin !== self.location.origin) return
-  if (url.pathname.startsWith('/api/chat') || url.pathname.startsWith('/auth')) return
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth')) return
 
   event.respondWith(
     fetch(request)

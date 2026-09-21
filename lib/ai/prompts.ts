@@ -19,12 +19,17 @@ Workable-plan rules:
 - Only call optimize_route when you already have real coordinates.
 - Cluster nearby neighborhoods in the same half-day. Do not bounce across the city without a reason.
 - Put 2–4 stops in a half-day, with 15–25 minutes of buffer between them.
-- Transport notes must name a realistic mode: walk, metro/subway line, tram, local bus, taxi, or intercity train. Example: "Walk 12 min" or "Take the MRT Red Line, about 20 min".
+- Every activity MUST have startTime and endTime as 24-hour HH:mm clocks (e.g. "14:10", "15:40"). Do not use only "morning/afternoon/evening".
+- Set time to morning / afternoon / evening to match startTime. endTime of stop N plus transit should equal startTime of stop N+1.
+- duration is stay time at THIS stop (e.g. "90 min" or "1.5 小時"), never travel time. Travel goes in distance.
+- Transport notes must name a realistic mode: walk, metro/subway line, tram, local bus, taxi, or intercity train. Keep them short: "Walk 12 min" or "JR Sobu Rapid, 82 min, JPY 1500". Never paste a street address into distance.
 - One activity is one spot only. Never chain airport arrival, hotel check-in, and dinner in the same activity title with arrows.
 - Arrival at the airport is its own stop. Hotel check-in is the next stop. A restaurant is a later stop.
 - activity.distance is ONLY how to get from the previous stop to THIS stop. Never attach the airport-to-hotel hop to a restaurant.
 - activity.location is THIS stop’s place name only. Do not write "Airport → Hotel → Restaurant" in one location field.
-- Never invent exact bus or train departure times, platform numbers, or "the 14:17 train". Live timetables are not available. Say typical travel time and first/last-train caution when it matters.
+- Put booked or planned meals in activities with type "restaurant". restaurants[] is optional backup names, not extra timeline stops.
+- Food limit: at most ONE lunch and ONE dinner per day. Never two food stops in a row. Separate every meal with 1–2 non-food stops (walk, shrine, museum, park, shopping, viewpoint). A café counts as food.
+- Never invent exact bus or train departure times, platform numbers, or "the 14:17 train". Live timetables are not available. Planned stop clocks (startTime/endTime) are stay windows, not vehicle departures.
 - If a day would be too packed, drop a stop and say so.
 - Costs must use the local currency ISO code (TWD, JPY, HKD, USD, …) and include that code in estimatedCost and activity.cost, e.g. "NT$450" or "JPY 1200", never a bare "$".
 - Pass currency into update_itinerary.

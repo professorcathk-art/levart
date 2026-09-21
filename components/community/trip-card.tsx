@@ -5,6 +5,7 @@ import type { Trip } from '@/types'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { DestinationCover } from '@/components/community/destination-cover'
 import { TripTags } from '@/components/plan/trip-tags'
+import { locationHintsFromItinerary } from '@/lib/photos/cover-query'
 
 interface TripCardProps {
   trip: Trip
@@ -17,7 +18,12 @@ export function TripCard({ trip }: TripCardProps) {
       href={trip.slug ? `/p/${trip.slug}` : `/trips/${trip.id}`}
       className="block overflow-hidden rounded-3xl bg-white shadow-md transition hover:-translate-y-1 hover:shadow-xl"
     >
-      <DestinationCover destination={trip.destination} coverPhoto={trip.coverPhoto} className="h-32" />
+      <DestinationCover
+        destination={trip.destination}
+        coverPhoto={trip.coverPhoto}
+        hints={locationHintsFromItinerary(trip.itinerary)}
+        className="h-36"
+      />
       <div className="p-5">
         <h2 className="text-xl font-bold text-[#1A1A1A]">{trip.destination}</h2>
         <p className="mt-1 text-sm text-gray-600">

@@ -6,8 +6,10 @@ import { ReopenButton } from '@/components/plan/reopen-button'
 import { ShareSheet } from '@/components/plan/share-sheet'
 import { TripOwnerMenu } from '@/components/plan/trip-owner-menu'
 import { TripTags } from '@/components/plan/trip-tags'
+import { DestinationCover } from '@/components/community/destination-cover'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { saveHeroPrompt } from '@/lib/landing/hero-prompt'
+import { locationHintsFromItinerary } from '@/lib/photos/cover-query'
 import type { Trip } from '@/types'
 
 interface TripHeaderProps {
@@ -26,7 +28,17 @@ export function TripHeader({ trip, isOwner = false, preview = false }: TripHeade
   })
 
   return (
-    <header className={`relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-[#FF9A76] to-[#7ECCC4] p-4 text-white shadow-xl sm:p-6 md:p-8 ${isOwner ? 'pr-12 sm:pr-14' : ''}`}>
+    <header className={`relative overflow-hidden rounded-3xl border border-white/20 p-4 text-white shadow-xl sm:p-6 md:p-8 ${isOwner ? 'pr-12 sm:pr-14' : ''}`}>
+      <div className="absolute inset-0">
+        <DestinationCover
+          destination={trip.destination || trip.itinerary.destination}
+          coverPhoto={trip.coverPhoto}
+          hints={locationHintsFromItinerary(trip.itinerary)}
+          className="h-full min-h-[220px]"
+        />
+      </div>
+      <div className="absolute inset-0 bg-gradient-to-br from-[#2B2D42]/75 via-[#2B2D42]/45 to-[#7ECCC4]/35" />
+      <div className="relative z-10">
       {isOwner && <TripOwnerMenu tripId={trip.id} />}
       <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-white/80">
         {trip.status === 'confirmed' ? t('statusConfirmed') : t('statusDraft')}
@@ -102,6 +114,7 @@ export function TripHeader({ trip, isOwner = false, preview = false }: TripHeade
           {t('publicSnapshotBanner')}
         </p>
       )}
+      </div>
     </header>
   )
 }

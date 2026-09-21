@@ -64,6 +64,8 @@ export function expandCompoundActivity(activity: DayActivity): DayActivity[] {
       address: placeIndex === 0 ? activity.address : undefined,
       duration: placeIndex === 0 ? activity.duration : undefined,
       cost: placeIndex === 0 ? activity.cost : undefined,
+      startTime: placeIndex === 0 ? activity.startTime : undefined,
+      endTime: placeIndex === 0 ? activity.endTime : undefined,
       distance: inbound,
       type: HOTEL.test(part) ? 'attraction' : activity.type,
     })

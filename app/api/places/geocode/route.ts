@@ -16,85 +16,94 @@ function isNearDuplicate(pins: Attraction[], lat: number, lon: number) {
 function isCloseToAnchor(anchor: { lat: number; lon: number }, lat: number, lon: number) {
   const dlat = anchor.lat - lat
   const dlon = anchor.lon - lon
-  return dlat * dlat + dlon * dlon < 16
+  return dlat * dlat + dlon * dlon < 4
+}
+
+function isCloseToAnyAnchor(anchors: Array<{ lat: number; lon: number }>, lat: number, lon: number) {
+  if (anchors.length === 0) return true
+  return anchors.some((anchor) => isCloseToAnchor(anchor, lat, lon))
+}
+
+function parseStops(raw: unknown) {
+  const values = Array.isArray(raw)
+    ? raw.map((item) => (typeof item === 'string' ? item : ''))
+    : typeof raw === 'string'
+      ? raw.split('|')
+      : []
+  return values
+    .map((stop) => cleanPlaceName(stop))
+    .filter((stop) => stop.length >= 2)
+    .filter((stop, index, all) => all.indexOf(stop) === index)
+    .slice(0, 8)
+}
+
+async function buildPins(destination: string, stopsRaw: unknown) {
+  const cities = destination
+    .split(/[·・‧•,，/|]+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+  const pins: Attraction[] = []
+  const anchors: Array<{ lat: number; lon: number }> = []
+
+  for (const city of cities.slice(0, 4)) {
+    const hit = await geocodePlace(city)
+    if (!hit || isNearDuplicate(pins, hit.lat, hit.lon)) continue
+    anchors.push({ lat: hit.lat, lon: hit.lon })
+    pins.push({
+      id: pinId(city, pins.length),
+      name: hit.name || city,
+      category: 'city',
+      lat: hit.lat,
+      lon: hit.lon,
+    })
+  }
+
+  const stops = parseStops(stopsRaw)
+  const stopHits = await Promise.all(
+    stops.map((stop) => geocodePlace(stop))
+  )
+
+  stopHits.forEach((hit, index) => {
+    if (!hit || isNearDuplicate(pins, hit.lat, hit.lon)) return
+    if (!isCloseToAnyAnchor(anchors, hit.lat, hit.lon)) return
+    pins.push({
+      id: pinId(stops[index], pins.length),
+      name: hit.name || stops[index],
+      category: 'stop',
+      lat: hit.lat,
+      lon: hit.lon,
+    })
+  })
+
+  return { pins, destination }
 }
 
 export async function GET(request: NextRequest) {
   const destination = request.nextUrl.searchParams.get('q')?.trim()
-  const stopsRaw = request.nextUrl.searchParams.get('stops')?.trim() || ''
   if (!destination) {
     return NextResponse.json({ error: 'Missing destination' }, { status: 400 })
   }
 
   try {
-    const cities = destination
-      .split(/[·・‧•,，/|]+/)
-      .map((part) => part.trim())
-      .filter(Boolean)
-    const pins: Attraction[] = []
-    let proximity: { lon: number; lat: number } | undefined
+    const result = await buildPins(destination, request.nextUrl.searchParams.get('stops') || '')
+    return NextResponse.json(result)
+  } catch (error) {
+    console.error('Geocode route failed:', error)
+    return NextResponse.json({ pins: [] }, { status: 502 })
+  }
+}
 
-    for (const city of cities.slice(0, 3)) {
-      let hit = await geocodePlace(city, {
-        types: 'place,region,locality,district,poi',
-        proximity,
-        language: /[\u4e00-\u9fff]/.test(city) ? 'zh' : 'en',
-      })
-      if (hit && proximity && !isCloseToAnchor({ lat: proximity.lat, lon: proximity.lon }, hit.lat, hit.lon)) {
-        hit = null
-      }
-      if (!hit && proximity) {
-        hit = await geocodePlace(`${city}, ${cities[0]}`, {
-          types: 'place,region,locality,poi',
-          proximity,
-        })
-        if (hit && !isCloseToAnchor({ lat: proximity.lat, lon: proximity.lon }, hit.lat, hit.lon)) {
-          hit = null
-        }
-      }
-      if (!hit) continue
-      if (isNearDuplicate(pins, hit.lat, hit.lon)) continue
-      if (!proximity) proximity = { lon: hit.lon, lat: hit.lat }
-      pins.push({
-        id: pinId(city, pins.length),
-        name: hit.name || city,
-        category: 'city',
-        lat: hit.lat,
-        lon: hit.lon,
-      })
-    }
+export async function POST(request: NextRequest) {
+  const body = (await request.json().catch(() => null)) as { q?: unknown; destination?: unknown; stops?: unknown } | null
+  const destination = (typeof body?.q === 'string' ? body.q : typeof body?.destination === 'string' ? body.destination : '')
+    .trim()
+  if (!destination) {
+    return NextResponse.json({ error: 'Missing destination' }, { status: 400 })
+  }
 
-    const stops = stopsRaw
-      .split('|')
-      .map((stop) => cleanPlaceName(stop))
-      .filter((stop) => stop.length >= 2)
-      .slice(0, 6)
-
-    const stopHits = await Promise.all(
-      stops.map((stop) =>
-        geocodePlace(stop, {
-          types: 'poi,address,place,neighborhood,locality',
-          proximity,
-          language: /[\u4e00-\u9fff]/.test(stop) ? 'zh' : 'en',
-        })
-      )
-    )
-
-    stopHits.forEach((hit, index) => {
-      if (!hit || isNearDuplicate(pins, hit.lat, hit.lon)) return
-      if (proximity && !isCloseToAnchor({ lat: proximity.lat, lon: proximity.lon }, hit.lat, hit.lon)) {
-        return
-      }
-      pins.push({
-        id: pinId(stops[index], pins.length),
-        name: hit.name || stops[index],
-        category: 'stop',
-        lat: hit.lat,
-        lon: hit.lon,
-      })
-    })
-
-    return NextResponse.json({ pins, destination })
+  try {
+    const result = await buildPins(destination, body?.stops)
+    return NextResponse.json(result)
   } catch (error) {
     console.error('Geocode route failed:', error)
     return NextResponse.json({ pins: [] }, { status: 502 })

@@ -49,9 +49,16 @@ export function MapComponent({ attractions, routePolyline, className }: MapCompo
 
     map.current.on('load', () => {
       setMapLoaded(true)
+      map.current?.resize()
     })
 
+    const observer = new ResizeObserver(() => {
+      map.current?.resize()
+    })
+    observer.observe(mapContainer.current)
+
     return () => {
+      observer.disconnect()
       markers.current.forEach((marker) => marker.remove())
       markers.current = []
       map.current?.remove()

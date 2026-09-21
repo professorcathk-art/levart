@@ -1,5 +1,6 @@
 import type { Attraction, DayActivity, DayItinerary, Itinerary, RouteData, Trip, TripFocus } from '@/types'
 import { expandDayActivities } from '@/lib/trips/atomic-stops'
+import { parseClock } from '@/lib/trips/clock'
 import { parseStructuredTags } from '@/lib/trips/structured-tags'
 import { parseVersionList, stripVersions } from '@/lib/trips/versions'
 
@@ -70,12 +71,14 @@ export function isTripFocus(value: string): value is TripFocus {
 
 function parseActivity(value: unknown): DayActivity | null {
   if (!value || typeof value !== 'object') return null
-  const raw = value as Partial<DayActivity>
+  const raw = value as Partial<DayActivity> & { start_time?: unknown; end_time?: unknown }
   if (typeof raw.activity !== 'string' || typeof raw.location !== 'string') return null
   const time = raw.time === 'afternoon' || raw.time === 'evening' ? raw.time : 'morning'
   return {
     ...raw,
     time,
+    startTime: parseClock(raw.startTime ?? raw.start_time),
+    endTime: parseClock(raw.endTime ?? raw.end_time),
     activity: raw.activity,
     location: raw.location,
     notes: typeof raw.notes === 'string' ? raw.notes : undefined,

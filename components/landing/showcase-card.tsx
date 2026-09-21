@@ -9,6 +9,7 @@ import { useState } from 'react'
 import { BoardingPass } from '@/components/landing/boarding-pass'
 import { PawMark } from '@/components/ui/paw-mark'
 import { TripTags } from '@/components/plan/trip-tags'
+import { locationHintsFromItinerary } from '@/lib/photos/cover-query'
 import type { Trip } from '@/types'
 
 interface ShowcaseCardProps {
@@ -38,7 +39,12 @@ export function ShowcaseCard({ trip }: ShowcaseCardProps) {
     <>
       <article className="group relative overflow-hidden rounded-3xl border border-white/80 bg-white shadow-[0_12px_40px_rgba(43,45,66,0.06)] transition hover:-translate-y-1 hover:shadow-[0_18px_50px_rgba(224,122,95,0.16)]">
         <div className="relative">
-          <DestinationCover destination={trip.destination} coverPhoto={trip.coverPhoto} className="h-44" />
+          <DestinationCover
+            destination={trip.destination}
+            coverPhoto={trip.coverPhoto}
+            hints={locationHintsFromItinerary(trip.itinerary)}
+            className="h-44"
+          />
           {pawsome && (
             <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full border border-white/50 bg-white/70 px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#E07A5F] shadow-sm backdrop-blur-md">
               <PawMark size={12} />

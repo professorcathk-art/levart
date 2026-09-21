@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/supabase/auth'
 import { itineraryHasPlan, freezePublishedCopy } from '@/lib/trips/itinerary'
 import { getOwnedTrip } from '@/lib/trips/queries'
-import { resolvePlacePhoto } from '@/lib/photos/search'
+import { resolveCoverPhotos } from '@/lib/photos/search'
 
 export async function POST(_request: NextRequest, { params }: { params: { id: string } }) {
   const user = await getAuthUser()
@@ -24,8 +24,8 @@ export async function POST(_request: NextRequest, { params }: { params: { id: st
   let coverPhoto = trip.coverPhoto
   if (!coverPhoto && trip.destination) {
     try {
-      const resolved = await resolvePlacePhoto(`${trip.destination} landmark`)
-      coverPhoto = resolved.photo
+      const photos = await resolveCoverPhotos(trip.destination)
+      coverPhoto = photos[0] ?? null
     } catch (error) {
       console.error('Cover photo lookup failed:', error)
     }

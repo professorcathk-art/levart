@@ -68,6 +68,11 @@ export function DaySection({ day, destination, currency, trip }: DaySectionProps
         {day.notes && (
           <p className="mt-3 rounded-2xl bg-white/70 px-3 py-2 text-sm text-slate-600">{day.notes}</p>
         )}
+        {day.restaurants.length > 0 && (
+          <p className="mt-3 text-sm text-slate-500">
+            {t('planEatSuggest')}: {day.restaurants.map((restaurant) => restaurant.name).join(' · ')}
+          </p>
+        )}
       </header>
 
       <VerticalTimeline>

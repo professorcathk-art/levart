@@ -17,9 +17,10 @@ interface DayMapPanelProps {
 
 export function DayMapPanel({ destination, trip, dayNumber }: DayMapPanelProps) {
   const { t } = useLocale()
+  const lookupDestination = destination || trip?.destination || trip?.itinerary.destination || ''
   const lookupKey = [
     trip?.id ?? '',
-    destination,
+    lookupDestination,
     String(dayNumber ?? 'all'),
     trip ? pinsForDay(trip, dayNumber).map((pin) => pin.id).join(',') : '',
     trip ? dayStopQueries(trip, dayNumber).join('|') : '',
@@ -30,6 +31,7 @@ export function DayMapPanel({ destination, trip, dayNumber }: DayMapPanelProps) 
   )
 
   useEffect(() => {
+    let cancelled = false
     const attached = trip ? pinsForDay(trip, dayNumber) : []
     if (attached.length > 0) {
       setPins(attached)
@@ -37,41 +39,50 @@ export function DayMapPanel({ destination, trip, dayNumber }: DayMapPanelProps) 
       return
     }
 
-    if (!destination) {
+    if (!lookupDestination) {
       setPins([])
       setStatus('empty')
       return
     }
 
     const controller = new AbortController()
-    const params = new URLSearchParams({ q: destination })
-    if (trip) {
-      const stops = dayStopQueries(trip, dayNumber)
-      if (stops.length > 0) params.set('stops', stops.join('|'))
-    }
+    const stops = trip ? dayStopQueries(trip, dayNumber) : []
 
     setStatus('loading')
-    fetch(`/api/places/geocode?${params}`, { signal: controller.signal })
+    fetch('/api/places/geocode', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ q: lookupDestination, stops }),
+      signal: controller.signal,
+    })
       .then((response) => response.json())
       .then((data: { pins?: Attraction[] }) => {
+        if (cancelled) return
         const next = Array.isArray(data.pins) ? data.pins : []
         setPins(next)
         setStatus(next.length > 0 ? 'ready' : 'empty')
       })
       .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === 'AbortError') return
+        if (cancelled) return
+        const aborted =
+          (error instanceof DOMException && error.name === 'AbortError') ||
+          (error instanceof Error && error.name === 'AbortError')
+        if (aborted) return
         console.error('Day map geocode failed:', error)
         setPins([])
         setStatus('empty')
       })
 
-    return () => controller.abort()
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
     // lookupKey already encodes destination, day, stored pins, and stop names
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lookupKey])
 
-  const cityMaps = destination
-    ? { href: mapsSearchUrl(destination), label: t('openCityMaps', { destination }) }
+  const cityMaps = lookupDestination
+    ? { href: mapsSearchUrl(lookupDestination), label: t('openCityMaps', { destination: lookupDestination }) }
     : undefined
 
   return (

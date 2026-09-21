@@ -43,6 +43,8 @@ export interface RouteData {
 
 export interface DayActivity {
   time: 'morning' | 'afternoon' | 'evening'
+  startTime?: string
+  endTime?: string
   activity: string
   location: string
   duration?: string

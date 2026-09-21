@@ -17,8 +17,9 @@ export async function generateItinerary(
   void preferences
 
   const systemPrompt = `You are an expert travel planner. Generate detailed day-by-day itineraries in JSON format.
-Each day should include morning, afternoon, and evening activities based on the selected attractions and route.
-Include restaurant suggestions, transport recommendations, and cost estimates.
+Each activity needs startTime and endTime as HH:mm clocks, plus morning/afternoon/evening.
+At most one lunch and one dinner per day. Never schedule consecutive restaurant stops.
+Include restaurant suggestions as activities (type restaurant), short transport notes, and cost estimates.
 Be practical and realistic about timing and distances.`
 
   const attractionsList = selectedAttractions

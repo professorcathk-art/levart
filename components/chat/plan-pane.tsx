@@ -9,6 +9,7 @@ import { MapPlaceholder } from '@/components/ui/map-placeholder'
 import { TripTags } from '@/components/plan/trip-tags'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { itineraryHasPlan } from '@/lib/trips/itinerary'
+import { formatTimeRange } from '@/lib/trips/clock'
 import type { DayActivity, Itinerary } from '@/types'
 import type { MessageKey } from '@/lib/i18n/dictionaries'
 
@@ -151,7 +152,7 @@ export function PlanPane({
                   <li key={`${day.day}-${index}`} className="rounded-xl border-l-4 border-[#E07A5F]/70 bg-[#FFF8F3] px-3 py-2">
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#7ECCC4]">
-                        {t(TIME_KEYS[activity.time])}
+                        {formatTimeRange(activity.startTime, activity.endTime) || t(TIME_KEYS[activity.time])}
                         {activity.userLocked ? ` · ${t('locked')}` : ''}
                       </p>
                       <PlaceHint
@@ -167,8 +168,8 @@ export function PlanPane({
                     <p className="break-words text-sm text-gray-600">{activity.location}</p>
                     {activity.notes && <p className="mt-1 text-sm text-[#FF9A76]">{activity.notes}</p>}
                     <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-500">
-                      {activity.duration && <span>{activity.duration}</span>}
-                      {activity.cost && <span>{activity.cost}</span>}
+                      {activity.duration && <span>⏱️ {activity.duration}</span>}
+                      {activity.cost && <span>💰 {activity.cost}</span>}
                     </div>
                   </li>
                 )
@@ -181,7 +182,7 @@ export function PlanPane({
             )}
             {day.restaurants.length > 0 && (
               <p className="mt-3 text-sm text-gray-600">
-                {t('planEat')}: {day.restaurants.map((restaurant) => restaurant.name).join(', ')}
+                {t('planEatSuggest')}: {day.restaurants.map((restaurant) => restaurant.name).join(', ')}
               </p>
             )}
           </section>

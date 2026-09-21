@@ -177,6 +177,12 @@ export function PDFExport({ itinerary }: PDFExportProps) {
                         <h4 className="font-bold text-lg mb-2">{activity.activity}</h4>
                         <p className="text-gray-600 mb-2">{activity.location}</p>
                         <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                          {(activity.startTime || activity.endTime) && (
+                            <span>
+                              {activity.startTime}
+                              {activity.endTime ? ` – ${activity.endTime}` : ''}
+                            </span>
+                          )}
                           {activity.duration && <span>⏱️ {activity.duration}</span>}
                           {activity.cost && <span>💰 {activity.cost}</span>}
                           {activity.distance && <span>🚶 {activity.distance}</span>}

@@ -1,15 +1,16 @@
 'use client'
 
 import { useEffect, useId, useState } from 'react'
+import { Clock, MapPin, Wallet } from 'lucide-react'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { PlaceThumb } from '@/components/itinerary/place-thumb'
-import { MapPin } from 'lucide-react'
 import { PlaceHint } from '@/components/itinerary/place-hint'
 import { StayBookLink } from '@/components/plan/booking-links'
 import { IconBadge } from '@/components/ui/icon-badge'
 import { TicketMark } from '@/components/ui/ticket-mark'
 import { useTripView } from '@/components/itinerary/trip-view-provider'
 import { displayCost } from '@/lib/trips/currency'
+import { formatTimeRange, parseDurationMinutes } from '@/lib/trips/clock'
 import { mapsSearchUrl } from '@/lib/trips/transit'
 import { mapsPlaceQuery } from '@/lib/trips/place-query'
 import type { TimelineItem } from '@/lib/trips/timeline'
@@ -27,6 +28,20 @@ interface ActivityCardProps {
   destination: string
   currency?: string
   trip?: Trip
+}
+
+function stayLabel(
+  duration: string | undefined,
+  t: (key: MessageKey, vars?: Record<string, string | number>) => string
+) {
+  const minutes = parseDurationMinutes(duration)
+  if (minutes !== null) {
+    if (minutes >= 60 && minutes % 60 === 0) {
+      return t('stayDurationHours', { hours: minutes / 60 })
+    }
+    return t('stayDurationMinutes', { minutes })
+  }
+  return duration ? t('stayDurationText', { duration }) : null
 }
 
 export function ActivityCard({ item, destination, currency, trip }: ActivityCardProps) {
@@ -49,7 +64,8 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
       activity.nearbyAlternatives?.length
   )
   const cost = displayCost(activity.cost, currency, destination)
-  const meta = [cost, activity.duration].filter(Boolean).join(' · ')
+  const stay = stayLabel(activity.duration, t)
+  const clock = formatTimeRange(activity.startTime, activity.endTime)
 
   const actions = (
     <div className="flex w-full flex-wrap items-center justify-start gap-2 sm:w-auto sm:justify-end">
@@ -95,6 +111,30 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
     </div>
   )
 
+  const timeChip = (
+    <TicketMark className={viewStyle === 'handbook' ? 'bg-[#F6E6C8] text-[#C4A574]' : undefined}>
+      {clock || t(TIME_KEYS[item.time])}
+    </TicketMark>
+  )
+
+  const metrics = (
+    <div className="flex flex-col gap-1 text-[11px] font-semibold text-slate-500">
+      {stay && (
+        <p className="inline-flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5 text-[#7ECCC4]" aria-hidden />
+          <span>{stay}</span>
+        </p>
+      )}
+      {cost && (
+        <p className="inline-flex items-center gap-1.5">
+          <Wallet className="h-3.5 w-3.5 text-[#E07A5F]" aria-hidden />
+          <span>{/\d/.test(cost) ? t('budgetPerPerson', { cost }) : cost}</span>
+        </p>
+      )}
+      {!stay && !cost ? <p>—</p> : null}
+    </div>
+  )
+
   if (viewStyle === 'handbook') {
     return (
       <article className="relative rounded-[28px] border border-[#E8DFD1] bg-[#FFFDF9] p-3 shadow-[2px_4px_0_rgba(90,70,40,0.08)] sm:p-4">
@@ -109,11 +149,11 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
             />
           </figure>
           <div className="min-w-0 flex-1">
-            <TicketMark className="bg-[#F6E6C8] text-[#C4A574]">{t(TIME_KEYS[item.time])}</TicketMark>
+            {timeChip}
             <h4 className="mt-1 break-words font-serif text-lg leading-snug text-[#3F3428] sm:text-xl">{item.title}</h4>
             <p className="break-words text-xs text-[#7A6A58]">{item.location}</p>
             <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-              <p className="font-mono text-[11px] font-semibold uppercase tracking-wide text-[#7A6A58]">{meta}</p>
+              {metrics}
               {actions}
             </div>
           </div>
@@ -134,13 +174,13 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
           className="h-14 w-14 shrink-0 rounded-xl sm:h-16 sm:w-16"
         />
         <div className="min-w-0 flex-1">
-          <TicketMark>{t(TIME_KEYS[item.time])}</TicketMark>
+          {timeChip}
           <h4 className="mt-1 break-words text-base font-extrabold text-slate-800">{item.title}</h4>
           <p className="break-words text-xs text-slate-500">{item.location}</p>
         </div>
       </div>
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-wide text-slate-500">{meta || '—'}</p>
+        {metrics}
         {actions}
       </div>
       {hasDetails && (

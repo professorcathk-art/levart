@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { PlaceHint } from '@/components/itinerary/place-hint'
+import { bucketFromClock, parseClock } from '@/lib/trips/clock'
 import type { DayActivity } from '@/types'
 import type { MessageKey } from '@/lib/i18n/dictionaries'
 
@@ -11,8 +12,6 @@ const TIME_KEYS: Record<DayActivity['time'], MessageKey> = {
   afternoon: 'timeAfternoon',
   evening: 'timeEvening',
 }
-
-const TIMES: Array<DayActivity['time']> = ['morning', 'afternoon', 'evening']
 
 interface EditableStopProps {
   activity: DayActivity
@@ -25,42 +24,58 @@ export function EditableStop({ activity, destination, onCommit }: EditableStopPr
   const [title, setTitle] = useState(activity.activity)
   const [location, setLocation] = useState(activity.location)
   const [notes, setNotes] = useState(activity.notes ?? '')
+  const [startTime, setStartTime] = useState(activity.startTime ?? '')
+  const [endTime, setEndTime] = useState(activity.endTime ?? '')
 
   useEffect(() => {
     setTitle(activity.activity)
     setLocation(activity.location)
     setNotes(activity.notes ?? '')
-  }, [activity.activity, activity.location, activity.notes])
+    setStartTime(activity.startTime ?? '')
+    setEndTime(activity.endTime ?? '')
+  }, [activity.activity, activity.location, activity.notes, activity.startTime, activity.endTime])
 
   const commit = (patch: Partial<DayActivity>) => {
     onCommit({ ...patch, userLocked: true })
   }
 
+  const commitTimes = (nextStart: string, nextEnd: string) => {
+    const start = parseClock(nextStart)
+    const end = parseClock(nextEnd)
+    if (start === activity.startTime && end === activity.endTime) return
+    commit({
+      startTime: start,
+      endTime: end,
+      time: bucketFromClock(start || end),
+    })
+  }
+
   return (
     <li className="rounded-2xl border border-orange-100/80 bg-[#FFF8F3] p-3">
       <div className="flex items-start justify-between gap-2">
-        <div
-          role="radiogroup"
-          aria-label={t('timeOfDay')}
-          className="flex min-w-0 flex-1 gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {TIMES.map((time) => {
-            const selected = activity.time === time
-            return (
-              <button
-                key={time}
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                onClick={() => commit({ time })}
-                className={`min-h-9 shrink-0 rounded-full px-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] ${
-                  selected ? 'bg-[#2B2D42] text-white' : 'bg-white text-slate-500'
-                }`}
-              >
-                {t(TIME_KEYS[time])}
-              </button>
-            )
-          })}
+        <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
+          <label className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+            {t('startTime')}
+            <input
+              type="time"
+              value={startTime}
+              aria-label={t('startTime')}
+              onChange={(event) => setStartTime(event.target.value)}
+              onBlur={() => commitTimes(startTime, endTime)}
+              className="mt-1 min-h-11 w-full rounded-xl bg-white/80 px-3 font-mono text-sm text-[#2B2D42] outline-none ring-1 ring-transparent focus:ring-[#E07A5F]/40"
+            />
+          </label>
+          <label className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
+            {t('endTime')}
+            <input
+              type="time"
+              value={endTime}
+              aria-label={t('endTime')}
+              onChange={(event) => setEndTime(event.target.value)}
+              onBlur={() => commitTimes(startTime, endTime)}
+              className="mt-1 min-h-11 w-full rounded-xl bg-white/80 px-3 font-mono text-sm text-[#2B2D42] outline-none ring-1 ring-transparent focus:ring-[#E07A5F]/40"
+            />
+          </label>
         </div>
         <PlaceHint
           title={title || activity.activity}
@@ -71,6 +86,9 @@ export function EditableStop({ activity, destination, onCommit }: EditableStopPr
           address={activity.address}
         />
       </div>
+      <p className="mt-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-[#7ECCC4]">
+        {t(TIME_KEYS[activity.time])}
+      </p>
       <input
         value={title}
         aria-label={t('activityName')}
@@ -78,7 +96,7 @@ export function EditableStop({ activity, destination, onCommit }: EditableStopPr
         onBlur={() => {
           if (title.trim() && title.trim() !== activity.activity) commit({ activity: title.trim() })
         }}
-        className="mt-3 min-h-11 w-full rounded-xl bg-white/80 px-3 text-base font-semibold text-[#2B2D42] outline-none ring-1 ring-transparent focus:ring-[#E07A5F]/40"
+        className="mt-2 min-h-11 w-full rounded-xl bg-white/80 px-3 text-base font-semibold text-[#2B2D42] outline-none ring-1 ring-transparent focus:ring-[#E07A5F]/40"
       />
       <input
         value={location}
