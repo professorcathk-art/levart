@@ -32,11 +32,11 @@ interface ActivityCardProps {
 export function ActivityCard({ item, destination, currency, trip }: ActivityCardProps) {
   const { t } = useLocale()
   const { viewStyle } = useTripView()
-  const [open, setOpen] = useState(viewStyle !== 'concise')
+  const [open, setOpen] = useState(false)
   const panelId = useId()
 
   useEffect(() => {
-    setOpen(viewStyle !== 'concise')
+    setOpen(viewStyle === 'handbook')
   }, [viewStyle])
 
   const activity = item.activity
@@ -94,32 +94,6 @@ export function ActivityCard({ item, destination, currency, trip }: ActivityCard
       )}
     </div>
   )
-
-  if (viewStyle === 'concise') {
-    return (
-      <article className="rounded-xl border border-orange-100/80 bg-white/90 p-3 shadow-sm transition-all hover:shadow-md sm:p-4">
-        <TicketMark>{t(TIME_KEYS[item.time])}</TicketMark>
-        <h4 className="mt-1 break-words text-base font-extrabold text-slate-800">{item.title}</h4>
-        <p className="mt-0.5 break-words text-xs text-slate-500">{item.location}</p>
-        <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-wide text-slate-500">{meta || '—'}</p>
-          {actions}
-        </div>
-        {hasDetails && (
-          <button
-            type="button"
-            className="mt-2 min-h-9 text-xs font-semibold text-[#E07A5F]"
-            aria-expanded={open}
-            aria-controls={panelId}
-            onClick={() => setOpen((value) => !value)}
-          >
-            {open ? t('hideDetails') : t('showDetails')}
-          </button>
-        )}
-        {open ? <div className="mt-2">{details}</div> : null}
-      </article>
-    )
-  }
 
   if (viewStyle === 'handbook') {
     return (

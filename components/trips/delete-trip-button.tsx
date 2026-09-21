@@ -9,9 +9,10 @@ import { IconBadge } from '@/components/ui/icon-badge'
 interface DeleteTripButtonProps {
   tripId: string
   redirectTo?: string
+  appearance?: 'pill' | 'menu'
 }
 
-export function DeleteTripButton({ tripId, redirectTo }: DeleteTripButtonProps) {
+export function DeleteTripButton({ tripId, redirectTo, appearance = 'pill' }: DeleteTripButtonProps) {
   const { t } = useLocale()
   const router = useRouter()
   const [busy, setBusy] = useState(false)
@@ -36,6 +37,21 @@ export function DeleteTripButton({ tripId, redirectTo }: DeleteTripButtonProps) 
       window.alert(error instanceof Error ? error.message : t('deleteTripFailed'))
       setBusy(false)
     }
+  }
+
+  if (appearance === 'menu') {
+    return (
+      <button
+        type="button"
+        role="menuitem"
+        onClick={() => void onDelete()}
+        disabled={busy}
+        className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60"
+      >
+        <Trash2 className="h-4 w-4" aria-hidden />
+        {busy ? t('deletingTrip') : t('deleteTrip')}
+      </button>
+    )
   }
 
   return (

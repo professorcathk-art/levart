@@ -69,7 +69,7 @@ function BoardChrome({ itinerary, destination, trip, preview = false, previewNex
             )
           })}
         </div>
-        <div className="flex min-w-0 shrink-0 items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex shrink-0 items-center justify-between gap-2">
           <ViewStyleToggle />
           {trip && !preview && <OfflineBadge trip={trip} />}
         </div>

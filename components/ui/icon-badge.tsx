@@ -39,7 +39,7 @@ export function IconBadge({
   const content = (
     <>
       <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} aria-hidden />
-      <span>{children}</span>
+      <span className="whitespace-nowrap">{children}</span>
     </>
   )
 

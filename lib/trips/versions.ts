@@ -173,6 +173,9 @@ export function formatItineraryForPrompt(itinerary: Itinerary): string {
   const lines = [
     `Destination: ${itinerary.destination}`,
     `Focus: ${itinerary.tripFocus.join(', ') || 'none'}`,
+    itinerary.structuredTags
+      ? `Tags: ${itinerary.structuredTags.themeHeadline || ''} / ${itinerary.structuredTags.budget || ''} / ${itinerary.structuredTags.vibe || ''} / ${itinerary.structuredTags.companion || ''}`
+      : 'Tags: none yet — set structuredTags on the next update_itinerary',
     `Dates: ${itinerary.checkIn || '?'} to ${itinerary.checkOut || '?'}`,
     `Currency: ${itinerary.currency || 'guess from destination'}`,
   ]

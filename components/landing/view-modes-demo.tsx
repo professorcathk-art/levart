@@ -18,7 +18,6 @@ export function ViewModesDemo() {
   const modes: Array<{ id: ViewStyle; label: string }> = [
     { id: 'clean', label: t('styleClean') },
     { id: 'handbook', label: t('styleHandbook') },
-    { id: 'concise', label: t('styleConcise') },
   ]
 
   return (
@@ -35,7 +34,7 @@ export function ViewModesDemo() {
                 key={mode.id}
                 type="button"
                 onClick={() => setStyle(mode.id)}
-                className={`min-h-11 rounded-full px-4 font-mono text-[11px] font-semibold uppercase tracking-[0.14em] shadow-sm ${
+                className={`min-h-11 rounded-full px-4 font-semibold shadow-sm ${
                   style === mode.id ? 'bg-[#E07A5F] text-white' : 'border border-orange-100/80 bg-white text-[#2B2D42]'
                 }`}
               >
@@ -52,11 +51,9 @@ export function ViewModesDemo() {
               <div key={stop.place}>
                 <article
                   className={
-                    style === 'concise'
-                      ? 'rounded-r-xl border-l-4 border-[#E07A5F] bg-[#FAF6F0] px-4 py-3'
-                      : style === 'handbook'
-                        ? 'rounded-[24px] border border-[#E8DFD1] bg-[#FFFDF9] p-4 shadow-[2px_3px_0_rgba(90,70,40,0.06)]'
-                        : 'rounded-2xl border border-orange-100/80 bg-[#FAF6F0] p-4'
+                    style === 'handbook'
+                      ? 'rounded-[24px] border border-[#E8DFD1] bg-[#FFFDF9] p-4 shadow-[2px_3px_0_rgba(90,70,40,0.06)]'
+                      : 'rounded-2xl border border-orange-100/80 bg-[#FAF6F0] p-4'
                   }
                 >
                   <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#E07A5F]">

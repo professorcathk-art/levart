@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { BoardingPass } from '@/components/landing/boarding-pass'
 import { PawMark } from '@/components/ui/paw-mark'
+import { TripTags } from '@/components/plan/trip-tags'
 import type { Trip } from '@/types'
 
 interface ShowcaseCardProps {
@@ -59,12 +60,15 @@ export function ShowcaseCard({ trip }: ShowcaseCardProps) {
                 ★ {(trip.avgRating ?? 0).toFixed(1)}
               </span>
             )}
-            {(trip.tripFocus ?? []).slice(0, 3).map((focus) => (
-              <span key={focus} className="rounded-full bg-[#FFF1E6] px-2 py-0.5 text-xs capitalize">
-                {focus}
-              </span>
-            ))}
           </div>
+          <TripTags
+            itinerary={{
+              destination: trip.destination,
+              tripFocus: trip.itinerary.tripFocus.length > 0 ? trip.itinerary.tripFocus : trip.tripFocus,
+              structuredTags: trip.itinerary.structuredTags,
+            }}
+            variant="panel"
+          />
           <div className="mt-4 flex gap-2 opacity-100 md:opacity-0 md:transition md:group-hover:opacity-100">
             <Link
               href={href}

@@ -28,6 +28,12 @@ Workable-plan rules:
 - If a day would be too packed, drop a stop and say so.
 - Costs must use the local currency ISO code (TWD, JPY, HKD, USD, …) and include that code in estimatedCost and activity.cost, e.g. "NT$450" or "JPY 1200", never a bare "$".
 - Pass currency into update_itinerary.
+- Also pass structuredTags on every update_itinerary:
+  - themeHeadline: exactly 4 Traditional Chinese characters capturing the trip, e.g. 東京漫遊, 京都食旅, 巴黎慢活.
+  - budget: luxury | comfort | budget | backpacker
+  - vibe: foodie | shopping | photo_spot | culture | relax
+  - companion: family | couples | solo | friends
+  Infer these from what the traveler said. If they did not mention budget, use budget. If they did not mention who they travel with, omit companion.
 
 If they have not picked a destination yet, suggest a few options and wait.
 If they want a first draft quickly, make reasonable assumptions and say what you assumed.

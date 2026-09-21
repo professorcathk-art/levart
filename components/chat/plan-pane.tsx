@@ -6,25 +6,16 @@ import { EditableStop } from '@/components/itinerary/editable-stop'
 import { PlaceHint } from '@/components/itinerary/place-hint'
 import { IconBadge } from '@/components/ui/icon-badge'
 import { MapPlaceholder } from '@/components/ui/map-placeholder'
+import { TripTags } from '@/components/plan/trip-tags'
 import { useLocale } from '@/components/i18n/locale-provider'
 import { itineraryHasPlan } from '@/lib/trips/itinerary'
-import type { DayActivity, Itinerary, TripFocus } from '@/types'
+import type { DayActivity, Itinerary } from '@/types'
 import type { MessageKey } from '@/lib/i18n/dictionaries'
 
 const TIME_KEYS: Record<DayActivity['time'], MessageKey> = {
   morning: 'timeMorning',
   afternoon: 'timeAfternoon',
   evening: 'timeEvening',
-}
-
-const FOCUS_KEYS: Record<TripFocus, MessageKey> = {
-  food: 'focusFood',
-  culture: 'focusCulture',
-  shopping: 'focusShopping',
-  beach: 'focusBeach',
-  nightlife: 'focusNightlife',
-  family: 'focusFamily',
-  climbing: 'focusClimbing',
 }
 
 interface PlanPaneProps {
@@ -102,15 +93,7 @@ export function PlanPane({
             {t('planChanged')}: {lastChange}
           </p>
         )}
-        {itinerary.tripFocus.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {itinerary.tripFocus.map((focus) => (
-              <span key={focus} className="rounded-full border border-orange-100/80 bg-[#FF9A76]/10 px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#FF9A76]">
-                {t(FOCUS_KEYS[focus])}
-              </span>
-            ))}
-          </div>
-        )}
+        <TripTags itinerary={itinerary} variant="panel" />
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {itinerary.days.map((day) => (
             <a

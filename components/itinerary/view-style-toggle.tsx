@@ -8,7 +8,6 @@ import type { MessageKey } from '@/lib/i18n/dictionaries'
 const STYLES: Array<{ id: ViewStyle; label: MessageKey }> = [
   { id: 'clean', label: 'styleClean' },
   { id: 'handbook', label: 'styleHandbook' },
-  { id: 'concise', label: 'styleConcise' },
 ]
 
 export function ViewStyleToggle() {
@@ -19,7 +18,7 @@ export function ViewStyleToggle() {
     <div
       role="radiogroup"
       aria-label={t('styleSwitcher')}
-      className="inline-flex w-full min-w-0 rounded-lg bg-slate-100/90 p-0.5 ring-1 ring-slate-200/80 sm:w-auto"
+      className="inline-flex shrink-0 rounded-lg bg-slate-100/90 p-0.5 ring-1 ring-slate-200/80"
     >
       {STYLES.map((style) => {
         const selected = viewStyle === style.id
@@ -30,7 +29,7 @@ export function ViewStyleToggle() {
             role="radio"
             aria-checked={selected}
             onClick={() => setViewStyle(style.id)}
-            className={`min-h-11 flex-1 rounded-md px-2.5 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] transition sm:flex-none sm:px-3 ${
+            className={`min-h-11 rounded-md px-3 font-semibold transition ${
               selected ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'
             }`}
           >

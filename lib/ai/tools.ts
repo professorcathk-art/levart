@@ -10,6 +10,7 @@ import { emptyItinerary, isTripFocus } from '@/lib/trips/itinerary'
 import { expandDayActivities } from '@/lib/trips/atomic-stops'
 import { addVersion, formatItineraryForPrompt, preserveUserEdits, summarizeDiff } from '@/lib/trips/versions'
 import { searchTravelKnowledge } from '@/lib/trips/knowledge'
+import { parseStructuredTags, inferStructuredTags, mergeStructuredTags } from '@/lib/trips/structured-tags'
 import { guessCurrency } from '@/lib/trips/currency'
 import type { Attraction, DayItinerary, Itinerary, TripFocus } from '@/types'
 
@@ -329,6 +330,17 @@ export function createPlannerTools(ctx: PlannerContext) {
           .optional()
           .describe('One sentence describing what you changed so the traveler can see the difference'),
         selectedAttractionIds: z.array(z.string()).optional(),
+        structuredTags: z
+          .object({
+            themeHeadline: z
+              .string()
+              .optional()
+              .describe('Exactly 4 Traditional Chinese characters, e.g. 東京漫遊 or 京都食旅'),
+            budget: z.enum(['luxury', 'comfort', 'budget', 'backpacker']).optional(),
+            vibe: z.enum(['foodie', 'shopping', 'photo_spot', 'culture', 'relax']).optional(),
+            companion: z.enum(['family', 'couples', 'solo', 'friends']).optional(),
+          })
+          .optional(),
       }),
       execute: async ({
         destination,
@@ -339,6 +351,7 @@ export function createPlannerTools(ctx: PlannerContext) {
         days,
         changeSummary,
         selectedAttractionIds,
+        structuredTags,
       }) => {
         const previous = ctx.itinerary
         const focus = tripFocus.filter(isTripFocus) as TripFocus[]
@@ -355,6 +368,11 @@ export function createPlannerTools(ctx: PlannerContext) {
           activities: expandDayActivities(day.activities),
         }))
         const money = (currency || previous.currency || guessCurrency(destination).code).toUpperCase()
+        const tags = mergeStructuredTags(
+          parseStructuredTags(structuredTags),
+          previous.structuredTags,
+          inferStructuredTags({ destination, tripFocus: focus }, 'zh-Hant')
+        )
 
         const drafted = emptyItinerary({
           ...ctx.itinerary,
@@ -365,6 +383,7 @@ export function createPlannerTools(ctx: PlannerContext) {
           currency: money,
           days: daysWithPhotos,
           selectedAttractions: selected,
+          structuredTags: tags,
         })
         const merged = preserveUserEdits(previous, drafted)
         const summary = changeSummary || summarizeDiff(previous, merged)

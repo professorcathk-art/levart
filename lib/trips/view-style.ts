@@ -1,10 +1,10 @@
-export type ViewStyle = 'clean' | 'handbook' | 'concise'
+export type ViewStyle = 'clean' | 'handbook'
 export type DayFilter = 'all' | 'attractions' | 'food' | 'stay'
 
 export const VIEW_STYLE_KEY = 'levart-view-style'
 
 export function isViewStyle(value: string | null | undefined): value is ViewStyle {
-  return value === 'clean' || value === 'handbook' || value === 'concise'
+  return value === 'clean' || value === 'handbook'
 }
 
 export function readViewStyle(): ViewStyle {

@@ -1,5 +1,6 @@
 import type { Attraction, DayActivity, DayItinerary, Itinerary, RouteData, Trip, TripFocus } from '@/types'
 import { expandDayActivities } from '@/lib/trips/atomic-stops'
+import { parseStructuredTags } from '@/lib/trips/structured-tags'
 import { parseVersionList, stripVersions } from '@/lib/trips/versions'
 
 export const EMPTY_ROUTE: RouteData = {
@@ -22,6 +23,7 @@ export function emptyItinerary(partial?: Partial<Itinerary>): Itinerary {
     currency: partial?.currency,
     versions: partial?.versions,
     lastChange: partial?.lastChange,
+    structuredTags: partial?.structuredTags,
     publishedCopy: partial?.publishedCopy,
   }
 }
@@ -144,6 +146,9 @@ export function parseItinerary(value: unknown): Itinerary {
       itinerary: parseItinerary({ ...version.itinerary, versions: [] }),
     })),
     lastChange: typeof raw.lastChange === 'string' ? raw.lastChange : undefined,
+    structuredTags: parseStructuredTags(
+      raw.structuredTags ?? (raw as { structured_tags?: unknown }).structured_tags
+    ),
     publishedCopy: raw.publishedCopy
       ? parseItinerary({ ...raw.publishedCopy, publishedCopy: undefined, versions: [] })
       : undefined,

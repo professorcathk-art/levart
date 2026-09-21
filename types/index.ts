@@ -99,6 +99,17 @@ export interface PlanVersion {
   itinerary: Itinerary
 }
 
+export type TripBudgetTag = 'luxury' | 'comfort' | 'budget' | 'backpacker'
+export type TripVibeTag = 'foodie' | 'shopping' | 'photo_spot' | 'culture' | 'relax'
+export type TripCompanionTag = 'family' | 'couples' | 'solo' | 'friends'
+
+export interface StructuredTags {
+  themeHeadline?: string
+  budget?: TripBudgetTag
+  vibe?: TripVibeTag
+  companion?: TripCompanionTag
+}
+
 export interface Itinerary {
   destination: string
   tripFocus: TripFocus[]
@@ -109,6 +120,7 @@ export interface Itinerary {
   checkOut?: string
   notes?: string
   currency?: string
+  structuredTags?: StructuredTags
   versions?: PlanVersion[]
   lastChange?: string
   publishedCopy?: Itinerary
